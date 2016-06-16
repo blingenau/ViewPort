@@ -1,7 +1,16 @@
 /// <reference path="Definitions/github-electron.d.ts" />
-
+"use strict";
 // tabs module
-
+var Tab = (function () {
+    function Tab(tab) {
+        this.url = tab.url || "",
+            this.active = tab.active || false,
+            this.id = tab.id || Math.round(Math.random() * 100000000000000000),
+            this.webview = tab.webview || null;
+    }
+    return Tab;
+}());
+module.exports = Tab;
 /*
 
 var tabPrototype = {
@@ -116,4 +125,4 @@ var tabPrototype = {
     })
   }
 }
-*/
+*/ 
