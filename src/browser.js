@@ -20,7 +20,6 @@ function navigateTo(url) {
     if (url.indexOf("http") === -1) {
         url = "http://" + url;
     }
-    // address.value = url;
     address.blur();
     webview.loadURL(url);
 }

@@ -27,7 +27,6 @@ function navigateTo(url: string): void {
         url = `http://${url}`;
     }
 
-    // address.value = url;
     address.blur();
     webview.loadURL(url);
 }
