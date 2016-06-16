@@ -33,15 +33,17 @@ onload = function () {
     });
     webview.addEventListener("did-start-loading", handleLoadStart);
     webview.addEventListener("did-stop-loading", handleLoadStop);
+    webview.addEventListener("did-fail-load", handleFailLoad);
     webview.addEventListener("load-commit", handleLoadCommit);
+    webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
 };
-function navigateTo(url) {
+function navigateTo(url, html) {
     var address = document.querySelector("#location");
     var webview = document.querySelector("#webpage");
     if (!url) {
         url = "http://athenanet.athenahealth.com";
     }
-    if (url.indexOf("http") === -1) {
+    if (url.indexOf("http") === -1 && !html) {
         url = "http://" + url;
     }
     address.blur();
@@ -64,4 +66,10 @@ function handleLoadCommit(event) {
     address.value = event.url;
     document.querySelector("#back").disabled = !webview.canGoBack();
     document.querySelector("#forward").disabled = !webview.canGoForward();
+}
+function handleLoadRedirect(event) {
+    document.getElementById("location").value = event.newURL;
+}
+function handleFailLoad(event) {
+    navigateTo("file://" + __dirname + "/error.html", true);
 }

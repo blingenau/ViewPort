@@ -43,10 +43,12 @@ onload = () => {
 
     webview.addEventListener("did-start-loading", handleLoadStart);
     webview.addEventListener("did-stop-loading", handleLoadStop);
+    webview.addEventListener("did-fail-load", handleFailLoad);
     webview.addEventListener("load-commit", handleLoadCommit);
+    webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
 };
 
-function navigateTo(url: string): void {
+function navigateTo(url: string, html?: boolean): void {
     let address: HTMLInputElement = (<HTMLInputElement>document.querySelector("#location"));
     let webview: Electron.WebViewElement = <Electron.WebViewElement>document.querySelector("#webpage");
 
@@ -54,7 +56,7 @@ function navigateTo(url: string): void {
         url = "http://athenanet.athenahealth.com";
     }
 
-    if (url.indexOf("http") === -1) {
+    if (url.indexOf("http") === -1 && !html) {
         url = `http://${url}`;
     }
 
@@ -91,4 +93,12 @@ function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void 
     address.value = event.url;
     (<HTMLButtonElement>document.querySelector("#back")).disabled = !webview.canGoBack();
     (<HTMLButtonElement>document.querySelector("#forward")).disabled = !webview.canGoForward();
+}
+
+function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequestEvent): void {
+    (<HTMLInputElement>document.getElementById("location")).value = event.newURL;
+}
+
+function handleFailLoad(event: Electron.WebViewElement.DidFailLoadEvent): void {
+    navigateTo("file://" + __dirname + "/error.html", true);
 }
