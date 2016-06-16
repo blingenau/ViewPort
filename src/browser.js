@@ -1,20 +1,28 @@
 window.onresize = doLayout;
 onload = function () {
+    var webview = document.getElementById("webpage");
     doLayout();
     document.getElementById("location-form").onsubmit = function () {
         navigateTo(document.getElementById("location").value);
         return false;
     };
+    webview.addEventListener("load-commit", function (event) {
+        var address = document.getElementById("location");
+        address.value = event.url;
+    });
 };
 function navigateTo(url) {
+    var address = document.getElementById("location");
+    var webview = document.getElementById("webpage");
     if (!url) {
         url = "http://athenanet.athenahealth.com";
     }
-    console.log(url);
     if (url.indexOf("http") === -1) {
         url = "http://" + url;
     }
-    document.getElementById("webpage").loadURL(url);
+    // address.value = url;
+    address.blur();
+    webview.loadURL(url);
 }
 function doLayout() {
     var webview = document.getElementById("webpage");

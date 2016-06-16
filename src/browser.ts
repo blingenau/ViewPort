@@ -1,23 +1,35 @@
 window.onresize = doLayout;
 
 onload = () => {
-    doLayout();
+    let webview: Electron.WebViewElement = <Electron.WebViewElement>document.getElementById("webpage");
 
+    doLayout();
     document.getElementById("location-form").onsubmit = (): boolean => {
         navigateTo((<HTMLInputElement>document.getElementById("location")).value);
         return false;
     };
+    webview.addEventListener("load-commit", (event: Electron.WebViewElement.LoadCommitEvent) => {
+        let address: HTMLInputElement = (<HTMLInputElement>document.getElementById("location"));
+
+        address.value = event.url;
+    });
 };
 
 function navigateTo(url: string): void {
+    let address: HTMLInputElement = (<HTMLInputElement>document.getElementById("location"));
+    let webview: Electron.WebViewElement = <Electron.WebViewElement>document.getElementById("webpage");
+
     if (!url) {
         url = "http://athenanet.athenahealth.com";
     }
-    console.log(url);
+
     if (url.indexOf("http") === -1) {
         url = `http://${url}`;
     }
-    (<Electron.WebViewElement>document.getElementById("webpage")).loadURL(url);
+
+    // address.value = url;
+    address.blur();
+    webview.loadURL(url);
 }
 
 function doLayout(): void {
