@@ -20,7 +20,7 @@ function navigateTo(url: string): void {
     (<Electron.WebViewElement>document.getElementById("webpage")).loadURL(url);
 }
 
-function doLayout() {
+function doLayout(): void {
     let webview: MSHTMLWebViewElement = <MSHTMLWebViewElement> document.getElementById("webpage");
     let controls: HTMLDivElement = <HTMLDivElement> document.getElementById("controls");
     let controlsHeight: number = controls.offsetHeight;
