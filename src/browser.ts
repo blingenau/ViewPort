@@ -1,23 +1,54 @@
+/// <reference path="Definitions/github-electron.d.ts" />
+/// <reference path="Definitions/node.d.ts" />
+
 window.onresize = doLayout;
+let isLoading: boolean = false;
 
 onload = () => {
-    let webview: Electron.WebViewElement = <Electron.WebViewElement>document.getElementById("webpage");
+    let webview: Electron.WebViewElement = <Electron.WebViewElement>document.querySelector("#webpage"),
+        reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload");
 
     doLayout();
+
     document.getElementById("location-form").onsubmit = (): boolean => {
-        navigateTo((<HTMLInputElement>document.getElementById("location")).value);
+        navigateTo((<HTMLInputElement>document.querySelector("#location")).value);
         return false;
     };
-    webview.addEventListener("load-commit", (event: Electron.WebViewElement.LoadCommitEvent) => {
-        let address: HTMLInputElement = (<HTMLInputElement>document.getElementById("location"));
 
-        address.value = event.url;
+    document.getElementById("back").onclick = function () {
+        webview.goBack();
+    };
+
+    document.getElementById("forward").onclick = function () {
+        webview.goForward();
+    };
+
+    document.getElementById("home").onclick = function () {
+        navigateTo("http://athenanet.athenahealth.com/");
+    };
+
+    reload.onclick = function () {
+        if (isLoading) {
+            webview.stop();
+        } else {
+            webview.reload();
+        }
+    };
+
+    reload.addEventListener("webkitAnimationIteration", (): void => {
+        if (!isLoading) {
+            document.body.classList.remove("loading");
+        }
     });
+
+    webview.addEventListener("did-start-loading", handleLoadStart);
+    webview.addEventListener("did-stop-loading", handleLoadStop);
+    webview.addEventListener("load-commit", handleLoadCommit);
 };
 
 function navigateTo(url: string): void {
-    let address: HTMLInputElement = (<HTMLInputElement>document.getElementById("location"));
-    let webview: Electron.WebViewElement = <Electron.WebViewElement>document.getElementById("webpage");
+    let address: HTMLInputElement = (<HTMLInputElement>document.querySelector("#location"));
+    let webview: Electron.WebViewElement = <Electron.WebViewElement>document.querySelector("#webpage");
 
     if (!url) {
         url = "http://athenanet.athenahealth.com";
@@ -32,14 +63,32 @@ function navigateTo(url: string): void {
 }
 
 function doLayout(): void {
-    let webview: MSHTMLWebViewElement = <MSHTMLWebViewElement> document.getElementById("webpage");
-    let controls: HTMLDivElement = <HTMLDivElement> document.getElementById("controls");
-    let controlsHeight: number = controls.offsetHeight;
-    let windowWidth: number = document.documentElement.clientWidth;
-    let windowHeight: number = document.documentElement.clientHeight;
-    let webviewWidth: number = windowWidth;
-    let webviewHeight: number = windowHeight - controlsHeight;
+    let webview: MSHTMLWebViewElement = <MSHTMLWebViewElement> document.querySelector("#webpage"),
+        controls: HTMLDivElement = <HTMLDivElement> document.querySelector("#controls"),
+        controlsHeight: number = controls.offsetHeight,
+        windowWidth: number = document.documentElement.clientWidth,
+        windowHeight: number = document.documentElement.clientHeight,
+        webviewWidth: number = windowWidth,
+        webviewHeight: number = windowHeight - controlsHeight;
 
     webview.style.width = webviewWidth + "px";
     webview.style.height = webviewHeight + "px";
+}
+
+function handleLoadStart(event: Event): void {
+    document.body.classList.add("loading");
+    isLoading = true;
+}
+
+function handleLoadStop(event: Event): void {
+    isLoading = false;
+}
+
+function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
+    let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location"),
+        webview: Electron.WebViewElement = <Electron.WebViewElement>document.querySelector("#webpage");
+
+    address.value = event.url;
+    (<HTMLButtonElement>document.querySelector("#back")).disabled = !webview.canGoBack();
+    (<HTMLButtonElement>document.querySelector("#forward")).disabled = !webview.canGoForward();
 }
