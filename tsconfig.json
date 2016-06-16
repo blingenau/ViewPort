@@ -1,7 +1,8 @@
 {
     "files": [
         "src/main.ts",
-        "src/browser.ts"
+        "src/browser.ts",
+        "src/tabs.ts"
     ],
     "compilerOptions": {
         "noImplicitAny": true,
