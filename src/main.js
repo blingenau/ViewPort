@@ -57,7 +57,6 @@ var template = [{
                     var win = new BrowserWindow({ width: 400, height: 320 });
                     win.on("closed", function () { win = null; });
                     win.loadURL(modalPath);
-                    win.webContents.openDevTools();
                     win.show();
                 }
             },

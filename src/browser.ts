@@ -74,7 +74,8 @@ class TabBar {
         for (let index = 0; index < this.size(); index++) {
             let button: HTMLButtonElement = document.createElement("button");
             let tab: Tab = this.tabs[index];
-            button.title = tab.url;
+            button.title = button.innerHTML = tab.url;
+            button.className = "tab";
             button.id = tab.id.toString();
             let click = function () {
                 Tabs.activate(tab);

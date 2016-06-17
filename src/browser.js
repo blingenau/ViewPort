@@ -71,7 +71,8 @@ var TabBar = (function () {
         var _loop_1 = function(index) {
             var button = document.createElement("button");
             var tab = this_1.tabs[index];
-            button.title = tab.url;
+            button.title = button.innerHTML = tab.url;
+            button.className = "tab";
             button.id = tab.id.toString();
             var click = function () {
                 Tabs.activate(tab);
