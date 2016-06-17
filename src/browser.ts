@@ -99,7 +99,7 @@ onload = () => {
     Tabs.add_tab(new Tab({
         url: "http://athenanet.athenahealth.com"
     }));
-    // let webview: Electron.WebViewElement = <Electron.WebViewElement>document.querySelector("#webpage");
+
     let reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload");
 
     doLayout();
@@ -136,13 +136,6 @@ onload = () => {
             Tabs.active().webview.reload();
         }
     };
-
-    reload.addEventListener("webkitAnimationIteration", (): void => {
-        if (!isLoading) {
-            document.body.classList.remove("loading");
-        }
-    });
-
 };
 
 function createWebview(): Electron.WebViewElement {
@@ -188,10 +181,12 @@ function doLayout(): void {
 
 function handleLoadStart(event: Event): void {
     document.body.classList.add("loading");
+    document.getElementById("reload").innerHTML = "&#10005";
     isLoading = true;
 }
 
 function handleLoadStop(event: Event): void {
+    document.getElementById("reload").innerHTML = "&#10227";
     isLoading = false;
 }
 

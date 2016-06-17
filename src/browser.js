@@ -99,7 +99,6 @@ onload = function () {
     Tabs.add_tab(new Tab({
         url: "http://athenanet.athenahealth.com"
     }));
-    // let webview: Electron.WebViewElement = <Electron.WebViewElement>document.querySelector("#webpage");
     var reload = document.getElementById("reload");
     doLayout();
     document.getElementById("location-form").onsubmit = function () {
@@ -130,11 +129,6 @@ onload = function () {
             Tabs.active().webview.reload();
         }
     };
-    reload.addEventListener("webkitAnimationIteration", function () {
-        if (!isLoading) {
-            document.body.classList.remove("loading");
-        }
-    });
 };
 function createWebview() {
     var webview = document.createElement("webview");
@@ -168,9 +162,11 @@ function doLayout() {
 }
 function handleLoadStart(event) {
     document.body.classList.add("loading");
+    document.getElementById("reload").innerHTML = "&#10005";
     isLoading = true;
 }
 function handleLoadStop(event) {
+    document.getElementById("reload").innerHTML = "&#10227";
     isLoading = false;
 }
 function handleLoadCommit(event) {
