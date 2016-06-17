@@ -12,7 +12,7 @@ const BrowserWindow: typeof Electron.BrowserWindow = electron.BrowserWindow;
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
 let mainWindow: Electron.BrowserWindow = null;
-
+const {ipcMain} = require("electron");
 
 
 /**
@@ -35,6 +35,23 @@ function createWindow(): void {
         // when you should delete the corresponding element.
         mainWindow = null;
     });
+    mainWindow.webContents.on("did-finish-load", () => {
+      console.log("sending");
+      mainWindow.webContents.send("TEST", "test");
+     });
+    mainWindow.webContents.session.on("will-download", function (event, item, webContents) {
+    let itemURL: string = item.getURL();
+    if (item.getMimeType() === "application/pdf" && itemURL.indexOf("blob:") !== 0) { // clicking the download button in the viewer opens a blob url, so we don't want to open those in the viewer (since that would make it impossible to download a PDF)
+      event.preventDefault();
+      mainWindow.webContents.send("openPDF", {
+        url: itemURL,
+        event: event,
+        item: item, // as of electron 0.35.1, this is an empty object
+        webContents: webContents
+      });
+    }
+    return true;
+  });
 }
 
 // This method will be called when ELectron has finished

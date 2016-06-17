@@ -9,6 +9,7 @@ var BrowserWindow = electron.BrowserWindow;
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
 var mainWindow = null;
+var ipcMain = require("electron").ipcMain;
 /**
  * Function to create a browser window
  */
@@ -25,6 +26,23 @@ function createWindow() {
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
         mainWindow = null;
+    });
+    mainWindow.webContents.on("did-finish-load", function () {
+        console.log("sending");
+        mainWindow.webContents.send("TEST", "test");
+    });
+    mainWindow.webContents.session.on("will-download", function (event, item, webContents) {
+        var itemURL = item.getURL();
+        if (item.getMimeType() === "application/pdf" && itemURL.indexOf("blob:") !== 0) {
+            event.preventDefault();
+            mainWindow.webContents.send("openPDF", {
+                url: itemURL,
+                event: event,
+                item: item,
+                webContents: webContents
+            });
+        }
+        return true;
     });
 }
 // This method will be called when ELectron has finished

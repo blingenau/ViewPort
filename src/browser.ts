@@ -108,7 +108,9 @@ let Tabs: TabBar = new TabBar();
 
 window.onresize = doLayout;
 let isLoading: boolean = false;
+let ipc: Electron.IpcRenderer = require("electron").ipcRenderer;
 onload = () => {
+
     Tabs.add_tab(new Tab({
         url: "http://athenanet.athenahealth.com"
     }));
@@ -142,6 +144,27 @@ onload = () => {
         }));
     };
 
+
+    ipc.on("openPDF", function (event, filedata) {
+        debugger;
+        let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
+        let PDFurl: string = PDFViewerURL + filedata.url;
+        let hasOpenedPDF: boolean = false;
+
+        Tabs.tabs.forEach(function (tab) {
+            if (tab.url === filedata.url) {
+                navigateTo(tab.webview, PDFurl);
+                hasOpenedPDF = true;
+            }
+        });
+        // open in new tab
+        if (!hasOpenedPDF) {
+            Tabs.add_tab(new Tab({
+                url: PDFurl
+            }));
+        }
+    });
+
     reload.onclick = function () {
         if (isLoading) {
             Tabs.active().webview.stop();
@@ -159,7 +182,6 @@ onload = () => {
 };
 
 function handlePageLoad(event: Event ): void {
-    debugger;
     let tab = Tabs.get(this.tab_id);
 }
 
@@ -181,7 +203,6 @@ function createWebview(): Electron.WebViewElement {
 
 function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolean): void {
     let address: HTMLInputElement = (<HTMLInputElement>document.querySelector("#location"));
-    debugger;
     if (!url) {
         url = "http://athenanet.athenahealth.com";
     }
@@ -212,9 +233,7 @@ function handleLoadStart(event: Event): void {
 }
 
 function handleLoadStop(event: Event): void {
-    debugger;
     isLoading = false;
-    console.log(this);
     let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
     let webview: Electron.WebViewElement = Tabs.active().webview;
     let tab = Tabs.get(webview.getAttribute("tab_id"));
@@ -224,7 +243,6 @@ function handleLoadStop(event: Event): void {
 }
 
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
-    console.log(event.srcElement);
     let webview: Electron.WebViewElement = Tabs.active().webview;
     // address.value = event.url;
     (<HTMLButtonElement>document.querySelector("#back")).disabled = !webview.canGoBack();

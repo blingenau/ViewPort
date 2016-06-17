@@ -3,10 +3,11 @@
 var Tab = (function () {
     function Tab(tab) {
         this.url = tab.url || "",
-            this.id = tab.id || Math.round(Math.random() * 100000000000000000),
+            this.id = tab.id || Math.round(Math.random() * 100000000000000000).toString(),
             this.webview = tab.webview || createWebview();
         this.active = tab.active || true;
         this.webview.src = this.url;
+        this.webview.setAttribute("tab_id", this.id);
     }
     return Tab;
 }());
@@ -15,6 +16,14 @@ var TabBar = (function () {
         this.tabs = [];
         this.active_tab = -1;
     }
+    TabBar.prototype.get = function (id) {
+        for (var index = 0; index < this.size(); index++) {
+            if (this.tabs[index].id === id) {
+                return this.tabs[index];
+            }
+        }
+        return null;
+    };
     TabBar.prototype.size = function () {
         return this.tabs.length;
     };
@@ -34,12 +43,12 @@ var TabBar = (function () {
         this.render();
     };
     TabBar.prototype.remove_tab = function (tab_id) {
-        if (tab_id === void 0) { tab_id = -1; }
+        if (tab_id === void 0) { tab_id = ""; }
         if (this.size() === 0) {
             console.log("Popping from empty TabBar");
             return;
         }
-        if (tab_id === -1) {
+        if (tab_id === "") {
             this.tabs.pop();
             if (this.active_tab === this.size()) {
                 this.active_tab -= 1;
@@ -50,13 +59,15 @@ var TabBar = (function () {
                 return tab.id !== tab_id;
             });
         }
+        // delete webview from webviews 
+        document.getElementById("webviews").removeChild(this.get(tab_id).webview);
         this.render();
     };
     TabBar.prototype.active = function () {
         return this.tabs[this.active_tab];
     };
     TabBar.prototype.activate = function (tab) {
-        var button = document.getElementById(tab.id.toString());
+        var button = document.getElementById(tab.id);
         for (var index = 0; index < this.size(); index++) {
             this.tabs[index].active = this.tabs[index].id === tab.id;
             if (this.tabs[index].active) {
@@ -73,7 +84,7 @@ var TabBar = (function () {
             var tab = this_1.tabs[index];
             button.title = button.innerHTML = tab.url;
             button.className = "tab";
-            button.id = tab.id.toString();
+            button.id = tab.id;
             var click = function () {
                 Tabs.activate(tab);
             };
@@ -95,6 +106,7 @@ var TabBar = (function () {
 var Tabs = new TabBar();
 window.onresize = doLayout;
 var isLoading = false;
+var ipc = require("electron").ipcRenderer;
 onload = function () {
     Tabs.add_tab(new Tab({
         url: "http://athenanet.athenahealth.com"
@@ -102,9 +114,9 @@ onload = function () {
     // let webview: Electron.WebViewElement = <Electron.WebViewElement>document.querySelector("#webpage");
     var reload = document.getElementById("reload");
     doLayout();
-    document.getElementById("location-form").onsubmit = function () {
+    var urlBar = document.getElementById("location-form");
+    urlBar.onsubmit = function () {
         var address = document.querySelector("#location").value;
-        Tabs.active().url = address;
         navigateTo(Tabs.active().webview, address);
         return false;
     };
@@ -122,6 +134,24 @@ onload = function () {
             url: "about:blank"
         }));
     };
+    ipc.on("openPDF", function (event, filedata) {
+        debugger;
+        var PDFViewerURL = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
+        var PDFurl = PDFViewerURL + filedata.url;
+        var hasOpenedPDF = false;
+        Tabs.tabs.forEach(function (tab) {
+            if (tab.url === filedata.url) {
+                navigateTo(tab.webview, PDFurl);
+                hasOpenedPDF = true;
+            }
+        });
+        // open in new tab
+        if (!hasOpenedPDF) {
+            Tabs.add_tab(new Tab({
+                url: PDFurl
+            }));
+        }
+    });
     reload.onclick = function () {
         if (isLoading) {
             Tabs.active().webview.stop();
@@ -136,6 +166,9 @@ onload = function () {
         }
     });
 };
+function handlePageLoad(event) {
+    var tab = Tabs.get(this.tab_id);
+}
 function createWebview() {
     var webview = document.createElement("webview");
     webview.addEventListener("did-start-loading", handleLoadStart);
@@ -143,6 +176,7 @@ function createWebview() {
     webview.addEventListener("did-fail-load", handleFailLoad);
     webview.addEventListener("load-commit", handleLoadCommit);
     webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
+    webview.addEventListener("did-navigate-in-page", handlePageLoad);
     webview.style.display = "flex";
     webview.style.width = "640px";
     webview.style.height = "480px";
@@ -151,7 +185,6 @@ function createWebview() {
 }
 function navigateTo(webview, url, html) {
     var address = document.querySelector("#location");
-    debugger;
     if (!url) {
         url = "http://athenanet.athenahealth.com";
     }
@@ -172,13 +205,16 @@ function handleLoadStart(event) {
 }
 function handleLoadStop(event) {
     isLoading = false;
-}
-function handleLoadCommit(event) {
-    debugger;
-    console.log(event.srcElement);
     var address = document.querySelector("#location");
     var webview = Tabs.active().webview;
-    address.value = event.url;
+    var tab = Tabs.get(webview.getAttribute("tab_id"));
+    tab.url = webview.getAttribute("src");
+    address.value = tab.url;
+    Tabs.render();
+}
+function handleLoadCommit(event) {
+    var webview = Tabs.active().webview;
+    // address.value = event.url;
     document.querySelector("#back").disabled = !webview.canGoBack();
     document.querySelector("#forward").disabled = !webview.canGoForward();
 }
