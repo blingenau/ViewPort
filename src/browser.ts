@@ -224,7 +224,6 @@ function handleLoadStart(event: Event): void {
 }
 
 function handleLoadStop(event: Event): void {
-<<<<<<< HEAD
     isLoading = false;
     let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
     let webview: Electron.WebViewElement = Tabs.active().webview;
@@ -234,17 +233,16 @@ function handleLoadStop(event: Event): void {
     Tabs.render();
 }
 
+/*
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
-=======
     document.getElementById("reload").innerHTML = "&#10227";
     isLoading = false;
 }
-
+*/
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
-    debugger;
+    document.getElementById("reload").innerHTML = "&#10227";
     console.log(event.srcElement);
     let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
->>>>>>> 2fbc5596949b2116efbcf739cf3d1113afbda6b9
     let webview: Electron.WebViewElement = Tabs.active().webview;
 
     address.value = event.url;
