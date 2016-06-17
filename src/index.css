@@ -9,6 +9,24 @@ input {
   outline: none;
 }
 
+#tabs {
+  margin: 0;
+  padding: 0 0 0 4;
+  height: 25px;
+}
+
+button.tab {
+  height: 20px;
+  margin-top: 5px;
+  margin-right: 4px;
+  border-radius: 4px;
+  width: 15%;
+  color: black;
+  background: -webkit-linear-gradient(bottom, #cccccc 0%, #f2f2f2 99%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 #controls {
   padding: 3px;
   border-bottom: solid 1px #ccc;
