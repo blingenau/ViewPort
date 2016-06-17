@@ -1,8 +1,9 @@
 /// <reference path="Definitions/github-electron.d.ts" />
 /// <reference path="Definitions/node.d.ts" />
 
-const electron: Electron.ElectronMainAndRenderer = require("electron");
 
+const electron: Electron.ElectronMainAndRenderer = require("electron");
+const Menu = electron.Menu;
 // Module to control application life.
 const app: Electron.App = electron.app;
 // Module to create a native browser window.
@@ -74,4 +75,62 @@ app.on("activate", () => {
     if (mainWindow === null) {
         createWindow();
     }
+});
+
+let template = [{
+  label: "Extra",
+  submenu: [{
+    label: "System Usage",
+    click: function () {
+    const modalPath = `file://${__dirname}/sysinfo.html`;
+      let win = new BrowserWindow({ width: 400, height: 320 });
+      win.on("closed", function () { win = null; });
+      win.loadURL(modalPath);
+      win.webContents.openDevTools();
+      win.show();
+    }
+    },
+    {
+        label: "Toggle Developer Tools",
+        accelerator: process.platform === "darwin" ? "Alt+Command+I" : "Ctrl+Shift+I",
+        click(item: any, focusedWindow: any) {
+          if (focusedWindow)
+            focusedWindow.webContents.toggleDevTools();
+        }
+      }]
+}];
+
+function addUpdateMenuItems (items: any, position: any) {
+  const version = electron.app.getVersion();
+  let updateItems = [{
+    label: `Version ${version}`,
+    enabled: false
+  }, {
+    label: "Checking for Update",
+    enabled: false,
+    key: "checkingForUpdate"
+  }, {
+    label: "Check for Update",
+    visible: false,
+    key: "checkForUpdate",
+    click: function () {
+      require("electron").autoUpdater.checkForUpdates();
+    }
+  }, {
+    label: "Restart and Install Update",
+    enabled: true,
+    visible: false,
+    key: "restartToUpdate",
+    click: function () {
+      require("electron").autoUpdater.quitAndInstall();
+    }
+  }];
+
+  items.splice.apply(items, [position, 0].concat(updateItems));
+}
+
+
+app.on("ready", () => {
+    const menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
 });

@@ -2,7 +2,8 @@
     "files": [
         "src/main.ts",
         "src/browser.ts",
-        "src/tabs.ts"
+        "src/tabs.ts",
+        "src/sys.ts"
     ],
     "compilerOptions": {
         "noImplicitAny": true,
