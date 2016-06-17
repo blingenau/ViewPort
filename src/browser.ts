@@ -210,5 +210,7 @@ function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequest
 }
 
 function handleFailLoad(event: Electron.WebViewElement.DidFailLoadEvent): void {
-    navigateTo(Tabs.active().webview, "file://" + __dirname + "/error.html", true);
+    if (event.errorCode !== -3) {
+        navigateTo(Tabs.active().webview, "file://" + __dirname + "/error.html", true);
+    }
 }

@@ -71,5 +71,7 @@ function handleLoadRedirect(event) {
     document.getElementById("location").value = event.newURL;
 }
 function handleFailLoad(event) {
-    navigateTo("file://" + __dirname + "/error.html", true);
+    if (event.errorCode !== -3) {
+        navigateTo("file://" + __dirname + "/error.html", true);
+    }
 }
