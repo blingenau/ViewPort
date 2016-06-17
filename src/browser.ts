@@ -2,15 +2,16 @@
 /// <reference path="Definitions/node.d.ts" />
 class Tab {
     url: string;
-    id: number;
+    id: string;
     active: boolean;
     webview: Electron.WebViewElement;
     constructor (tab: any) {
         this.url = tab.url || "",
-        this.id = tab.id || Math.round(Math.random() * 100000000000000000),
+        this.id = tab.id || Math.round(Math.random() * 100000000000000000).toString(),
         this.webview = tab.webview || createWebview();
         this.active = tab.active || true;
         this.webview.src = this.url;
+        this.webview.setAttribute("tab_id", this.id);
       }
   }
 class TabBar {
@@ -19,6 +20,14 @@ class TabBar {
     constructor() {
         this.tabs = [];
         this.active_tab = -1 ;
+    }
+    public get(id: string): Tab {
+        for (let index = 0; index < this.size(); index++) {
+            if (this.tabs[index].id === id) {
+                return this.tabs[index];
+            }
+        }
+        return null;
     }
     public size(): number {
         return this.tabs.length;
@@ -37,12 +46,12 @@ class TabBar {
         }
         this.render();
     }
-    public remove_tab(tab_id: number = -1) {
+    public remove_tab(tab_id: string = "") {
         if (this.size() === 0) {
             console.log("Popping from empty TabBar");
             return;
         }
-        if (tab_id === -1) {
+        if (tab_id === "") {
             this.tabs.pop();
             if (this.active_tab === this.size()) {
                 this.active_tab -= 1;
@@ -59,7 +68,7 @@ class TabBar {
         return this.tabs[this.active_tab];
     }
     public activate(tab: Tab): void {
-        let button: HTMLElement = document.getElementById(tab.id.toString());
+        let button: HTMLElement = document.getElementById(tab.id);
         for (let index = 0; index < this.size(); index++) {
             this.tabs[index].active = this.tabs[index].id === tab.id;
             if (this.tabs[index].active) {
@@ -75,7 +84,7 @@ class TabBar {
             let button: HTMLButtonElement = document.createElement("button");
             let tab: Tab = this.tabs[index];
             button.title = tab.url;
-            button.id = tab.id.toString();
+            button.id = tab.id;
             let click = function () {
                 Tabs.activate(tab);
             };
@@ -102,10 +111,10 @@ onload = () => {
     let reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload");
 
     doLayout();
+    let urlBar: HTMLElement = document.getElementById("location-form");
 
-    document.getElementById("location-form").onsubmit = (): boolean => {
+    urlBar.onsubmit = (): boolean => {
         let address: string = (<HTMLInputElement>document.querySelector("#location")).value;
-        Tabs.active().url = address;
         navigateTo(Tabs.active().webview, address);
         return false;
     };
@@ -144,6 +153,11 @@ onload = () => {
 
 };
 
+function handlePageLoad(event: Event ): void {
+    debugger;
+    let tab = Tabs.get(this.tab_id);
+}
+
 function createWebview(): Electron.WebViewElement {
     let webview: Electron.WebViewElement = document.createElement("webview");
     webview.addEventListener("did-start-loading", handleLoadStart);
@@ -151,10 +165,12 @@ function createWebview(): Electron.WebViewElement {
     webview.addEventListener("did-fail-load", handleFailLoad);
     webview.addEventListener("load-commit", handleLoadCommit);
     webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
+    webview.addEventListener("did-navigate-in-page", handlePageLoad);
     webview.style.display = "flex";
     webview.style.width = "640px";
     webview.style.height = "480px";
     document.getElementById("webviews").appendChild(webview);
+
     return webview;
 }
 
@@ -191,16 +207,21 @@ function handleLoadStart(event: Event): void {
 }
 
 function handleLoadStop(event: Event): void {
+    debugger;
     isLoading = false;
+    console.log(this);
+    let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
+    let webview: Electron.WebViewElement = Tabs.active().webview;
+    let tab = Tabs.get(webview.getAttribute("tab_id"));
+    tab.url = webview.getAttribute("src");
+    address.value = tab.url;
+    Tabs.render();
 }
 
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
-    debugger;
     console.log(event.srcElement);
-    let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
     let webview: Electron.WebViewElement = Tabs.active().webview;
-
-    address.value = event.url;
+    // address.value = event.url;
     (<HTMLButtonElement>document.querySelector("#back")).disabled = !webview.canGoBack();
     (<HTMLButtonElement>document.querySelector("#forward")).disabled = !webview.canGoForward();
 }
