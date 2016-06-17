@@ -12,23 +12,7 @@ const BrowserWindow: typeof Electron.BrowserWindow = electron.BrowserWindow;
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
 let mainWindow: Electron.BrowserWindow = null;
-class Tab {
-    url: string;
-    active: boolean;
-    id: number;
-    webview: Electron.WebViewElement;
-    constructor (tab: any) {
-        this.url = tab.url || "",
-        this.active = tab.active || false,
-        this.id = tab.id || Math.round(Math.random() * 100000000000000000),
-        this.webview = tab.webview || null;
-      }
-  }
 
-let Tabs: Tab[] = [new Tab({
-    url: "http://athenanet.athenahealth.com",
-    active: true
-})];
 
 
 /**

@@ -9,19 +9,6 @@ var BrowserWindow = electron.BrowserWindow;
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
 var mainWindow = null;
-var Tab = (function () {
-    function Tab(tab) {
-        this.url = tab.url || "",
-            this.active = tab.active || false,
-            this.id = tab.id || Math.round(Math.random() * 100000000000000000),
-            this.webview = tab.webview || null;
-    }
-    return Tab;
-}());
-var Tabs = [new Tab({
-        url: "http://athenanet.athenahealth.com",
-        active: true
-    })];
 /**
  * Function to create a browser window
  */
