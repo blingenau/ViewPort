@@ -22,7 +22,10 @@ var TabBar = (function () {
                 return this.tabs[index];
             }
         }
+<<<<<<< HEAD
         return null;
+=======
+>>>>>>> 2fbc5596949b2116efbcf739cf3d1113afbda6b9
     };
     TabBar.prototype.size = function () {
         return this.tabs.length;
@@ -59,7 +62,11 @@ var TabBar = (function () {
                 return tab.id !== tab_id;
             });
         }
+<<<<<<< HEAD
         // delete webview from webviews 
+=======
+        // delete webview from webviews
+>>>>>>> 2fbc5596949b2116efbcf739cf3d1113afbda6b9
         document.getElementById("webviews").removeChild(this.get(tab_id).webview);
         this.render();
     };
@@ -80,11 +87,17 @@ var TabBar = (function () {
         var tabs = document.getElementById("tabs");
         tabs.innerHTML = "";
         var _loop_1 = function(index) {
-            var button = document.createElement("button");
+            var button = document.createElement("button"), xButton = document.createElement("button");
             var tab = this_1.tabs[index];
             button.title = button.innerHTML = tab.url;
             button.className = "tab";
             button.id = tab.id;
+<<<<<<< HEAD
+=======
+            // xButton.innerHTML = "&#10005";
+            // xButton.onclick = () => { this.remove_tab(button.id); };
+            // button.appendChild(xButton);
+>>>>>>> 2fbc5596949b2116efbcf739cf3d1113afbda6b9
             var click = function () {
                 Tabs.activate(tab);
             };
@@ -111,10 +124,12 @@ onload = function () {
     Tabs.add_tab(new Tab({
         url: "http://athenanet.athenahealth.com"
     }));
-    // let webview: Electron.WebViewElement = <Electron.WebViewElement>document.querySelector("#webpage");
-    var reload = document.getElementById("reload");
+    var reload = document.getElementById("reload"), urlBar = document.getElementById("location-form");
     doLayout();
+<<<<<<< HEAD
     var urlBar = document.getElementById("location-form");
+=======
+>>>>>>> 2fbc5596949b2116efbcf739cf3d1113afbda6b9
     urlBar.onsubmit = function () {
         var address = document.querySelector("#location").value;
         navigateTo(Tabs.active().webview, address);
@@ -160,13 +175,12 @@ onload = function () {
             Tabs.active().webview.reload();
         }
     };
-    reload.addEventListener("webkitAnimationIteration", function () {
-        if (!isLoading) {
-            document.body.classList.remove("loading");
-        }
-    });
 };
 function handlePageLoad(event) {
+<<<<<<< HEAD
+=======
+    debugger;
+>>>>>>> 2fbc5596949b2116efbcf739cf3d1113afbda6b9
     var tab = Tabs.get(this.tab_id);
 }
 function createWebview() {
@@ -201,9 +215,11 @@ function doLayout() {
 }
 function handleLoadStart(event) {
     document.body.classList.add("loading");
+    document.getElementById("reload").innerHTML = "&#10005";
     isLoading = true;
 }
 function handleLoadStop(event) {
+    document.getElementById("reload").innerHTML = "&#10227";
     isLoading = false;
     var address = document.querySelector("#location");
     var webview = Tabs.active().webview;
