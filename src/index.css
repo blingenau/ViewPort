@@ -176,7 +176,7 @@ compared to the back/forward buttons */
 
 #sad-webview,
 webview {
-  position: absolute;
+/*  position: absolute;*/
   bottom: 0;
   left: 0;
 }
