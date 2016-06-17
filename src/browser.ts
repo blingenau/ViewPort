@@ -62,6 +62,8 @@ class TabBar {
                 return tab.id !== tab_id;
             });
         }
+        // delete webview from webviews 
+        document.getElementById("webviews").removeChild(this.get(tab_id).webview);
         this.render();
     }
     public active(): Tab {
