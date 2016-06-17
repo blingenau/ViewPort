@@ -2,15 +2,16 @@
 /// <reference path="Definitions/node.d.ts" />
 class Tab {
     url: string;
-    id: number;
+    id: string;
     active: boolean;
     webview: Electron.WebViewElement;
     constructor (tab: any) {
         this.url = tab.url || "",
-        this.id = tab.id || Math.round(Math.random() * 100000000000000000),
+        this.id = tab.id || Math.round(Math.random() * 100000000000000000).toString(),
         this.webview = tab.webview || createWebview();
         this.active = tab.active || true;
         this.webview.src = this.url;
+        this.webview.setAttribute("tab_id", this.id);
       }
   }
 class TabBar {
@@ -19,6 +20,13 @@ class TabBar {
     constructor() {
         this.tabs = [];
         this.active_tab = -1 ;
+    }
+    public get(id: string): Tab {
+        for (let index: number = 0; index < this.size(); index++) {
+            if (this.tabs[index].id === id) {
+                return this.tabs[index];
+            }
+        }
     }
     public size(): number {
         return this.tabs.length;
@@ -37,12 +45,12 @@ class TabBar {
         }
         this.render();
     }
-    public remove_tab(tab_id: number = -1) {
+    public remove_tab(tab_id: string = "") {
         if (this.size() === 0) {
             console.log("Popping from empty TabBar");
             return;
         }
-        if (tab_id === -1) {
+        if (tab_id === "") {
             this.tabs.pop();
             if (this.active_tab === this.size()) {
                 this.active_tab -= 1;
@@ -53,13 +61,15 @@ class TabBar {
                 return tab.id !== tab_id;
             });
         }
+        // delete webview from webviews
+        document.getElementById("webviews").removeChild(this.get(tab_id).webview);
         this.render();
     }
     public active(): Tab {
         return this.tabs[this.active_tab];
     }
     public activate(tab: Tab): void {
-        let button: HTMLElement = document.getElementById(tab.id.toString());
+        let button: HTMLElement = document.getElementById(tab.id);
         for (let index = 0; index < this.size(); index++) {
             this.tabs[index].active = this.tabs[index].id === tab.id;
             if (this.tabs[index].active) {
@@ -72,15 +82,19 @@ class TabBar {
         let tabs: HTMLElement = document.getElementById("tabs");
         tabs.innerHTML = "";
         for (let index = 0; index < this.size(); index++) {
-            let button: HTMLButtonElement = document.createElement("button");
+            let button: HTMLButtonElement = document.createElement("button"),
+                xButton: HTMLButtonElement = document.createElement("button");
             let tab: Tab = this.tabs[index];
             button.title = button.innerHTML = tab.url;
             button.className = "tab";
-            button.id = tab.id.toString();
+            button.id = tab.id;
+            // xButton.innerHTML = "&#10005";
+            // xButton.onclick = () => { this.remove_tab(button.id); };
+            // button.appendChild(xButton);
             let click = function () {
                 Tabs.activate(tab);
             };
-            button.onclick = function () { click(); };
+            button.onclick = () => { click(); };
             tabs.appendChild(button);
             if (!tab.active) {
                 tab.webview.style.width = "0px";
@@ -100,11 +114,12 @@ onload = () => {
         url: "http://athenanet.athenahealth.com"
     }));
 
-    let reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload");
+    let reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload"),
+        urlBar: HTMLFormElement = <HTMLFormElement>document.getElementById("location-form");
 
     doLayout();
 
-    document.getElementById("location-form").onsubmit = (): boolean => {
+    urlBar.onsubmit = (): boolean => {
         let address: string = (<HTMLInputElement>document.querySelector("#location")).value;
         Tabs.active().url = address;
         navigateTo(Tabs.active().webview, address);
@@ -138,6 +153,11 @@ onload = () => {
     };
 };
 
+function handlePageLoad(event: Event): void {
+    debugger;
+    let tab = Tabs.get(this.tab_id);
+}
+
 function createWebview(): Electron.WebViewElement {
     let webview: Electron.WebViewElement = document.createElement("webview");
     webview.addEventListener("did-start-loading", handleLoadStart);
@@ -145,6 +165,7 @@ function createWebview(): Electron.WebViewElement {
     webview.addEventListener("did-fail-load", handleFailLoad);
     webview.addEventListener("load-commit", handleLoadCommit);
     webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
+    webview.addEventListener("did-navigate-in-page", handlePageLoad);
     webview.style.display = "flex";
     webview.style.width = "640px";
     webview.style.height = "480px";
