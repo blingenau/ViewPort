@@ -4,6 +4,7 @@ var Tab = (function () {
     function Tab(tab) {
         this.url = tab.url || "",
             this.id = tab.id || Math.round(Math.random() * 100000000000000000).toString(),
+            this.title = tab.title || "",
             this.webview = tab.webview || createWebview();
         this.active = tab.active || true;
         this.webview.src = this.url;
@@ -82,7 +83,8 @@ var TabBar = (function () {
         var _loop_1 = function(index) {
             var button = document.createElement("button"), xButton = document.createElement("button");
             var tab = this_1.tabs[index];
-            button.title = button.innerHTML = tab.url;
+            // Make the button title the name of the website not URL 
+            button.title = button.innerHTML = tab.title;
             button.className = "tab";
             button.id = tab.id;
             // xButton.innerHTML = "&#10005";
@@ -203,6 +205,7 @@ function handleLoadStop(event) {
     var webview = Tabs.active().webview;
     var tab = Tabs.get(webview.getAttribute("tab_id"));
     tab.url = webview.getAttribute("src");
+    tab.title = webview.getTitle();
     address.value = tab.url;
     Tabs.render();
 }
