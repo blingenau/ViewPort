@@ -50,15 +50,15 @@ class TabBar {
             console.log("Popping from empty TabBar");
             return;
         }
-        
+        let tab: Tab = null;
         if (tab_id === "") {
-            this.tabs.pop();
+            tab = this.tabs.pop();
             if (this.active_tab === this.size()) {
                 this.active_tab -= 1;
             }
         }
         else {
-            this.tabs.filter(function (tab: Tab) {
+            this.tabs = this.tabs.filter(function (tab: Tab) {
                 return tab.id !== tab_id;
             });
         }
