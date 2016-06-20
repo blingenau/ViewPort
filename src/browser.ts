@@ -50,6 +50,7 @@ class TabBar {
             console.log("Popping from empty TabBar");
             return;
         }
+        
         if (tab_id === "") {
             this.tabs.pop();
             if (this.active_tab === this.size()) {
