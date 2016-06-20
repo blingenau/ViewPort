@@ -85,6 +85,17 @@ var template = [{
                     if (focusedWindow)
                         focusedWindow.webContents.toggleDevTools();
                 }
+            },
+            {
+                label: "Fileupload",
+                click: function () {
+                    var modalPath = "file://" + __dirname + "/fileupload.html";
+                    var win2 = new BrowserWindow({ width: 1000, height: 1000 });
+                    win2.on("closed", function () { win2 = null; });
+                    win2.loadURL(modalPath);
+                    win2.webContents.openDevTools();
+                    win2.show();
+                }
             }]
     }];
 function addUpdateMenuItems(items, position) {

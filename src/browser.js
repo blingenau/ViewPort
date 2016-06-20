@@ -22,10 +22,6 @@ var TabBar = (function () {
                 return this.tabs[index];
             }
         }
-<<<<<<< HEAD
-        return null;
-=======
->>>>>>> 2fbc5596949b2116efbcf739cf3d1113afbda6b9
     };
     TabBar.prototype.size = function () {
         return this.tabs.length;
@@ -51,22 +47,19 @@ var TabBar = (function () {
             console.log("Popping from empty TabBar");
             return;
         }
+        var tab = null;
         if (tab_id === "") {
-            this.tabs.pop();
+            tab = this.tabs.pop();
             if (this.active_tab === this.size()) {
                 this.active_tab -= 1;
             }
         }
         else {
-            this.tabs.filter(function (tab) {
+            this.tabs = this.tabs.filter(function (tab) {
                 return tab.id !== tab_id;
             });
         }
-<<<<<<< HEAD
-        // delete webview from webviews 
-=======
         // delete webview from webviews
->>>>>>> 2fbc5596949b2116efbcf739cf3d1113afbda6b9
         document.getElementById("webviews").removeChild(this.get(tab_id).webview);
         this.render();
     };
@@ -92,12 +85,9 @@ var TabBar = (function () {
             button.title = button.innerHTML = tab.url;
             button.className = "tab";
             button.id = tab.id;
-<<<<<<< HEAD
-=======
             // xButton.innerHTML = "&#10005";
             // xButton.onclick = () => { this.remove_tab(button.id); };
             // button.appendChild(xButton);
->>>>>>> 2fbc5596949b2116efbcf739cf3d1113afbda6b9
             var click = function () {
                 Tabs.activate(tab);
             };
@@ -126,12 +116,9 @@ onload = function () {
     }));
     var reload = document.getElementById("reload"), urlBar = document.getElementById("location-form");
     doLayout();
-<<<<<<< HEAD
-    var urlBar = document.getElementById("location-form");
-=======
->>>>>>> 2fbc5596949b2116efbcf739cf3d1113afbda6b9
     urlBar.onsubmit = function () {
         var address = document.querySelector("#location").value;
+        Tabs.active().url = address;
         navigateTo(Tabs.active().webview, address);
         return false;
     };
@@ -176,13 +163,6 @@ onload = function () {
         }
     };
 };
-function handlePageLoad(event) {
-<<<<<<< HEAD
-=======
-    debugger;
->>>>>>> 2fbc5596949b2116efbcf739cf3d1113afbda6b9
-    var tab = Tabs.get(this.tab_id);
-}
 function createWebview() {
     var webview = document.createElement("webview");
     webview.addEventListener("did-start-loading", handleLoadStart);
@@ -190,7 +170,6 @@ function createWebview() {
     webview.addEventListener("did-fail-load", handleFailLoad);
     webview.addEventListener("load-commit", handleLoadCommit);
     webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
-    webview.addEventListener("did-navigate-in-page", handlePageLoad);
     webview.style.display = "flex";
     webview.style.width = "640px";
     webview.style.height = "480px";
@@ -219,7 +198,6 @@ function handleLoadStart(event) {
     isLoading = true;
 }
 function handleLoadStop(event) {
-    document.getElementById("reload").innerHTML = "&#10227";
     isLoading = false;
     var address = document.querySelector("#location");
     var webview = Tabs.active().webview;
@@ -228,9 +206,18 @@ function handleLoadStop(event) {
     address.value = tab.url;
     Tabs.render();
 }
+/*
+function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
+    document.getElementById("reload").innerHTML = "&#10227";
+    isLoading = false;
+}
+*/
 function handleLoadCommit(event) {
+    document.getElementById("reload").innerHTML = "&#10227";
+    console.log(event.srcElement);
+    var address = document.querySelector("#location");
     var webview = Tabs.active().webview;
-    // address.value = event.url;
+    address.value = event.url;
     document.querySelector("#back").disabled = !webview.canGoBack();
     document.querySelector("#forward").disabled = !webview.canGoForward();
 }
