@@ -35,10 +35,7 @@ function createWindow(): void {
         // when you should delete the corresponding element.
         mainWindow = null;
     });
-    mainWindow.webContents.on("did-finish-load", () => {
-      console.log("sending");
-      mainWindow.webContents.send("TEST", "test");
-     });
+
     mainWindow.webContents.session.on("will-download", function (event, item, webContents) {
     let itemURL: string = item.getURL();
     if (item.getMimeType() === "application/pdf" && itemURL.indexOf("blob:") !== 0) { // clicking the download button in the viewer opens a blob url, so we don't want to open those in the viewer (since that would make it impossible to download a PDF)

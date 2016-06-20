@@ -1,5 +1,17 @@
 /// <reference path="Definitions/github-electron.d.ts" />
 /// <reference path="Definitions/node.d.ts" />
+
+/*
+    Class Tab: 
+    
+    Description: 
+        Organizes information needed to display a tab and webview
+    Properties:
+        url: string - url of the tab
+        id: string - random unique ID for the tab
+        active: boolean - is the tab the current active tab on screen
+        webview: Electron.WebViewElement - webview element of tab
+*/
 class Tab {
     url: string;
     id: string;
@@ -14,6 +26,15 @@ class Tab {
         this.webview.setAttribute("tab_id", this.id);
       }
   }
+/*
+    Class TabBar: 
+    
+    Description: 
+        Organizes Tab objects and handles displaying them in some way
+    Properties:
+        tabs: Tab[] - list of Tab objects (see Tab class)
+        active_tab: number - index of tab in the list that is the active tab 
+*/
 class TabBar {
     tabs: Tab[];
     active_tab: number;
@@ -21,16 +42,46 @@ class TabBar {
         this.tabs = [];
         this.active_tab = -1 ;
     }
+    /* 
+        Function: TabBar.get(id: string): Tab
+        
+        Description:
+            gets a Tab from within the list with id matching input
+        
+        Arguments: 
+            id: string - id of tab to return
+
+        Return Value:
+            Tab object matching id input if found, else null
+    */
     public get(id: string): Tab {
         for (let index: number = 0; index < this.size(); index++) {
             if (this.tabs[index].id === id) {
                 return this.tabs[index];
             }
         }
+        return null;
     }
+    /*
+        Function: TabBar.size()
+        returns number of tabs currently in the TabBar
+    */
     public size(): number {
         return this.tabs.length;
     }
+    /*
+        Function: TabBar.add_tab(tab: Tab, background: boolean = false): void
+
+        Description:
+            pushes a Tab into list of tabs
+        
+        Arguments:
+            tab: Tab - Tab object to insert 
+            background: boolean - if true open in background (not active) - default false
+        
+        Return Value:
+            none
+    */
     public add_tab(tab: Tab, background: boolean = false): void {
         this.tabs.push(tab);
         if (this.active_tab === -1) {
@@ -45,30 +96,70 @@ class TabBar {
         }
         this.render();
     }
-    public remove_tab(tab_id: string = "") {
+
+    /* 
+        Function: TabBar.remove_tab(tab_id: string): boolean
+
+        Description: 
+            Removes a tab matching tab_id input.
+        
+        Arguments: 
+            tab_id: string - tab_id to find and remove tab
+        
+        Return Value:
+            returns remove state (true is good, false means TabBar is empty (closed) or error)
+    */
+    // 
+    public remove_tab(tab_id: string): boolean {
         if (this.size() === 0) {
+            // this should not happen
             console.log("Popping from empty TabBar");
-            return;
+            return false;
         }
-        let tab: Tab = null;
-        if (tab_id === "") {
-            tab = this.tabs.pop();
-            if (this.active_tab === this.size()) {
-                this.active_tab -= 1;
+
+        let result: number = -1;
+        for (let index = 0; index < this.size(); index++) {
+            if (this.tabs[index].id === tab_id) {
+                result = index;
+                break;
             }
         }
-        else {
-            this.tabs = this.tabs.filter(function (tab: Tab) {
-                return tab.id !== tab_id;
-            });
+        if (result > -1) {
+            let tab: Tab = this.tabs.splice(result, 1)[0];
+            document.getElementById("webviews").removeChild(tab.webview);
+            if (this.size() === 0) {
+                return false;
+            }
+            if (tab.active) {
+                // tab was active, activate another.
+                this.activate(this.tabs[Math.min(result, this.size() - 1)]);
+            }
+            else {
+                this.render();
+            }
+            return true;
         }
-        // delete webview from webviews
-        document.getElementById("webviews").removeChild(this.get(tab_id).webview);
-        this.render();
+        return false;
     }
+    /* 
+        Function: TabBar.active(): Tab
+        returns active tab within TabBar
+    */
     public active(): Tab {
         return this.tabs[this.active_tab];
     }
+    /*
+        Function: TabBar.activate(tab: Tab): void 
+
+        Description:
+            activate the given tab, and set all other tabs in TabBar to inactive
+
+        Arguments:
+            tab: Tab - Tab object ot activate
+        
+        Return value:
+            none
+    */
     public activate(tab: Tab): void {
         let button: HTMLElement = document.getElementById(tab.id);
         for (let index = 0; index < this.size(); index++) {
@@ -77,8 +168,21 @@ class TabBar {
                 this.active_tab = index;
             }
         }
-        this.render();
     }
+
+    /*
+        Function: TabBar.render(): void 
+
+        Description:
+            Handles the rendering of multiple tabs and setting up tab buttons.
+            Currently assigns an on-click call to global Tabs variable. 
+
+        Arguments: 
+            none
+        
+        Return Value:
+            none
+    */
     public render(): void {
         let tabs: HTMLElement = document.getElementById("tabs");
         tabs.innerHTML = "";
@@ -94,6 +198,7 @@ class TabBar {
             // button.appendChild(xButton);
             let click = function () {
                 Tabs.activate(tab);
+                Tabs.render();
             };
             button.onclick = () => { click(); };
             tabs.appendChild(button);
