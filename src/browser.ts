@@ -136,7 +136,9 @@ class TabBar {
                 this.activate(this.tabs[Math.min(result, this.size() - 1)]);
             }
             else {
-                this.render();
+                if (result < this.active_tab) {
+                    this.active_tab--;
+                }
             }
             return true;
         }
@@ -178,22 +180,39 @@ class TabBar {
         let tabs: HTMLElement = document.getElementById("tabs");
         tabs.innerHTML = "";
         for (let index = 0; index < this.size(); index++) {
-            let button: HTMLButtonElement = document.createElement("button"),
-                xButton: HTMLButtonElement = document.createElement("button");
-            let tab: Tab = this.tabs[index];
+            let tabDiv: HTMLDivElement = document.createElement("div"),
+                tabTitle: HTMLDivElement = document.createElement("div"),
+                tabFavicon: HTMLDivElement = document.createElement("div"),
+                tabClose: HTMLDivElement = document.createElement("div"),
+                xButton: HTMLButtonElement = document.createElement("button"),
+                tab: Tab = this.tabs[index];
+
+            tabDiv.className = "chrome-tab";
+            tabDiv.id = tab.id;
+
+            tabTitle.title = tabTitle.innerHTML = tab.title;
+            tabTitle.className = "chrome-tab-title";
+            tabClose.className = "chrome-tab-close";
+            tabClose.onclick = () => {
+                Tabs.remove_tab(tabDiv.id);
+                Tabs.render();
+            };
+
             // Make the button title the name of the website not URL 
-            button.title = button.innerHTML = tab.title;
-            button.className = "tab";
-            button.id = tab.id;
-            // xButton.innerHTML = "&#10005";
-            // xButton.onclick = () => { this.remove_tab(button.id); };
-            // button.appendChild(xButton);
+
+            // tabDiv.title = tabDiv.innerHTML = tab.title;
+
+            tabDiv.appendChild(tabFavicon); tabDiv.appendChild(tabTitle); tabDiv.appendChild(tabClose);
+            // xButton.innerHTML = "&#215";
+            // xButton.onclick = () => { Tabs.remove_tab(tabDiv.id); };
+            // tabDiv.appendChild(xButton);
             let click = function () {
                 Tabs.activate(tab);
                 Tabs.render();
+                tabSwitch();
             };
-            button.onclick = () => { click(); };
-            tabs.appendChild(button);
+            tabDiv.onclick = () => { click(); };
+            tabs.appendChild(tabDiv);
             if (!tab.active) {
                 tab.webview.style.width = "0px";
                 tab.webview.style.height = "0px";
@@ -358,4 +377,28 @@ function handleFailLoad(event: Electron.WebViewElement.DidFailLoadEvent): void {
     if (event.errorCode !== -3) {
         navigateTo(Tabs.active().webview, "file://" + __dirname + "/error.html", true);
     }
+}
+
+/**
+
+ * Actions to happen upon a context switch from Tab to Tab.
+
+ */
+
+function tabSwitch(): void {
+    let active: Electron.WebViewElement = Tabs.active().webview;
+
+    // Re-evaluate the back/forward navigation buttons based on new active Tab
+    (<HTMLButtonElement>document.querySelector("#back")).disabled = !active.canGoBack();
+    (<HTMLButtonElement>document.querySelector("#forward")).disabled = !active.canGoForward();
+
+    document.getElementById("back").onclick = function () {
+        active.goBack();
+    };
+
+    document.getElementById("forward").onclick = function () {
+        active.goForward();
+    };
+
+    (<HTMLInputElement>document.getElementById("location")).value = Tabs.active().webview.getURL();
 }
