@@ -1,5 +1,16 @@
 /// <reference path="Definitions/github-electron.d.ts" />
 /// <reference path="Definitions/node.d.ts" />
+/*
+    Class Tab:
+    
+    Description:
+        Organizes information needed to display a tab and webview
+    Properties:
+        url: string - url of the tab
+        id: string - random unique ID for the tab
+        active: boolean - is the tab the current active tab on screen
+        webview: Electron.WebViewElement - webview element of tab
+*/
 var Tab = (function () {
     function Tab(tab) {
         this.url = tab.url || "",
@@ -12,21 +23,60 @@ var Tab = (function () {
     }
     return Tab;
 }());
+/*
+    Class TabBar:
+    
+    Description:
+        Organizes Tab objects and handles displaying them in some way
+    Properties:
+        tabs: Tab[] - list of Tab objects (see Tab class)
+        active_tab: number - index of tab in the list that is the active tab
+*/
 var TabBar = (function () {
     function TabBar() {
         this.tabs = [];
         this.active_tab = -1;
     }
+    /*
+        Function: TabBar.get(id: string): Tab
+        
+        Description:
+            gets a Tab from within the list with id matching input
+        
+        Arguments:
+            id: string - id of tab to return
+
+        Return Value:
+            Tab object matching id input if found, else null
+    */
     TabBar.prototype.get = function (id) {
         for (var index = 0; index < this.size(); index++) {
             if (this.tabs[index].id === id) {
                 return this.tabs[index];
             }
         }
+        return null;
     };
+    /*
+        Function: TabBar.size()
+        returns number of tabs currently in the TabBar
+    */
     TabBar.prototype.size = function () {
         return this.tabs.length;
     };
+    /*
+        Function: TabBar.add_tab(tab: Tab, background: boolean = false): void
+
+        Description:
+            pushes a Tab into list of tabs
+        
+        Arguments:
+            tab: Tab - Tab object to insert
+            background: boolean - if true open in background (not active) - default false
+        
+        Return Value:
+            none
+    */
     TabBar.prototype.add_tab = function (tab, background) {
         if (background === void 0) { background = false; }
         this.tabs.push(tab);
@@ -42,31 +92,70 @@ var TabBar = (function () {
         }
         this.render();
     };
+    /*
+        Function: TabBar.remove_tab(tab_id: string): boolean
+
+        Description:
+            Removes a tab matching tab_id input.
+        
+        Arguments:
+            tab_id: string - tab_id to find and remove tab
+        
+        Return Value:
+            returns remove state (true is good, false means TabBar is empty (closed) or error)
+    */
+    // 
     TabBar.prototype.remove_tab = function (tab_id) {
-        if (tab_id === void 0) { tab_id = ""; }
         if (this.size() === 0) {
+            // this should not happen
             console.log("Popping from empty TabBar");
-            return;
+            return false;
         }
-        var tab = null;
-        if (tab_id === "") {
-            tab = this.tabs.pop();
-            if (this.active_tab === this.size()) {
-                this.active_tab -= 1;
+        var result = -1;
+        for (var index = 0; index < this.size(); index++) {
+            if (this.tabs[index].id === tab_id) {
+                result = index;
+                break;
             }
         }
-        else {
-            this.tabs = this.tabs.filter(function (tab) {
-                return tab.id !== tab_id;
-            });
+        if (result > -1) {
+            var tab = this.tabs.splice(result, 1)[0];
+            document.getElementById("webviews").removeChild(tab.webview);
+            if (this.size() === 0) {
+                return false;
+            }
+            if (tab.active) {
+                // tab was active, activate another.
+                this.activate(this.tabs[Math.min(result, this.size() - 1)]);
+            }
+            else {
+                if (result < this.active_tab) {
+                    this.active_tab--;
+                }
+            }
+            return true;
         }
-        // delete webview from webviews
-        document.getElementById("webviews").removeChild(this.get(tab_id).webview);
-        this.render();
+        return false;
     };
+    /*
+        Function: TabBar.active(): Tab
+        returns active tab within TabBar
+    */
     TabBar.prototype.active = function () {
         return this.tabs[this.active_tab];
     };
+    /*
+        Function: TabBar.activate(tab: Tab): void
+
+        Description:
+            activate the given tab, and set all other tabs in TabBar to inactive
+
+        Arguments:
+            tab: Tab - Tab object ot activate
+        
+        Return value:
+            none
+    */
     TabBar.prototype.activate = function (tab) {
         var button = document.getElementById(tab.id);
         for (var index = 0; index < this.size(); index++) {
@@ -75,26 +164,49 @@ var TabBar = (function () {
                 this.active_tab = index;
             }
         }
-        this.render();
     };
+    /*
+        Function: TabBar.render(): void
+
+        Description:
+            Handles the rendering of multiple tabs and setting up tab buttons.
+            Currently assigns an on-click call to global Tabs variable.
+
+        Arguments:
+            none
+        
+        Return Value:
+            none
+    */
     TabBar.prototype.render = function () {
         var tabs = document.getElementById("tabs");
         tabs.innerHTML = "";
         var _loop_1 = function(index) {
-            var button = document.createElement("button"), xButton = document.createElement("button");
-            var tab = this_1.tabs[index];
+            var tabDiv = document.createElement("div"), tabTitle = document.createElement("div"), tabFavicon = document.createElement("div"), tabClose = document.createElement("div"), xButton = document.createElement("button"), tab = this_1.tabs[index];
+            tabDiv.className = "chrome-tab";
+            tabDiv.id = tab.id;
+            tabTitle.title = tabTitle.innerHTML = tab.title;
+            tabTitle.className = "chrome-tab-title";
+            tabClose.className = "chrome-tab-close";
+            tabClose.onclick = function () {
+                Tabs.remove_tab(tabDiv.id);
+                Tabs.render();
+            };
             // Make the button title the name of the website not URL 
-            button.title = button.innerHTML = tab.title;
-            button.className = "tab";
-            button.id = tab.id;
-            // xButton.innerHTML = "&#10005";
-            // xButton.onclick = () => { this.remove_tab(button.id); };
-            // button.appendChild(xButton);
+            // tabDiv.title = tabDiv.innerHTML = tab.title;
+            tabDiv.appendChild(tabFavicon);
+            tabDiv.appendChild(tabTitle);
+            tabDiv.appendChild(tabClose);
+            // xButton.innerHTML = "&#215";
+            // xButton.onclick = () => { Tabs.remove_tab(tabDiv.id); };
+            // tabDiv.appendChild(xButton);
             var click = function () {
                 Tabs.activate(tab);
+                Tabs.render();
+                tabSwitch();
             };
-            button.onclick = function () { click(); };
-            tabs.appendChild(button);
+            tabDiv.onclick = function () { click(); };
+            tabs.appendChild(tabDiv);
             if (!tab.active) {
                 tab.webview.style.width = "0px";
                 tab.webview.style.height = "0px";
@@ -231,4 +343,22 @@ function handleFailLoad(event) {
     if (event.errorCode !== -3) {
         navigateTo(Tabs.active().webview, "file://" + __dirname + "/error.html", true);
     }
+}
+/**
+
+ * Actions to happen upon a context switch from Tab to Tab.
+
+ */
+function tabSwitch() {
+    var active = Tabs.active().webview;
+    // Re-evaluate the back/forward navigation buttons based on new active Tab
+    document.querySelector("#back").disabled = !active.canGoBack();
+    document.querySelector("#forward").disabled = !active.canGoForward();
+    document.getElementById("back").onclick = function () {
+        active.goBack();
+    };
+    document.getElementById("forward").onclick = function () {
+        active.goForward();
+    };
+    document.getElementById("location").value = Tabs.active().webview.getURL();
 }
