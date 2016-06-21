@@ -1,17 +1,19 @@
 /// <reference path="Definitions/github-electron.d.ts" />
 /// <reference path="Definitions/node.d.ts" />
 
-/*
-    Class Tab: 
-    
-    Description: 
-        Organizes information needed to display a tab and webview
-    Properties:
-        url: string - url of the tab
-        id: string - random unique ID for the tab
-        active: boolean - is the tab the current active tab on screen
-        webview: Electron.WebViewElement - webview element of tab
-*/
+
+/**
+ *  Class Tab:
+ * 
+ *  Description: 
+ *      Organizes information needed to display a tab and webview
+ *  
+ *  Properties:
+ *      url: string - url of the tab
+ *      id: string - random unique ID for the tab
+ *      active: boolean - is the tab the current active tab on screen
+ *      webview: Electron.WebViewElement - webview element of tab
+ */
 class Tab {
     url: string;
     id: string;
@@ -20,43 +22,43 @@ class Tab {
     webview: Electron.WebViewElement;
 
     constructor (tab: any) {
-        this.url = tab.url || "",
-        this.id = tab.id || Math.round(Math.random() * 100000000000000000).toString(),
-        this.title = tab.title || "",
+        this.url = tab.url || "";
+        this.id = tab.id || Math.round(Math.random() * 100000000000000000).toString();
+        this.title = tab.title || "";
         this.webview = tab.webview || createWebview();
         this.active = tab.active || true;
         this.webview.src = this.url;
         this.webview.setAttribute("tab_id", this.id);
       }
   }
-/*
-    Class TabBar: 
-    
-    Description: 
-        Organizes Tab objects and handles displaying them in some way
-    Properties:
-        tabs: Tab[] - list of Tab objects (see Tab class)
-        active_tab: number - index of tab in the list that is the active tab 
+/** 
+ *  Class TabBar:
+ * 
+ *  Description: 
+ *      Organizes Tab objects and handles displaying them in some way
+ *  Properties:
+ *      user: string - user_id associated with a set of tabs
+ *      tabs: Tab[] - list of Tab objects (see Tab class)
+ *      active_tab: number - index of tab in the list that is the active tab 
 */
 class TabBar {
+    user: string;
     tabs: Tab[];
     active_tab: number;
-    constructor() {
+    constructor(user: string = "") {
         this.tabs = [];
         this.active_tab = -1 ;
+        this.user = user || Math.round(Math.random() * 100000000000000000).toString();
     }
-    /* 
-        Function: TabBar.get(id: string): Tab
-        
-        Description:
-            gets a Tab from within the list with id matching input
-        
-        Arguments: 
-            id: string - id of tab to return
-
-        Return Value:
-            Tab object matching id input if found, else null
-    */
+    /**   
+     *  Description:
+     *      gets a Tab from within the list with id matching input
+     * 
+     *  Return Value:
+     *      Tab object matching id input if found, else null
+     * 
+     * @param id   : id of tab to return.
+     */
     public get(id: string): Tab {
         for (let index: number = 0; index < this.size(); index++) {
             if (this.tabs[index].id === id) {
@@ -69,22 +71,23 @@ class TabBar {
         Function: TabBar.size()
         returns number of tabs currently in the TabBar
     */
+    /**
+     *  Description: 
+     *      returns number of tabs currently in the TabBar
+     */
     public size(): number {
         return this.tabs.length;
     }
-    /*
-        Function: TabBar.add_tab(tab: Tab, background: boolean = false): void
-
-        Description:
-            pushes a Tab into list of tabs
-        
-        Arguments:
-            tab: Tab - Tab object to insert 
-            background: boolean - if true open in background (not active) - default false
-        
-        Return Value:
-            none
-    */
+    /**
+     *  Description:
+     *      pushes a Tab into list of tabs
+     * 
+     *  Return Value:
+     *      none
+     * 
+     *  @param tab   : Tab object to insert
+     *  @param background   if true open tab in background (not active), default false 
+     */
     public add_tab(tab: Tab, background: boolean = false): void {
         this.tabs.push(tab);
         if (this.active_tab === -1) {
@@ -99,20 +102,15 @@ class TabBar {
         }
         this.render();
     }
-
-    /* 
-        Function: TabBar.remove_tab(tab_id: string): boolean
-
-        Description: 
-            Removes a tab matching tab_id input.
-        
-        Arguments: 
-            tab_id: string - tab_id to find and remove tab
-        
-        Return Value:
-            returns remove state (true is good, false means TabBar is empty (closed) or error)
-    */
-    // 
+    /**
+     *  Description:
+     *      Removes a tab matching tab_id input.
+     * 
+     *  Return Value:
+     *      returns remove state (true is good, false means TabBar is empty (closed) or error)
+     * 
+     * @param tab_id   id of tab to find and remove.
+     */
     public remove_tab(tab_id: string): boolean {
         if (this.size() === 0) {
             // this should not happen
@@ -144,25 +142,21 @@ class TabBar {
         }
         return false;
     }
-    /* 
-        Function: TabBar.active(): Tab
-        returns active tab within TabBar
-    */
+    /**
+     * Description:
+     *      returns active Tab object within TabBar
+     */
     public active(): Tab {
         return this.tabs[this.active_tab];
     }
-    /*
-        Function: TabBar.activate(tab: Tab): void 
-
-        Description:
-            activate the given tab, and set all other tabs in TabBar to inactive
-
-        Arguments:
-            tab: Tab - Tab object ot activate
-        
-        Return value:
-            none
-    */
+    /**
+     *  Description:
+     *      activate the given tab, and set all other tabs in TabBar to inactive
+     *  Return value:
+     *      none
+     * 
+     * @param tab   Tab object to make active, make all others inactive.
+     */
     public activate(tab: Tab): void {
         let button: HTMLElement = document.getElementById(tab.id);
         for (let index = 0; index < this.size(); index++) {
@@ -172,20 +166,14 @@ class TabBar {
             }
         }
     }
-
-    /*
-        Function: TabBar.render(): void 
-
-        Description:
-            Handles the rendering of multiple tabs and setting up tab buttons.
-            Currently assigns an on-click call to global Tabs variable. 
-
-        Arguments: 
-            none
-        
-        Return Value:
-            none
-    */
+    /**
+     * Description:
+     *      Handles the rendering of multiple tabs and setting up tab buttons.
+     *      Currently assigns an on-click call to global Tabs variable. 
+     *  
+     *  Return Value: 
+     *      none
+     */
     public render(): void {
         let tabs: HTMLElement = document.getElementById("tabs");
         tabs.innerHTML = "";
@@ -214,6 +202,7 @@ class TabBar {
     doLayout();
     }
 }
+
 
 let Tabs: TabBar = new TabBar();
 
