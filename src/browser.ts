@@ -203,6 +203,7 @@ class TabBar {
             let click = function () {
                 Tabs.activate(tab);
                 Tabs.render();
+                tabSwitch();
             };
             button.onclick = () => { click(); };
             tabs.appendChild(button);
@@ -369,4 +370,28 @@ function handleFailLoad(event: Electron.WebViewElement.DidFailLoadEvent): void {
     if (event.errorCode !== -3) {
         navigateTo(Tabs.active().webview, "file://" + __dirname + "/error.html", true);
     }
+}
+
+/**
+
+ * Actions to happen upon a context switch from Tab to Tab.
+
+ */
+
+function tabSwitch(): void {
+    let active: Electron.WebViewElement = Tabs.active().webview;
+
+    // Re-evaluate the back/forward navigation buttons based on new active Tab
+    (<HTMLButtonElement>document.querySelector("#back")).disabled = !active.canGoBack();
+    (<HTMLButtonElement>document.querySelector("#forward")).disabled = !active.canGoForward();
+
+    document.getElementById("back").onclick = function () {
+        active.goBack();
+    };
+
+    document.getElementById("forward").onclick = function () {
+        active.goForward();
+    };
+
+    (<HTMLInputElement>document.getElementById("location")).value = Tabs.active().webview.getURL();
 }

@@ -27,10 +27,6 @@ function createWindow() {
         // when you should delete the corresponding element.
         mainWindow = null;
     });
-    mainWindow.webContents.on("did-finish-load", function () {
-        console.log("sending");
-        mainWindow.webContents.send("TEST", "test");
-    });
     mainWindow.webContents.session.on("will-download", function (event, item, webContents) {
         var itemURL = item.getURL();
         if (item.getMimeType() === "application/pdf" && itemURL.indexOf("blob:") !== 0) {
