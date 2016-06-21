@@ -186,8 +186,13 @@ var TabBar = (function () {
             tabDiv.className = "chrome-tab";
             tabDiv.id = tab.id;
             tabTitle.title = tabTitle.innerHTML = tab.title;
+            var tab_fav = "http://www.google.com/s2/favicons?domain=" + tab.url;
+            // tabFavicon.innerHTML = `style="background-image: url(` + tab_fav + ")";
+            // tabFavicon.style = background-image: url( + tab_fav + ")" + `"`;
+            tabFavicon.innerHTML = "<img src = " + tab_fav + ">";
             tabTitle.className = "chrome-tab-title";
             tabClose.className = "chrome-tab-close";
+            tabFavicon.className = "chrome-tab-favicon";
             tabClose.onclick = function () {
                 Tabs.remove_tab(tabDiv.id);
                 Tabs.render();
