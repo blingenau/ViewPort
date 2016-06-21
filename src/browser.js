@@ -129,7 +129,9 @@ var TabBar = (function () {
                 this.activate(this.tabs[Math.min(result, this.size() - 1)]);
             }
             else {
-                this.render();
+                if (result < this.active_tab) {
+                    this.active_tab--;
+                }
             }
             return true;
         }
@@ -180,22 +182,31 @@ var TabBar = (function () {
         var tabs = document.getElementById("tabs");
         tabs.innerHTML = "";
         var _loop_1 = function(index) {
-            var button = document.createElement("button"), xButton = document.createElement("button");
-            var tab = this_1.tabs[index];
+            var tabDiv = document.createElement("div"), tabTitle = document.createElement("div"), tabFavicon = document.createElement("div"), tabClose = document.createElement("div"), xButton = document.createElement("button"), tab = this_1.tabs[index];
+            tabDiv.className = "chrome-tab";
+            tabDiv.id = tab.id;
+            tabTitle.title = tabTitle.innerHTML = tab.title;
+            tabTitle.className = "chrome-tab-title";
+            tabClose.className = "chrome-tab-close";
+            tabClose.onclick = function () {
+                Tabs.remove_tab(tabDiv.id);
+                Tabs.render();
+            };
             // Make the button title the name of the website not URL 
-            button.title = button.innerHTML = tab.title;
-            button.className = "tab";
-            button.id = tab.id;
-            // xButton.innerHTML = "&#10005";
-            // xButton.onclick = () => { this.remove_tab(button.id); };
-            // button.appendChild(xButton);
+            // tabDiv.title = tabDiv.innerHTML = tab.title;
+            tabDiv.appendChild(tabFavicon);
+            tabDiv.appendChild(tabTitle);
+            tabDiv.appendChild(tabClose);
+            // xButton.innerHTML = "&#215";
+            // xButton.onclick = () => { Tabs.remove_tab(tabDiv.id); };
+            // tabDiv.appendChild(xButton);
             var click = function () {
                 Tabs.activate(tab);
                 Tabs.render();
                 tabSwitch();
             };
-            button.onclick = function () { click(); };
-            tabs.appendChild(button);
+            tabDiv.onclick = function () { click(); };
+            tabs.appendChild(tabDiv);
             if (!tab.active) {
                 tab.webview.style.width = "0px";
                 tab.webview.style.height = "0px";
