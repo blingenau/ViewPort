@@ -100,7 +100,6 @@ class TabBar {
         for (let index = 0; index < this.size(); index++) {
             this.tabs[index].active = this.active_tab === index;
         }
-        this.render();
     }
     /**
      *  Description:
@@ -194,7 +193,9 @@ class TabBar {
             tabTitle.className = "chrome-tab-title";
             tabClose.className = "chrome-tab-close";
             tabClose.onclick = () => {
-                Tabs.remove_tab(tabDiv.id);
+                if (!Tabs.removeTab(Tabs.activeUser(), tabDiv.id)) {
+                    require("electron").remote.app.quit();
+                }
                 Tabs.render();
             };
 
@@ -207,7 +208,7 @@ class TabBar {
             // xButton.onclick = () => { Tabs.remove_tab(tabDiv.id); };
             // tabDiv.appendChild(xButton);
             let click = function () {
-                Tabs.activate(tab);
+                Tabs.bars[Tabs.active_bar].activate(tab);
                 Tabs.render();
                 tabSwitch();
             };
@@ -222,18 +223,115 @@ class TabBar {
     }
 }
 
+class TabBarSet {
+    bars: TabBar[];
+    active_bar: number;
+    constructor() {
+        this.bars = [];
+        this.active_bar = -1;
+    }
+    public size(): number {
+        return this.bars.length;
+    }
+    public get(user: string): TabBar {
+        for (let index = 0; index < this.size(); index++) {
+            if (user === this.bars[index].user) {
+                return this.bars[index];
+            }
+        }
+        return null;
+    }
+    public addTab(user: string, tab: Tab): void {
+        let bar: TabBar = this.get(user);
+        if (bar === null) {
+            bar = new TabBar(user);
+            bar.add_tab(tab);
+            this.bars.push(bar);
+        }
+        else {
+            bar.add_tab(tab);
+        }
 
-let Tabs: TabBar = new TabBar();
+    }
+    public removeTab(user: string, tab_id: string): boolean {
+        let bar: TabBar = this.get(user);
+        if (bar !== null) {
+            return bar.remove_tab(tab_id);
+        }
+        return false;
+    }
+    public removeUser(user: string): void {
+        let result: number = -1;
+        for (let index = 0; index < this.size(); index++) {
+            if (this.bars[index].user === user) {
+                result = index;
+                break;
+            }
+        }
+        if (result > -1) {
+            let bar = this.bars.splice(result, 1)[0];
+            while (bar.size() > 0) {
+                bar.remove_tab(bar.active().id);
+            }
+        }
+    }
+    public activate(user: string): void {
+        let bar: TabBar = this.get(user);
+        if (bar === null) {
+            console.error("attempt to activate user that does not exist");
+            return;
+        }
+        this.active_bar = -1;
+        // set all other tabs to inactive (hidden)
+        for (let index = 0; index < this.size(); index++) {
+            let tmpBar = this.bars[index];
+            if (tmpBar.user === bar.user) {
+                this.active_bar = index;
+            }
+            for (let bar_index = 0; bar_index < tmpBar.size(); bar_index++) {
+                tmpBar.tabs[bar_index].active = false;
+                tmpBar.tabs[bar_index].webview.style.width = "0px";
+                tmpBar.tabs[bar_index].webview.style.height = "0px";
+            }
+        }
+        // set tab state of active tab in bar to active
+        bar.active().active = true;
+        bar.render();
+    }
+    public activeTab(): Tab {
+        return this.bars[this.active_bar].active();
+    }
+    public activeUser(): string {
+        return this.bars[this.active_bar].user;
+    }
+    public getTab(tab_id: string): Tab {
+        for (let index = 0; index < this.size(); index++) {
+            let bar: TabBar = this.bars[index];
+            for (let tab_index = 0; tab_index < bar.size(); tab_index++) {
+                if (bar.tabs[tab_index].id === tab_id) {
+                    return bar.tabs[tab_index];
+                }
+            }
+        }
+    return null;
+    }
 
+    public render(): void {
+        this.bars[this.active_bar].render();
+    }
+
+}
+
+let Tabs: TabBarSet = new TabBarSet();
 window.onresize = doLayout;
 let isLoading: boolean = false;
 let ipc: Electron.IpcRenderer = require("electron").ipcRenderer;
 onload = () => {
 
-    Tabs.add_tab(new Tab({
+    Tabs.addTab("test", new Tab({
         url: "http://athenanet.athenahealth.com"
     }));
-
+    Tabs.activate("test");
     let reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload"),
         urlBar: HTMLFormElement = <HTMLFormElement>document.getElementById("location-form");
 
@@ -241,25 +339,25 @@ onload = () => {
 
     urlBar.onsubmit = (): boolean => {
         let address: string = (<HTMLInputElement>document.querySelector("#location")).value;
-        Tabs.active().url = address;
-        navigateTo(Tabs.active().webview, address);
+        Tabs.activeTab().url = address;
+        navigateTo(Tabs.activeTab().webview, address);
         return false;
     };
 
     document.getElementById("back").onclick = function () {
-        Tabs.active().webview.goBack();
+        Tabs.activeTab().webview.goBack();
     };
 
     document.getElementById("forward").onclick = function () {
-        Tabs.active().webview.goForward();
+        Tabs.activeTab().webview.goForward();
     };
 
     document.getElementById("home").onclick = function () {
-        navigateTo(Tabs.active().webview, "http://athenanet.athenahealth.com/");
+        navigateTo(Tabs.activeTab().webview, "http://athenanet.athenahealth.com/");
     };
 
     document.getElementById("add-tab").onclick = function () {
-        Tabs.add_tab(new Tab({
+        Tabs.addTab(Tabs.activeUser(), new Tab({
             url: "about:blank"
         }));
     };
@@ -271,15 +369,17 @@ onload = () => {
         let PDFurl: string = PDFViewerURL + filedata.url;
         let hasOpenedPDF: boolean = false;
 
-        Tabs.tabs.forEach(function (tab) {
-            if (tab.url === filedata.url) {
-                navigateTo(tab.webview, PDFurl);
-                hasOpenedPDF = true;
-            }
+        Tabs.bars.forEach(function (bar) {
+            bar.tabs.forEach(function (tab){
+                if (tab.url === filedata.url) {
+                    navigateTo(tab.webview, PDFurl);
+                    hasOpenedPDF = true;
+                }
+            });
         });
         // open in new tab
         if (!hasOpenedPDF) {
-            Tabs.add_tab(new Tab({
+            Tabs.addTab(Tabs.activeUser(), new Tab({
                 url: PDFurl
             }));
         }
@@ -287,9 +387,9 @@ onload = () => {
 
     reload.onclick = function () {
         if (isLoading) {
-            Tabs.active().webview.stop();
+            Tabs.activeTab().webview.stop();
         } else {
-            Tabs.active().webview.reload();
+            Tabs.activeTab().webview.reload();
         }
     };
 };
@@ -323,7 +423,7 @@ function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolea
 }
 
 function doLayout(): void {
-    let webview: Electron.WebViewElement = Tabs.active().webview,
+    let webview: Electron.WebViewElement = Tabs.activeTab().webview,
         controls: HTMLDivElement = <HTMLDivElement> document.querySelector("#controls"),
         controlsHeight: number = controls.offsetHeight,
         windowWidth: number = document.documentElement.clientWidth,
@@ -344,8 +444,8 @@ function handleLoadStart(event: Event): void {
 function handleLoadStop(event: Event): void {
     isLoading = false;
     let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
-    let webview: Electron.WebViewElement = Tabs.active().webview;
-    let tab = Tabs.get(webview.getAttribute("tab_id"));
+    let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
+    let tab = Tabs.getTab(webview.getAttribute("tab_id"));
     tab.url = webview.getAttribute("src");
     tab.title = webview.getTitle();
     address.value = tab.url;
@@ -360,9 +460,8 @@ function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void 
 */
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
     document.getElementById("reload").innerHTML = "&#10227";
-    console.log(event.srcElement);
     let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
-    let webview: Electron.WebViewElement = Tabs.active().webview;
+    let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
 
     address.value = event.url;
     (<HTMLButtonElement>document.querySelector("#back")).disabled = !webview.canGoBack();
@@ -375,7 +474,7 @@ function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequest
 
 function handleFailLoad(event: Electron.WebViewElement.DidFailLoadEvent): void {
     if (event.errorCode !== -3) {
-        navigateTo(Tabs.active().webview, "file://" + __dirname + "/error.html", true);
+        navigateTo(<Electron.WebViewElement>event.target, "file://" + __dirname + "/error.html", true);
     }
 }
 
@@ -386,7 +485,7 @@ function handleFailLoad(event: Electron.WebViewElement.DidFailLoadEvent): void {
  */
 
 function tabSwitch(): void {
-    let active: Electron.WebViewElement = Tabs.active().webview;
+    let active: Electron.WebViewElement = Tabs.activeTab().webview;
 
     // Re-evaluate the back/forward navigation buttons based on new active Tab
     (<HTMLButtonElement>document.querySelector("#back")).disabled = !active.canGoBack();
@@ -400,5 +499,5 @@ function tabSwitch(): void {
         active.goForward();
     };
 
-    (<HTMLInputElement>document.getElementById("location")).value = Tabs.active().webview.getURL();
+    (<HTMLInputElement>document.getElementById("location")).value = Tabs.activeTab().webview.getURL();
 }
