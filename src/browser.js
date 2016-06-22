@@ -416,7 +416,6 @@ function navigateTo(webview, url, html) {
  * Resizes the elements in the window.
  */
 function doLayout() {
-    console.log("bruh");
     var webview = Tabs.activeTab().webview;
     var controls = document.querySelector("#controls");
     var tabBar = document.querySelector("#tabs-shell");

@@ -11,6 +11,8 @@ var BrowserWindow = electron.BrowserWindow;
 var mainWindow = null;
 // The main process's IPC.
 var ipcMain = electron.ipcMain;
+// Electron's dialog API
+var dialog = require("electron").dialog;
 /**
  * Function to create a browser window
  */
@@ -27,6 +29,18 @@ function createWindow() {
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
         mainWindow = null;
+    });
+    mainWindow.on("close", function (event) {
+        var options = {
+            type: "question",
+            title: "Close all tabs",
+            message: "Are you sure you want to close all your tabs?",
+            buttons: ["Yes", "No"]
+        };
+        var response = dialog.showMessageBox(options);
+        if (response === 1) {
+            event.preventDefault();
+        }
     });
     mainWindow.webContents.session.on("will-download", function (event, item, webContents) {
         var itemURL = item.getURL();
