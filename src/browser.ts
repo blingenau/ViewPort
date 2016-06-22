@@ -439,11 +439,13 @@ function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolea
 function doLayout(): void {
     let webview: Electron.WebViewElement = Tabs.activeTab().webview;
     let controls: HTMLDivElement = <HTMLDivElement>document.querySelector("#controls");
+    let tabBar: HTMLDivElement = <HTMLDivElement>document.querySelector("#tabs");
     let controlsHeight: number = controls.offsetHeight;
+    let tabBarHeight: number = tabBar.offsetHeight;
     let windowWidth: number = document.documentElement.clientWidth;
     let windowHeight: number = document.documentElement.clientHeight;
     let webviewWidth: number = windowWidth;
-    let webviewHeight: number = windowHeight - controlsHeight;
+    let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
 
     webview.style.width = webviewWidth + "px";
     webview.style.height = webviewHeight + "px";

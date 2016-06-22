@@ -418,11 +418,13 @@ function navigateTo(webview, url, html) {
 function doLayout() {
     var webview = Tabs.activeTab().webview;
     var controls = document.querySelector("#controls");
+    var tabBar = document.querySelector("#tabs");
     var controlsHeight = controls.offsetHeight;
+    var tabBarHeight = tabBar.offsetHeight;
     var windowWidth = document.documentElement.clientWidth;
     var windowHeight = document.documentElement.clientHeight;
     var webviewWidth = windowWidth;
-    var webviewHeight = windowHeight - controlsHeight;
+    var webviewHeight = windowHeight - controlsHeight - tabBarHeight;
     webview.style.width = webviewWidth + "px";
     webview.style.height = webviewHeight + "px";
 }
