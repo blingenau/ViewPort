@@ -456,7 +456,7 @@ function doLayout(): void {
  */
 function handleLoadStart(event: Event): void {
     document.body.classList.add("loading");
-    document.getElementById("reload").innerHTML = "&#10005";
+    document.getElementById("reload").innerHTML = "&#10005;";
     isLoading = true;
 }
 
@@ -482,7 +482,7 @@ function handleLoadStop(event: Event): void {
  * @param event   The event triggered.
  */
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
-    document.getElementById("reload").innerHTML = "&#10227";
+    document.getElementById("reload").innerHTML = "&#10227;";
     let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
 

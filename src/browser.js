@@ -433,7 +433,7 @@ function doLayout() {
  */
 function handleLoadStart(event) {
     document.body.classList.add("loading");
-    document.getElementById("reload").innerHTML = "&#10005";
+    document.getElementById("reload").innerHTML = "&#10005;";
     isLoading = true;
 }
 /**
@@ -457,7 +457,7 @@ function handleLoadStop(event) {
  * @param event   The event triggered.
  */
 function handleLoadCommit(event) {
-    document.getElementById("reload").innerHTML = "&#10227";
+    document.getElementById("reload").innerHTML = "&#10227;";
     var address = document.querySelector("#location");
     var webview = event.target;
     address.value = event.url;
