@@ -323,6 +323,7 @@ let Tabs: TabBarSet = new TabBarSet();
 window.onresize = doLayout;
 let isLoading: boolean = false;
 const ipc = require("electron").ipcRenderer;
+
 onload = () => {
     Tabs.addTab("test", new Tab({
         url: "http://athenanet.athenahealth.com"
@@ -439,7 +440,7 @@ function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolea
 function doLayout(): void {
     let webview: Electron.WebViewElement = Tabs.activeTab().webview;
     let controls: HTMLDivElement = <HTMLDivElement>document.querySelector("#controls");
-    let tabBar: HTMLDivElement = <HTMLDivElement>document.querySelector("#tabs");
+    let tabBar: HTMLDivElement = <HTMLDivElement>document.querySelector("#tabs-shell");
     let controlsHeight: number = controls.offsetHeight;
     let tabBarHeight: number = tabBar.offsetHeight;
     let windowWidth: number = document.documentElement.clientWidth;
