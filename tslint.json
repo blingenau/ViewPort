@@ -1,0 +1,16 @@
+{
+    "extends": "tslint:recommended",
+    "rules": {
+        "eofline": false,
+        "linebreak-style": "LF",
+        "no-reference": false,
+        "object-literal-sort-keys": false,
+        "trailing-comma": {
+            "multiline": "never",
+            "singleline": "never"
+        },
+        "whitespace": {
+            "check-typecast": false
+        }
+    }
+}
