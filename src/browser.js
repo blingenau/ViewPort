@@ -322,14 +322,14 @@ onload = function () {
     Tabs.activate("test");
     var reload = document.getElementById("reload");
     var urlBar = document.getElementById("location-form");
-    var addressBar = document.getElementById("#location");
-    doLayout();
+    var addressBar = document.getElementById("location");
     urlBar.onsubmit = function () {
         var address = document.querySelector("#location").value;
         Tabs.activeTab().url = address;
         navigateTo(Tabs.activeTab().webview, address);
         return false;
     };
+    doLayout();
     addressBar.onfocus = function () {
         addressBar.select();
     };

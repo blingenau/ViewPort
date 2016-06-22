@@ -324,16 +324,13 @@ window.onresize = doLayout;
 let isLoading: boolean = false;
 const ipc = require("electron").ipcRenderer;
 onload = () => {
-
     Tabs.addTab("test", new Tab({
         url: "http://athenanet.athenahealth.com"
     }));
     Tabs.activate("test");
     let reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload");
     let urlBar: HTMLFormElement = <HTMLFormElement>document.getElementById("location-form");
-    let addressBar: HTMLInputElement = <HTMLInputElement>document.getElementById("#location");
-
-    doLayout();
+    let addressBar: HTMLInputElement = <HTMLInputElement>document.getElementById("location");
 
     urlBar.onsubmit = (): boolean => {
         let address: string = (<HTMLInputElement>document.querySelector("#location")).value;
@@ -341,6 +338,8 @@ onload = () => {
         navigateTo(Tabs.activeTab().webview, address);
         return false;
     };
+
+    doLayout();
 
     addressBar.onfocus = (): void => {
         addressBar.select();
