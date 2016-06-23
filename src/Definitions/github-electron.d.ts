@@ -94,7 +94,7 @@ declare namespace Electron {
 		 */
 		on(event: 'open-url', listener: (event: Event, url: string) => void): this;
 		/**
-		 * Emitted when the application is activated, which usually happens when clicks on the applications’s dock icon.
+		 * Emitted when the application is activated, which usually happens when clicks on the applications's dock icon.
 		 * Note: This is only implemented on OS X.
 		 */
 		on(event: 'activate', listener: Function): this;
@@ -194,7 +194,7 @@ declare namespace Electron {
 		/**
 		 * On Linux, focuses on the first visible window.
 		 * On OS X, makes the application the active app.
-		 * On Windows, focuses on the application’s first window.
+		 * On Windows, focuses on the application's first window.
 		 */
 		focus(): void;
 		/**
@@ -399,7 +399,7 @@ declare namespace Electron {
 		 */
 		downloadFinished(filePath: string): void;
 		/**
-		 * Sets the string to be displayed in the dock’s badging area.
+		 * Sets the string to be displayed in the dock's badging area.
 		 *
 		 * Note: This API is only available on Mac.
 		 */
@@ -522,11 +522,11 @@ declare namespace Electron {
 	class BrowserWindow extends EventEmitter {
 		/**
 		 * Emitted when the document changed its title,
-		 * calling event.preventDefault() would prevent the native window’s title to change.
+		 * calling event.preventDefault() would prevent the native window's title to change.
 		 */
 		on(event: 'page-title-updated', listener: (event: Event) => void): this;
 		/**
-		 * Emitted when the window is going to be closed. It’s emitted before the beforeunload
+		 * Emitted when the window is going to be closed. It's emitted before the beforeunload
 		 * and unload event of the DOM. Calling event.preventDefault() will cancel the close.
 		 */
 		on(event: 'close', listener: (event: Event) => void): this;
@@ -739,7 +739,7 @@ declare namespace Electron {
 		 * This will have a window maintain an aspect ratio.
 		 * The extra size allows a developer to have space, specified in pixels,
 		 * not included within the aspect ratio calculations.
-		 * This API already takes into account the difference between a window’s size and its content size.
+		 * This API already takes into account the difference between a window's size and its content size.
 		 *
 		 * Note: This API is available only on OS X.
 		 */
@@ -927,7 +927,7 @@ declare namespace Electron {
 		 */
 		getRepresentedFilename(): string;
 		/**
-		 * Specifies whether the window’s document has been edited, and the icon in
+		 * Specifies whether the window's document has been edited, and the icon in
 		 * title bar will become grey when set to true.
 		 * Note: This API is available only on OS X.
 		 */
@@ -1077,7 +1077,7 @@ declare namespace Electron {
 		 */
 		session?: Session;
 		/**
-		 * Sets the session used by the page according to the session’s partition string.
+		 * Sets the session used by the page according to the session's partition string.
 		 * If partition starts with persist:, the page will use a persistent session available
 		 * to all pages in the app with the same partition. if there is no persist: prefix,
 		 * the page will use an in-memory session. By assigning the same partition,
@@ -1138,12 +1138,12 @@ declare namespace Electron {
 		 */
 		plugins?: boolean;
 		/**
-		 * Enables Chromium’s experimental features.
+		 * Enables Chromium's experimental features.
 		 * Default: false.
 		 */
 		experimentalFeatures?: boolean;
 		/**
-		 * Enables Chromium’s experimental canvas features.
+		 * Enables Chromium's experimental canvas features.
 		 * Default: false.
 		 */
 		experimentalCanvasFeatures?: boolean;
@@ -1211,28 +1211,28 @@ declare namespace Electron {
 
 	interface BrowserWindowOptions extends Rectangle {
 		/**
-		 * Window’s width in pixels.
+		 * Window's width in pixels.
 		 * Default: 800.
 		 */
 		width?: number;
 		/**
-		 * Window’s height in pixels.
+		 * Window's height in pixels.
 		 * Default: 600.
 		 */
 		height?: number;
 		/**
-		 * Window’s left offset from screen.
+		 * Window's left offset from screen.
 		 * Default: center the window.
 		 */
 		x?: number;
 		/**
-		 * Window’s top offset from screen.
+		 * Window's top offset from screen.
 		 * Default: center the window.
 		 */
 		y?: number;
 		/**
-		 * The width and height would be used as web page’s size, which means
-		 * the actual window’s size will include window frame’s size and be slightly larger.
+		 * The width and height would be used as web page's size, which means
+		 * the actual window's size will include window frame's size and be slightly larger.
 		 * Default: false.
 		 */
 		useContentSize?: boolean;
@@ -1242,22 +1242,22 @@ declare namespace Electron {
 		 */
 		center?: boolean;
 		/**
-		 * Window’s minimum width.
+		 * Window's minimum width.
 		 * Default: 0.
 		 */
 		minWidth?: number;
 		/**
-		 * Window’s minimum height.
+		 * Window's minimum height.
 		 * Default: 0.
 		 */
 		minHeight?: number;
 		/**
-		 * Window’s maximum width.
+		 * Window's maximum width.
 		 * Default: no limit.
 		 */
 		maxWidth?: number;
 		/**
-		 * Window’s maximum height.
+		 * Window's maximum height.
 		 * Default: no limit.
 		 */
 		maxHeight?: number;
@@ -1323,7 +1323,7 @@ declare namespace Electron {
 		 */
 		title?: string;
 		/**
-		 * The window icon, when omitted on Windows the executable’s icon would be used as window icon.
+		 * The window icon, when omitted on Windows the executable's icon would be used as window icon.
 		 */
 		icon?: NativeImage|string;
 		/**
@@ -1357,7 +1357,7 @@ declare namespace Electron {
 		 */
 		enableLargerThanScreen?: boolean;
 		/**
-		 * Window’s background color as Hexadecimal value, like #66CD00 or #FFF or #80FFFFFF (alpha is supported).
+		 * Window's background color as Hexadecimal value, like #66CD00 or #FFF or #80FFFFFF (alpha is supported).
 		 * Default: #FFF (white).
 		 */
 		backgroundColor?: string;
@@ -1387,7 +1387,7 @@ declare namespace Electron {
 		 */
 		titleBarStyle?: 'default' | 'hidden' | 'hidden-inset';
 		/**
-		 * Settings of web page’s features.
+		 * Settings of web page's features.
 		 */
 		webPreferences?: WebPreferences;
 	}
@@ -1674,7 +1674,7 @@ declare namespace Electron {
 		/**
 		 * The described name of the capturing screen or window.
 		 * If the source is a screen, the name will be Entire Screen or Screen <index>;
-		 * if it is a window, the name will be the window’s title.
+		 * if it is a window, the name will be the window's title.
 		 */
 		name: string;
 		/**
@@ -1820,7 +1820,7 @@ declare namespace Electron {
 		 * On Windows Electron will try to figure out which one of the buttons are common buttons
 		 * (like "Cancel" or "Yes"), and show the others as command links in the dialog.
 		 * This can make the dialog appear in the style of modern Windows apps.
-		 * If you don’t like this behavior, you can set noLink to true.
+		 * If you don't like this behavior, you can set noLink to true.
 		 */
 		noLink?: boolean;
 	}
@@ -1837,14 +1837,14 @@ declare namespace Electron {
 		on(event: 'updated', listener: Function): this;
 		/**
 		 * Emits when the download is in a terminal state. This includes a completed download,
-		 * a cancelled download (via downloadItem.cancel()), and interrupted download that can’t be resumed.
+		 * a cancelled download (via downloadItem.cancel()), and interrupted download that can't be resumed.
 		 */
 		on(event: 'done', listener: (event: Event, state: 'completed' | 'cancelled' | 'interrupted') => void): this;
 		on(event: string, listener: Function): this;
 		/**
 		 * Set the save file path of the download item.
-		 * Note: The API is only available in session’s will-download callback function.
-		 * If user doesn’t set the save path via the API, Electron will use the original
+		 * Note: The API is only available in session's will-download callback function.
+		 * If user doesn't set the save path via the API, Electron will use the original
 		 * routine to determine the save path (Usually prompts a save dialog).
 		 */
 		setSavePath(path: string): void;
@@ -2192,7 +2192,7 @@ declare namespace Electron {
 		 */
 		insert(position: number, menuItem: MenuItem): void;
 		/**
-		 * @returns an array containing the menu’s items.
+		 * @returns an array containing the menu's items.
 		 */
 		items: MenuItem[];
 	}
@@ -2346,19 +2346,19 @@ declare namespace Electron {
 		 */
 		isProtocolHandled(scheme: string, callback: (handled: boolean) => void): void;
 		/**
-		 * Intercepts scheme protocol and uses handler as the protocol’s new handler which sends a file as a response.
+		 * Intercepts scheme protocol and uses handler as the protocol's new handler which sends a file as a response.
 		 */
 		interceptFileProtocol(scheme: string, handler: FileProtocolHandler, completion?: (error: Error) => void): void;
 		/**
-		 * Intercepts scheme protocol and uses handler as the protocol’s new handler which sends a Buffer as a response.
+		 * Intercepts scheme protocol and uses handler as the protocol's new handler which sends a Buffer as a response.
 		 */
 		interceptBufferProtocol(scheme: string, handler: BufferProtocolHandler, completion?: (error: Error) => void): void;
 		/**
-		 * Intercepts scheme protocol and uses handler as the protocol’s new handler which sends a String as a response.
+		 * Intercepts scheme protocol and uses handler as the protocol's new handler which sends a String as a response.
 		 */
 		interceptStringProtocol(scheme: string, handler: StringProtocolHandler, completion?: (error: Error) => void): void;
 		/**
-		 * Intercepts scheme protocol and uses handler as the protocol’s new handler which sends a new HTTP request as a response.
+		 * Intercepts scheme protocol and uses handler as the protocol's new handler which sends a new HTTP request as a response.
 		 */
 		interceptHttpProtocol(scheme: string, handler: HttpProtocolHandler, completion?: (error: Error) => void): void;
 		/**
@@ -2473,7 +2473,7 @@ declare namespace Electron {
 		size: Dimension;
 		workAreaSize: Dimension;
 		/**
-		 * Output device’s pixel scale factor.
+		 * Output device's pixel scale factor.
 		 */
 		scaleFactor: number;
 		/**
@@ -2570,11 +2570,11 @@ declare namespace Electron {
 		 */
 		cookies: SessionCookies;
 		/**
-		 * @returns the session’s current cache size.
+		 * @returns the session's current cache size.
 		 */
 		getCacheSize(callback: (size: number) => void): void;
 		/**
-		 * Clears the session’s HTTP cache.
+		 * Clears the session's HTTP cache.
 		 */
 		clearCache(callback: Function): void;
 		/**
@@ -2641,7 +2641,7 @@ declare namespace Electron {
 
 	interface ClearStorageDataOptions {
 		/**
-		 * Should follow window.location.origin’s representation scheme://host:port.
+		 * Should follow window.location.origin's representation scheme://host:port.
 		 */
 		origin?: string;
 		/**
@@ -3050,7 +3050,7 @@ declare namespace Electron {
 		/**
 		 * This method returns true if DWM composition (Aero Glass) is enabled,
 		 * and false otherwise. You can use it to determine if you should create
-		 * a transparent window or not (transparent windows won’t work correctly when DWM composition is disabled).
+		 * a transparent window or not (transparent windows won't work correctly when DWM composition is disabled).
 		 *
 		 * Note: This is only implemented on Windows.
 		 */
@@ -3347,7 +3347,7 @@ declare namespace Electron {
 		 */
 		on(event: 'media-paused', listener: Function): this;
 		/**
-		 * Emitted when a page’s theme color changes. This is usually due to encountering a meta tag:
+		 * Emitted when a page's theme color changes. This is usually due to encountering a meta tag:
 		 * <meta name='theme-color' content='#ff0000'>
 		 */
 		on(event: 'did-change-theme-color', listener: Function): this;
@@ -3356,7 +3356,7 @@ declare namespace Electron {
 		 */
 		on(event: 'update-target-url', listener: (event: Event, url: string) => void): this;
 		/**
-		 * Emitted when the cursor’s type changes.
+		 * Emitted when the cursor's type changes.
 		 * If the type parameter is custom, the image parameter will hold the custom cursor image
 		 * in a NativeImage, and the scale will hold scaling information for the image.
 		 */
@@ -4045,7 +4045,7 @@ declare namespace Electron {
 		 * Send given command to the debugging target.
 		 * @param method Method name, should be one of the methods defined by the remote debugging protocol.
 		 * @param commandParams JSON object with request parameters.
-		 * @param callback Response defined by the ‘returns’ attribute of the command description in the remote debugging protocol.
+		 * @param callback Response defined by the ‘returns' attribute of the command description in the remote debugging protocol.
 		 */
 		sendCommand(method: string, commandParams?: any, callback?: (error: Error, result: any) => void): void;
 		/**
@@ -4055,7 +4055,7 @@ declare namespace Electron {
 		on(event: 'detach', listener: (event: Event, reason: string) => void): this;
 		/**
 		 * Emitted whenever debugging target issues instrumentation event.
-		 * Event parameters defined by the ‘parameters’ attribute in the remote debugging protocol.
+		 * Event parameters defined by the ‘parameters' attribute in the remote debugging protocol.
 		 */
 		on(event: 'message', listener: (event: Event, method: string, params: any) => void): this;
 		on(event: string, listener: Function): this;
@@ -4106,7 +4106,7 @@ declare namespace Electron {
 		 */
 		registerURLSchemeAsSecure(scheme: string): void;
 		/**
-		 * Resources will be loaded from this scheme regardless of the current page’s Content Security Policy.
+		 * Resources will be loaded from this scheme regardless of the current page's Content Security Policy.
 		 */
 		registerURLSchemeAsBypassingCSP(scheme: string): void;
 		/**
@@ -4126,7 +4126,7 @@ declare namespace Electron {
 		 */
 		executeJavaScript(code: string, userGesture?: boolean, callback?: (result: any) => void): void;
 		/**
-		 * @returns Object describing usage information of Blink’s internal memory caches.
+		 * @returns Object describing usage information of Blink's internal memory caches.
 		 */
 		getResourceUsage(): ResourceUsages;
 		/**

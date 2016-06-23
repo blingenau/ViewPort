@@ -1,7 +1,6 @@
 /// <reference path="Definitions/github-electron.d.ts" />
 /// <reference path="Definitions/node.d.ts" />
 
-
 /**
  *  Class Tab:
  * 
@@ -15,22 +14,22 @@
  *      webview: Electron.WebViewElement - webview element of tab
  */
 class Tab {
-    url: string;
-    id: string;
-    title: string;
-    active: boolean;
-    webview: Electron.WebViewElement;
+    public url: string;
+    public id: string;
+    public title: string;
+    public active: boolean;
+    public webview: Electron.WebViewElement;
 
     constructor (tab: any) {
         this.url = tab.url || "";
-        this.id = tab.id || Math.round(Math.random() * 100000000000000000).toString();
+        this.id = Math.round(Math.random() * 100000000000000000).toString();
         this.title = tab.title || "";
         this.webview = tab.webview || createWebview();
         this.active = tab.active || true;
         this.webview.src = this.url;
-        this.webview.setAttribute("tab_id", this.id);
-      }
-  }
+        this.webview.setAttribute("tabID", this.id);
+    }
+}
 /** 
  *  Class TabBar:
  * 
@@ -39,16 +38,14 @@ class Tab {
  *  Properties:
  *      user: string - user_id associated with a set of tabs
  *      tabs: Tab[] - list of Tab objects (see Tab class)
- *      active_tab: number - index of tab in the list that is the active tab 
-*/
+ *      activeTab: number - index of tab in the list that is the active tab 
+ */
 class TabBar {
-    user: string;
-    tabs: Tab[];
-    active_tab: number;
+    public tabs: Tab[];
+    public activeTab: number;
     constructor(user: string = "") {
         this.tabs = [];
-        this.active_tab = -1 ;
-        this.user = user || Math.round(Math.random() * 100000000000000000).toString();
+        this.activeTab = -1 ;
     }
     /**   
      *  Description:
@@ -57,7 +54,7 @@ class TabBar {
      *  Return Value:
      *      Tab object matching id input if found, else null
      * 
-     * @param id   : id of tab to return.
+     * @param id   id of tab to return.
      */
     public get(id: string): Tab {
         for (let index: number = 0; index < this.size(); index++) {
@@ -67,10 +64,6 @@ class TabBar {
         }
         return null;
     }
-    /*
-        Function: TabBar.size()
-        returns number of tabs currently in the TabBar
-    */
     /**
      *  Description: 
      *      returns number of tabs currently in the TabBar
@@ -85,41 +78,44 @@ class TabBar {
      *  Return Value:
      *      none
      * 
-     *  @param tab   : Tab object to insert
+     *  @param tab   Tab object to insert
      *  @param background   if true open tab in background (not active), default false 
      */
     public add_tab(tab: Tab, background: boolean = false): void {
         this.tabs.push(tab);
-        if (this.active_tab === -1) {
-            this.active_tab = 0;
+        if (this.activeTab === -1) {
+            this.activeTab = 0;
         }
         if (!background) {
             // if tab not a background tab then set it as active tab
-            this.active_tab = this.size() - 1;
-        }
-        for (let index = 0; index < this.size(); index++) {
-            this.tabs[index].active = this.active_tab === index;
+            this.activeTab = this.size() - 1;
+            this.activate(tab);
+        } else {
+            tab.active = false;
         }
     }
     /**
      *  Description:
-     *      Removes a tab matching tab_id input.
+     *      Removes a tab matching tabID input.
      * 
      *  Return Value:
      *      returns remove state (true is good, false means TabBar is empty (closed) or error)
      * 
-     * @param tab_id   id of tab to find and remove.
+     * @param tabID   id of tab to find and remove.
      */
-    public remove_tab(tab_id: string): boolean {
+    public removeTab(tabID: string): boolean {
         if (this.size() === 0) {
             // this should not happen
             console.log("Popping from empty TabBar");
             return false;
+        } else if (this.size() === 1) {
+            ipc.send("tabs-all-closed");
+            return true;
         }
 
         let result: number = -1;
         for (let index = 0; index < this.size(); index++) {
-            if (this.tabs[index].id === tab_id) {
+            if (this.tabs[index].id === tabID) {
                 result = index;
                 break;
             }
@@ -133,10 +129,9 @@ class TabBar {
             if (tab.active) {
                 // tab was active, activate another.
                 this.activate(this.tabs[Math.min(result, this.size() - 1)]);
-            }
-            else {
-                if (result < this.active_tab) {
-                    this.active_tab--;
+            } else {
+                if (result < this.activeTab) {
+                    this.activeTab--;
                 }
             }
             return true;
@@ -148,7 +143,7 @@ class TabBar {
      *      returns active Tab object within TabBar
      */
     public active(): Tab {
-        return this.tabs[this.active_tab];
+        return this.tabs[this.activeTab];
     }
     /**
      *  Description:
@@ -159,13 +154,32 @@ class TabBar {
      * @param tab   Tab object to make active, make all others inactive.
      */
     public activate(tab: Tab): void {
-        let button: HTMLElement = document.getElementById(tab.id);
         for (let index = 0; index < this.size(); index++) {
             this.tabs[index].active = this.tabs[index].id === tab.id;
             if (this.tabs[index].active) {
-                this.active_tab = index;
+                this.activeTab = index;
             }
         }
+    }
+    /**
+     *  Description:
+     *      Clears all tabs from bar
+     */
+    public clearAllTabs(): void {
+        while (this.size()) {
+            this.removeTab(this.active().id);
+        }
+    }
+    /**
+     *  Description:
+     *      Sets all tabs to inactive and hides webviews
+     */
+    public hideTabs(): void {
+        this.tabs.forEach(function (tab: Tab) {
+            tab.active = false;
+            tab.webview.style.width = "0px";
+            tab.webview.style.height = "0px";
+        });
     }
     /**
      * Description:
@@ -179,39 +193,34 @@ class TabBar {
         let tabs: HTMLElement = document.getElementById("tabs");
         tabs.innerHTML = "";
         for (let index = 0; index < this.size(); index++) {
-            let tabDiv: HTMLDivElement = document.createElement("div"),
-                tabTitle: HTMLDivElement = document.createElement("div"),
-                tabFavicon: HTMLDivElement = document.createElement("div"),
-                tabClose: HTMLDivElement = document.createElement("div"),
-                xButton: HTMLButtonElement = document.createElement("button"),
-                tab: Tab = this.tabs[index];
+            let tabDiv: HTMLDivElement = document.createElement("div");
+            let tabTitle: HTMLDivElement = document.createElement("div");
+            let tabFavicon: HTMLDivElement = document.createElement("div");
+            let tabClose: HTMLDivElement = document.createElement("div");
+            let tab: Tab = this.tabs[index];
+            let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.url;
 
             tabDiv.className = "chrome-tab";
             tabDiv.id = tab.id;
 
+            // Make the button title the name of the website not URL 
             tabTitle.title = tabTitle.innerHTML = tab.title;
-            let tab_fav = "http://www.google.com/s2/favicons?domain=" + tab.url;
-            tabFavicon.innerHTML = "<img src = " + tab_fav + ">";
+
+            tabFavicon.innerHTML = "<img src = " + tabFav + ">";
             tabTitle.className = "chrome-tab-title";
             tabClose.className = "chrome-tab-close";
             tabFavicon.className = "chrome-tab-favicon";
             tabClose.onclick = () => {
-                if (!Tabs.removeTab(Tabs.activeUser(), tabDiv.id)) {
+                if (!Tabs.removeTab(Tabs.activeUser, tabDiv.id)) {
+                    // if there are no more tabs close application. Temporary
                     require("electron").remote.app.quit();
                 }
                 Tabs.render();
             };
 
-            // Make the button title the name of the website not URL 
-
-            // tabDiv.title = tabDiv.innerHTML = tab.title;
-
             tabDiv.appendChild(tabFavicon); tabDiv.appendChild(tabTitle); tabDiv.appendChild(tabClose);
-            // xButton.innerHTML = "&#215";
-            // xButton.onclick = () => { Tabs.remove_tab(tabDiv.id); };
-            // tabDiv.appendChild(xButton);
             let click = function () {
-                Tabs.bars[Tabs.active_bar].activate(tab);
+                Tabs.bars[Tabs.activeUser].activate(tab);
                 Tabs.render();
                 tabSwitch();
             };
@@ -222,105 +231,157 @@ class TabBar {
                 tab.webview.style.height = "0px";
             }
         }
-    doLayout();
+        doLayout();
     }
 }
 
+/**
+ * class TabBarSet:
+ * 
+ * Description:
+ *      Overarching handler for Tabs and TabBars. 
+ *      Essentially TabBarSet organizes multiple TabBars with their user.
+ *      A user must have a non-zero number of tabs to have a TabBar
+ */
 class TabBarSet {
-    bars: TabBar[];
-    active_bar: number;
+    // figure out how to make this typed as string -> TabBar instead of any
+    public bars: any;
+    public activeUser: string;
     constructor() {
-        this.bars = [];
-        this.active_bar = -1;
+        this.bars = {};
+        this.activeUser = "";
     }
+    /**
+     *  Description:
+     *      returns the number of TabBar objects within the set
+     */
     public size(): number {
-        return this.bars.length;
+        return Object.keys(this.bars).length;
     }
+    /**
+     * Description:
+     *      returns the TabBar associated with the user input, null if not found
+     * 
+     * @param user   username accociated with the returned TabBar
+     */
     public get(user: string): TabBar {
-        for (let index = 0; index < this.size(); index++) {
-            if (user === this.bars[index].user) {
-                return this.bars[index];
-            }
+        if (this.bars.hasOwnProperty(user)) {
+            return this.bars[user];
         }
         return null;
     }
+    /**
+     *  Description
+     *      adds a Tab to a users TabBar. 
+     *      Creates a TabBar for them if they don't have one.
+     *      Use this to create the TabBar for a user
+     * 
+     *  @param user   user who owns the tab
+     *  @param tab   Tab object to add
+     */
     public addTab(user: string, tab: Tab): void {
         let bar: TabBar = this.get(user);
         if (bar === null) {
-            bar = new TabBar(user);
+            bar = new TabBar();
             bar.add_tab(tab);
-            this.bars.push(bar);
-        }
-        else {
+            this.bars[user] = bar;
+        }else {
             bar.add_tab(tab);
         }
 
     }
-    public removeTab(user: string, tab_id: string): boolean {
+    /**
+     *  Description:
+     *      removes tab with tab.id = tabID from the input users bar
+     *  
+     *  Return Value:
+     *      boolean indicating success of removal, false is problematic (TabBar is now empty and needs to be handled)
+     *  @param user   username of tab owner
+     *  @param tabID   id of tab to remove
+     */
+    public removeTab(user: string, tabID: string): boolean {
+        // potentially handle case where removing tab causes empty TabBar
         let bar: TabBar = this.get(user);
         if (bar !== null) {
-            return bar.remove_tab(tab_id);
+            return bar.removeTab(tabID);
         }
         return false;
     }
+    /**
+     *  Description:
+     *      removes user and destroys all their tabs and TabBar
+     *  
+     *  @param user   user to remove
+     */
     public removeUser(user: string): void {
-        let result: number = -1;
-        for (let index = 0; index < this.size(); index++) {
-            if (this.bars[index].user === user) {
-                result = index;
-                break;
-            }
-        }
-        if (result > -1) {
-            let bar = this.bars.splice(result, 1)[0];
-            while (bar.size() > 0) {
-                bar.remove_tab(bar.active().id);
-            }
-        }
+       if (this.bars.hasOwnProperty(user)) {
+           this.bars[user].removeAllTabs();
+       }
+       if (user === this.activeUser) {
+           this.activeUser = "";
+       }
+       delete this.bars[user];
     }
+    /**
+     *  Description:
+     *      makes the given user the current user and sets up their active tab as the displayed tab
+     *  
+     *  @param user   user to activate
+     */
     public activate(user: string): void {
         let bar: TabBar = this.get(user);
         if (bar === null) {
             console.error("attempt to activate user that does not exist");
             return;
         }
-        this.active_bar = -1;
+        this.activeUser = user;
         // set all other tabs to inactive (hidden)
-        for (let index = 0; index < this.size(); index++) {
-            let tmpBar = this.bars[index];
-            if (tmpBar.user === bar.user) {
-                this.active_bar = index;
-            }
-            for (let bar_index = 0; bar_index < tmpBar.size(); bar_index++) {
-                tmpBar.tabs[bar_index].active = false;
-                tmpBar.tabs[bar_index].webview.style.width = "0px";
-                tmpBar.tabs[bar_index].webview.style.height = "0px";
-            }
-        }
+        let self: TabBarSet = this;
+        Object.keys(this.bars).forEach(function (key: string){
+            self.bars[key].hideTabs();
+        });
         // set tab state of active tab in bar to active
         bar.active().active = true;
         bar.render();
     }
+    /**
+     *  Description:
+     *      returns the active Tab object from the active user's TabBar
+     */
     public activeTab(): Tab {
-        return this.bars[this.active_bar].active();
+        return this.bars[this.activeUser].active();
     }
-    public activeUser(): string {
-        return this.bars[this.active_bar].user;
-    }
-    public getTab(tab_id: string): Tab {
-        for (let index = 0; index < this.size(); index++) {
-            let bar: TabBar = this.bars[index];
-            for (let tab_index = 0; tab_index < bar.size(); tab_index++) {
-                if (bar.tabs[tab_index].id === tab_id) {
-                    return bar.tabs[tab_index];
-                }
-            }
+    /**
+     * Description:
+     *      returns the Tab object associated with the given id
+     *  @param tab_id   tab id to search for
+     */
+    public getTab(tabID: string): Tab {
+        let self: TabBarSet = this;
+        let result: Tab[] = Object.keys(this.bars).map( function (key: string) {
+            return self.bars[key].get(tabID);
+        }).filter(function (val: Tab){
+            return val !== null;
+        });
+        if (result.length) {
+            return result[0];
         }
-    return null;
+        return null;
+    }
+    /**
+     *  Description:
+     *      handles rendering of the current user's TabBar.
+     */
+    public render(): void {
+        this.bars[this.activeUser].render();
     }
 
-    public render(): void {
-        this.bars[this.active_bar].render();
+    /**
+     *  Description: 
+     *      returns list of current users.
+     */
+    public getUsers(): string[] {
+        return Object.keys(this.bars);
     }
 
 }
@@ -328,17 +389,16 @@ class TabBarSet {
 let Tabs: TabBarSet = new TabBarSet();
 window.onresize = doLayout;
 let isLoading: boolean = false;
-let ipc: Electron.IpcRenderer = require("electron").ipcRenderer;
-onload = () => {
+const ipc = require("electron").ipcRenderer;
 
+onload = () => {
     Tabs.addTab("test", new Tab({
         url: "http://athenanet.athenahealth.com"
     }));
     Tabs.activate("test");
-    let reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload"),
-        urlBar: HTMLFormElement = <HTMLFormElement>document.getElementById("location-form");
-
-    doLayout();
+    let reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload");
+    let urlBar: HTMLFormElement = <HTMLFormElement>document.getElementById("location-form");
+    let addressBar: HTMLInputElement = <HTMLInputElement>document.getElementById("location");
 
     urlBar.onsubmit = (): boolean => {
         let address: string = (<HTMLInputElement>document.querySelector("#location")).value;
@@ -347,6 +407,13 @@ onload = () => {
         return false;
     };
 
+    doLayout();
+
+    addressBar.onfocus = (): void => {
+        addressBar.select();
+    };
+
+    // Navigation button controls
     document.getElementById("back").onclick = function () {
         Tabs.activeTab().webview.goBack();
     };
@@ -360,32 +427,17 @@ onload = () => {
     };
 
     document.getElementById("add-tab").onclick = function () {
-        Tabs.addTab(Tabs.activeUser(), new Tab({
+        Tabs.addTab(Tabs.activeUser, new Tab({
             url: "about:blank"
         }));
     };
 
-
     ipc.on("openPDF", function (event, filedata) {
-        debugger;
         let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
         let PDFurl: string = PDFViewerURL + filedata.url;
-        let hasOpenedPDF: boolean = false;
-
-        Tabs.bars.forEach(function (bar) {
-            bar.tabs.forEach(function (tab){
-                if (tab.url === filedata.url) {
-                    navigateTo(tab.webview, PDFurl);
-                    hasOpenedPDF = true;
-                }
-            });
-        });
-        // open in new tab
-        if (!hasOpenedPDF) {
-            Tabs.addTab(Tabs.activeUser(), new Tab({
+        Tabs.addTab(Tabs.activeUser, new Tab({
                 url: PDFurl
-            }));
-        }
+        }));
     });
 
     reload.onclick = function () {
@@ -397,7 +449,11 @@ onload = () => {
     };
 };
 
-
+/**
+ * Creates a new webview
+ *
+ * @returns A newly created webview tag.
+ */
 function createWebview(): Electron.WebViewElement {
     let webview: Electron.WebViewElement = document.createElement("webview");
     webview.addEventListener("did-start-loading", handleLoadStart);
@@ -412,6 +468,13 @@ function createWebview(): Electron.WebViewElement {
     return webview;
 }
 
+/**
+ * Navigates a tab to a new URL.
+ *
+ * @param webview   The webview to load the new URL into.
+ * @param url   The URL to navigate to.
+ * @param html   Whether the URL is local HTML to load.
+ */
 function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolean): void {
     let address: HTMLInputElement = (<HTMLInputElement>document.querySelector("#location"));
     if (!url) {
@@ -425,44 +488,58 @@ function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolea
     webview.loadURL(url);
 }
 
+/**
+ * Resizes the elements in the window.
+ */
 function doLayout(): void {
-    let webview: Electron.WebViewElement = Tabs.activeTab().webview,
-        controls: HTMLDivElement = <HTMLDivElement> document.querySelector("#controls"),
-        controlsHeight: number = controls.offsetHeight,
-        windowWidth: number = document.documentElement.clientWidth,
-        windowHeight: number = document.documentElement.clientHeight,
-        webviewWidth: number = windowWidth,
-        webviewHeight: number = windowHeight - controlsHeight;
+    let webview: Electron.WebViewElement = Tabs.activeTab().webview;
+    let controls: HTMLDivElement = <HTMLDivElement>document.querySelector("#controls");
+    let tabBar: HTMLDivElement = <HTMLDivElement>document.querySelector("#tabs-shell");
+    let controlsHeight: number = controls.offsetHeight;
+    let tabBarHeight: number = tabBar.offsetHeight;
+    let windowWidth: number = document.documentElement.clientWidth;
+    let windowHeight: number = document.documentElement.clientHeight;
+    let webviewWidth: number = windowWidth;
+    let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
 
     webview.style.width = webviewWidth + "px";
     webview.style.height = webviewHeight + "px";
 }
 
+/**
+ * Function to be called when a webview starts loading a new URL.
+ *
+ * @param event   The event triggered.
+ */
 function handleLoadStart(event: Event): void {
     document.body.classList.add("loading");
-    document.getElementById("reload").innerHTML = "&#10005";
+    document.getElementById("reload").innerHTML = "&#10005;";
     isLoading = true;
 }
 
+/**
+ * Function to be called when a webview stops loading a new URL.
+ *
+ * @param event   The event triggered.
+ */
 function handleLoadStop(event: Event): void {
     isLoading = false;
     let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
-    let tab = Tabs.getTab(webview.getAttribute("tab_id"));
+    let tab = Tabs.getTab(webview.getAttribute("tabID"));
     tab.url = webview.getAttribute("src");
     tab.title = webview.getTitle();
     address.value = tab.url;
     Tabs.render();
 }
 
-/*
+/**
+ * Function to be called when a webview has committed to loading a URL.
+ *
+ * @param event   The event triggered.
+ */
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
-    document.getElementById("reload").innerHTML = "&#10227";
-    isLoading = false;
-}
-*/
-function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
-    document.getElementById("reload").innerHTML = "&#10227";
+    document.getElementById("reload").innerHTML = "&#10227;";
     let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
 
@@ -471,10 +548,20 @@ function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void 
     (<HTMLButtonElement>document.querySelector("#forward")).disabled = !webview.canGoForward();
 }
 
+/**
+ * Function to be called when a webview redirects.
+ *
+ * @param event   The event triggered.
+ */
 function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequestEvent): void {
     (<HTMLInputElement>document.getElementById("location")).value = event.newURL;
 }
 
+/**
+ * Function to be called when a webview fails loading a URL. Loads an error page instead.
+ *
+ * @param event   The event triggered.
+ */
 function handleFailLoad(event: Electron.WebViewElement.DidFailLoadEvent): void {
     if (event.errorCode !== -3) {
         navigateTo(<Electron.WebViewElement>event.target, "file://" + __dirname + "/error.html", true);
@@ -482,11 +569,8 @@ function handleFailLoad(event: Electron.WebViewElement.DidFailLoadEvent): void {
 }
 
 /**
-
  * Actions to happen upon a context switch from Tab to Tab.
-
  */
-
 function tabSwitch(): void {
     let active: Electron.WebViewElement = Tabs.activeTab().webview;
 
