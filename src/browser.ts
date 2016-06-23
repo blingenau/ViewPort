@@ -280,14 +280,14 @@ class TabBarSet {
     }
     /**
      *  Description:
-     *      removes tab with tab.id = tab_id from the input users bar
+     *      removes tab with tab.id = tabID from the input users bar
      *  
      *  Return Value:
      *      boolean indicating success of removal, false is problematic (TabBar is now empty and needs to be handled)
      *  @param user   username of tab owner
-     *  @param tab_id   id of tab to remove
+     *  @param tabID   id of tab to remove
      */
-    public removeTab(user: string, tab_id: string): boolean {
+    public removeTab(user: string, tabID: string): boolean {
         let bar: TabBar = this.get(user);
         if (bar !== null) {
             return bar.removeTab(tabID);
@@ -334,20 +334,10 @@ class TabBarSet {
             if (tmpBar.user === bar.user) {
                 this.activeBar = index;
             }
-<<<<<<< HEAD
-            for (let bar_index = 0; bar_index < tmpBar.size(); bar_index++) {
-                tmpBar.tabs[bar_index].active = false;
-                if (tmpBar.tabs[bar_index].id !== bar.active().id) {
-                    // setting the size to zero of the active webview causes rendering issue
-                    tmpBar.tabs[bar_index].webview.style.width = "0px";
-                    tmpBar.tabs[bar_index].webview.style.height = "0px";
-                }
-=======
             for (let barIndex = 0; barIndex < tmpBar.size(); barIndex++) {
                 tmpBar.tabs[barIndex].active = false;
                 tmpBar.tabs[barIndex].webview.style.width = "0px";
                 tmpBar.tabs[barIndex].webview.style.height = "0px";
->>>>>>> f0c0bb46f845e9a475bd085bffb3500ef92bb765
             }
         }
         // set tab state of active tab in bar to active
@@ -368,16 +358,12 @@ class TabBarSet {
     public activeUser(): string {
         return this.bars[this.activeBar].user;
     }
-<<<<<<< HEAD
     /**
      * Description:
      *      returns the Tab object associated with the given id
      *  @param tab_id   tab id to search for
      */
-    public getTab(tab_id: string): Tab {
-=======
     public getTab(tabID: string): Tab {
->>>>>>> f0c0bb46f845e9a475bd085bffb3500ef92bb765
         for (let index = 0; index < this.size(); index++) {
             let bar: TabBar = this.bars[index];
             for (let tabIndex = 0; tabIndex < bar.size(); tabIndex++) {
@@ -447,7 +433,6 @@ onload = () => {
     ipc.on("openPDF", function (event, filedata) {
         let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
         let PDFurl: string = PDFViewerURL + filedata.url;
-        let hasOpenedPDF: boolean = false;
         Tabs.addTab(Tabs.activeUser(), new Tab({
                 url: PDFurl
         }));
