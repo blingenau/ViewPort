@@ -234,6 +234,13 @@ class TabBar {
         doLayout();
     }
 }
+/**
+ *  Description:
+ *      define interface for user->TabBar dictionary
+ */
+interface IUserMap {
+    [user: string]: TabBar;
+}
 
 /**
  * class TabBarSet:
@@ -245,7 +252,7 @@ class TabBar {
  */
 class TabBarSet {
     // figure out how to make this typed as string -> TabBar instead of any
-    public bars: any;
+    public bars: IUserMap;
     public activeUser: string;
     constructor() {
         this.bars = {};
@@ -315,7 +322,7 @@ class TabBarSet {
      */
     public removeUser(user: string): void {
        if (this.bars.hasOwnProperty(user)) {
-           this.bars[user].removeAllTabs();
+           this.bars[user].clearAllTabs();
        }
        if (user === this.activeUser) {
            this.activeUser = "";
@@ -358,13 +365,13 @@ class TabBarSet {
      */
     public getTab(tabID: string): Tab {
         let self: TabBarSet = this;
-        let result: Tab[] = Object.keys(this.bars).map( function (key: string) {
+        let result: Tab = Object.keys(this.bars).map( function (key: string) {
             return self.bars[key].get(tabID);
-        }).filter(function (val: Tab){
+        }).find(function (val: Tab){
             return val !== null;
         });
-        if (result.length) {
-            return result[0];
+        if (result !== undefined) {
+            return result;
         }
         return null;
     }
@@ -390,10 +397,11 @@ let Tabs: TabBarSet = new TabBarSet();
 window.onresize = doLayout;
 let isLoading: boolean = false;
 const ipc = require("electron").ipcRenderer;
+const homepage = "http://athenanet.athenahealth.com";
 
 onload = () => {
     Tabs.addTab("test", new Tab({
-        url: "http://athenanet.athenahealth.com"
+        url: homepage
     }));
     Tabs.activate("test");
     let reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload");
@@ -423,7 +431,7 @@ onload = () => {
     };
 
     document.getElementById("home").onclick = function () {
-        navigateTo(Tabs.activeTab().webview, "http://athenanet.athenahealth.com/");
+        navigateTo(Tabs.activeTab().webview, homepage);
     };
 
     document.getElementById("add-tab").onclick = function () {
@@ -478,7 +486,7 @@ function createWebview(): Electron.WebViewElement {
 function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolean): void {
     let address: HTMLInputElement = (<HTMLInputElement>document.querySelector("#location"));
     if (!url) {
-        url = "http://athenanet.athenahealth.com";
+        url = homepage;
     }
 
     if (url.indexOf("http") === -1 && !html) {
