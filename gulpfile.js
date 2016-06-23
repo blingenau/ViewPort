@@ -1,11 +1,13 @@
+const clean = require("gulp-clean");
 const gulp = require("gulp");
 const merge = require("merge2");
-const ts = require("gulp-typescript");
-const tslint = require("gulp-tslint");
 const mocha = require("gulp-mocha");
 const npmFiles = require("gulp-npm-files");
-const clean = require("gulp-clean");
-const replace = require("gulp-replace");
+const os = require("os");
+const package = require("./package.json");
+const packager = require("electron-packager");
+const ts = require("gulp-typescript");
+const tslint = require("gulp-tslint");
 
 gulp.task("tslint", () => {
     return gulp
@@ -21,7 +23,7 @@ gulp.task("tslint", () => {
         .pipe(tslint.report("verbose"));
 });
 
-gulp.task("tsc", ["tslint"], () => {
+gulp.task("tsc", ["tslint", "clean-dist"], () => {
     const tsProject = ts.createProject("tsconfig.json");
 
     return tsProject
@@ -56,7 +58,6 @@ gulp.task("clean-dist", () => {
 
 gulp.task("copy-package-json", ["clean-dist"], () => {
     gulp.src(["package.json"])
-        .pipe(replace("dist/", ""))
         .pipe(gulp.dest("dist"));
 });
 
@@ -76,7 +77,13 @@ gulp.task("copy", ["clean-dist"], () => {
         .pipe(gulp.dest("dist"));
 });
 
-gulp.task("dist", ["unit-tests", "copy-package-json", "copy-npm-dependencies", "copy"], () => {
+gulp.task("dist", [
+        "unit-tests",
+        "tsc",
+        "copy-package-json",
+        "copy-npm-dependencies",
+        "copy"
+    ], () => {
     const tsProject = ts.createProject(
         "tsconfig.json",
         {
@@ -89,4 +96,23 @@ gulp.task("dist", ["unit-tests", "copy-package-json", "copy-npm-dependencies", "
         .js.pipe(gulp.dest("dist"));
 });
 
-gulp.task("default", ["tsc", "tsc-test", "unit-tests", "dist"]);
+gulp.task("package", ["dist"], (callback) => {
+    var options = {
+        dir: "dist",
+        name: package.productName,
+        platform: "darwin",
+        arch: "x64",
+        version: process.versions.electron,
+        out: "packages",
+        "app-version": package.version,
+        overwrite: true
+    };
+    packager(options, (err, appPath) => {
+        if (err) {
+            return console.log(err);
+        }
+        callback();
+    });
+});
+
+gulp.task("default", ["dist"]);
