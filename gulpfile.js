@@ -38,12 +38,6 @@ gulp.task("dist", () => {
         .src()
         .pipe(ts(tsProject))
         .js.pipe(gulp.dest("dist"));
-    /*
-    return merge([
-        tsResult.dts.pipe(gulp.dest("dist")),
-        tsResult.js.pipe(gulp.dest("dist"))
-    ]);
-    */
 });
 
 gulp.task("default", ["tsc", "tslint", "dist", "copy"]);

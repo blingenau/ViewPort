@@ -190,6 +190,7 @@ var TabBar = (function () {
             tabFavicon.className = "chrome-tab-favicon";
             tabClose.onclick = function () {
                 if (!Tabs.removeTab(Tabs.activeUser(), tabDiv.id)) {
+                    // if there are no more tabs close application. Temporary
                     require("electron").remote.app.quit();
                 }
                 Tabs.render();
@@ -217,14 +218,32 @@ var TabBar = (function () {
     };
     return TabBar;
 }());
+/**
+ * class TabBarSet:
+ *
+ * Description:
+ *      Overarching handler for Tabs and TabBars.
+ *      Essentially TabBarSet organizes multiple TabBars with their user.
+ *      A user must have a non-zero number of tabs to have a TabBar
+ */
 var TabBarSet = (function () {
     function TabBarSet() {
         this.bars = [];
         this.activeBar = -1;
     }
+    /**
+     *  Description:
+     *      returns the number of TabBar objects within the set
+     */
     TabBarSet.prototype.size = function () {
         return this.bars.length;
     };
+    /**
+     * Description:
+     *      returns the TabBar associated with the user input, null if not found
+     *
+     * @param user   username accociated with the returned TabBar
+     */
     TabBarSet.prototype.get = function (user) {
         for (var index = 0; index < this.size(); index++) {
             if (user === this.bars[index].user) {
@@ -233,6 +252,15 @@ var TabBarSet = (function () {
         }
         return null;
     };
+    /**
+     *  Description
+     *      adds a Tab to a users TabBar.
+     *      Creates a TabBar for them if they don't have one.
+     *      Use this to create the TabBar for a user
+     *
+     *  @param user   user who owns the tab
+     *  @param tab   Tab object to add
+     */
     TabBarSet.prototype.addTab = function (user, tab) {
         var bar = this.get(user);
         if (bar === null) {
@@ -244,6 +272,15 @@ var TabBarSet = (function () {
             bar.add_tab(tab);
         }
     };
+    /**
+     *  Description:
+     *      removes tab with tab.id = tabID from the input users bar
+     *
+     *  Return Value:
+     *      boolean indicating success of removal, false is problematic (TabBar is now empty and needs to be handled)
+     *  @param user   username of tab owner
+     *  @param tabID   id of tab to remove
+     */
     TabBarSet.prototype.removeTab = function (user, tabID) {
         var bar = this.get(user);
         if (bar !== null) {
@@ -251,6 +288,12 @@ var TabBarSet = (function () {
         }
         return false;
     };
+    /**
+     *  Description:
+     *      removes user and destroys all their tabs and TabBar
+     *
+     *  @param user   user to remove
+     */
     TabBarSet.prototype.removeUser = function (user) {
         var result = -1;
         for (var index = 0; index < this.size(); index++) {
@@ -266,6 +309,12 @@ var TabBarSet = (function () {
             }
         }
     };
+    /**
+     *  Description:
+     *      makes the given user the current user and sets up their active tab as the displayed tab
+     *
+     *  @param user   user to activate
+     */
     TabBarSet.prototype.activate = function (user) {
         var bar = this.get(user);
         if (bar === null) {
@@ -289,12 +338,25 @@ var TabBarSet = (function () {
         bar.active().active = true;
         bar.render();
     };
+    /**
+     *  Description:
+     *      returns the active Tab object from the active user's TabBar
+     */
     TabBarSet.prototype.activeTab = function () {
         return this.bars[this.activeBar].active();
     };
+    /**
+     *  Description:
+     *      returns the current active user
+     */
     TabBarSet.prototype.activeUser = function () {
         return this.bars[this.activeBar].user;
     };
+    /**
+     * Description:
+     *      returns the Tab object associated with the given id
+     *  @param tab_id   tab id to search for
+     */
     TabBarSet.prototype.getTab = function (tabID) {
         for (var index = 0; index < this.size(); index++) {
             var bar = this.bars[index];
@@ -306,6 +368,10 @@ var TabBarSet = (function () {
         }
         return null;
     };
+    /**
+     *  Description:
+     *      handles rendering of the current user's TabBar.
+     */
     TabBarSet.prototype.render = function () {
         this.bars[this.activeBar].render();
     };
@@ -351,21 +417,9 @@ onload = function () {
     ipc.on("openPDF", function (event, filedata) {
         var PDFViewerURL = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
         var PDFurl = PDFViewerURL + filedata.url;
-        var hasOpenedPDF = false;
-        Tabs.bars.forEach(function (bar) {
-            bar.tabs.forEach(function (tab) {
-                if (tab.url === filedata.url) {
-                    navigateTo(tab.webview, PDFurl);
-                    hasOpenedPDF = true;
-                }
-            });
-        });
-        // open in new tab
-        if (!hasOpenedPDF) {
-            Tabs.addTab(Tabs.activeUser(), new Tab({
-                url: PDFurl
-            }));
-        }
+        Tabs.addTab(Tabs.activeUser(), new Tab({
+            url: PDFurl
+        }));
     });
     reload.onclick = function () {
         if (isLoading) {
