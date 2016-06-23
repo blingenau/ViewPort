@@ -6,7 +6,9 @@ const tslint = require("gulp-tslint");
 gulp.task("tslint", () => {
     return gulp
         .src(["src/**/*.ts", "!src/**/*.d.ts"])
-        .pipe(tslint())
+        .pipe(tslint({
+            configuration: "./tslint.json"
+        }))
         .pipe(tslint.report("verbose"));
 });
 

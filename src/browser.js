@@ -1,54 +1,55 @@
 /// <reference path="Definitions/github-electron.d.ts" />
 /// <reference path="Definitions/node.d.ts" />
-/*
-    Class Tab:
-    
-    Description:
-        Organizes information needed to display a tab and webview
-    Properties:
-        url: string - url of the tab
-        id: string - random unique ID for the tab
-        active: boolean - is the tab the current active tab on screen
-        webview: Electron.WebViewElement - webview element of tab
-*/
+/**
+ *  Class Tab:
+ *
+ *  Description:
+ *      Organizes information needed to display a tab and webview
+ *
+ *  Properties:
+ *      url: string - url of the tab
+ *      id: string - random unique ID for the tab
+ *      active: boolean - is the tab the current active tab on screen
+ *      webview: Electron.WebViewElement - webview element of tab
+ */
 var Tab = (function () {
     function Tab(tab) {
-        this.url = tab.url || "",
-            this.id = tab.id || Math.round(Math.random() * 100000000000000000).toString(),
-            this.title = tab.title || "",
-            this.webview = tab.webview || createWebview();
+        this.url = tab.url || "";
+        this.id = tab.id || Math.round(Math.random() * 100000000000000000).toString();
+        this.title = tab.title || "";
+        this.webview = tab.webview || createWebview();
         this.active = tab.active || true;
         this.webview.src = this.url;
-        this.webview.setAttribute("tab_id", this.id);
+        this.webview.setAttribute("tabID", this.id);
     }
     return Tab;
 }());
-/*
-    Class TabBar:
-    
-    Description:
-        Organizes Tab objects and handles displaying them in some way
-    Properties:
-        tabs: Tab[] - list of Tab objects (see Tab class)
-        active_tab: number - index of tab in the list that is the active tab
-*/
+/**
+ *  Class TabBar:
+ *
+ *  Description:
+ *      Organizes Tab objects and handles displaying them in some way
+ *  Properties:
+ *      user: string - user_id associated with a set of tabs
+ *      tabs: Tab[] - list of Tab objects (see Tab class)
+ *      activeTab: number - index of tab in the list that is the active tab
+ */
 var TabBar = (function () {
-    function TabBar() {
+    function TabBar(user) {
+        if (user === void 0) { user = ""; }
         this.tabs = [];
-        this.active_tab = -1;
+        this.activeTab = -1;
+        this.user = user || Math.round(Math.random() * 100000000000000000).toString();
     }
-    /*
-        Function: TabBar.get(id: string): Tab
-        
-        Description:
-            gets a Tab from within the list with id matching input
-        
-        Arguments:
-            id: string - id of tab to return
-
-        Return Value:
-            Tab object matching id input if found, else null
-    */
+    /**
+     *  Description:
+     *      gets a Tab from within the list with id matching input
+     *
+     *  Return Value:
+     *      Tab object matching id input if found, else null
+     *
+     * @param id   : id of tab to return.
+     */
     TabBar.prototype.get = function (id) {
         for (var index = 0; index < this.size(); index++) {
             if (this.tabs[index].id === id) {
@@ -61,59 +62,59 @@ var TabBar = (function () {
         Function: TabBar.size()
         returns number of tabs currently in the TabBar
     */
+    /**
+     *  Description:
+     *      returns number of tabs currently in the TabBar
+     */
     TabBar.prototype.size = function () {
         return this.tabs.length;
     };
-    /*
-        Function: TabBar.add_tab(tab: Tab, background: boolean = false): void
-
-        Description:
-            pushes a Tab into list of tabs
-        
-        Arguments:
-            tab: Tab - Tab object to insert
-            background: boolean - if true open in background (not active) - default false
-        
-        Return Value:
-            none
-    */
+    /**
+     *  Description:
+     *      pushes a Tab into list of tabs
+     *
+     *  Return Value:
+     *      none
+     *
+     *  @param tab   : Tab object to insert
+     *  @param background   if true open tab in background (not active), default false
+     */
     TabBar.prototype.add_tab = function (tab, background) {
         if (background === void 0) { background = false; }
         this.tabs.push(tab);
-        if (this.active_tab === -1) {
-            this.active_tab = 0;
+        if (this.activeTab === -1) {
+            this.activeTab = 0;
         }
         if (!background) {
             // if tab not a background tab then set it as active tab
-            this.active_tab = this.size() - 1;
+            this.activeTab = this.size() - 1;
         }
         for (var index = 0; index < this.size(); index++) {
-            this.tabs[index].active = this.active_tab === index;
+            this.tabs[index].active = this.activeTab === index;
         }
-        this.render();
     };
-    /*
-        Function: TabBar.remove_tab(tab_id: string): boolean
-
-        Description:
-            Removes a tab matching tab_id input.
-        
-        Arguments:
-            tab_id: string - tab_id to find and remove tab
-        
-        Return Value:
-            returns remove state (true is good, false means TabBar is empty (closed) or error)
-    */
-    // 
-    TabBar.prototype.remove_tab = function (tab_id) {
+    /**
+     *  Description:
+     *      Removes a tab matching tabID input.
+     *
+     *  Return Value:
+     *      returns remove state (true is good, false means TabBar is empty (closed) or error)
+     *
+     * @param tabID   id of tab to find and remove.
+     */
+    TabBar.prototype.removeTab = function (tabID) {
         if (this.size() === 0) {
             // this should not happen
             console.log("Popping from empty TabBar");
             return false;
         }
+        else if (this.size() === 1) {
+            ipc.send("tabs-all-closed");
+            return true;
+        }
         var result = -1;
         for (var index = 0; index < this.size(); index++) {
-            if (this.tabs[index].id === tab_id) {
+            if (this.tabs[index].id === tabID) {
                 result = index;
                 break;
             }
@@ -129,84 +130,75 @@ var TabBar = (function () {
                 this.activate(this.tabs[Math.min(result, this.size() - 1)]);
             }
             else {
-                if (result < this.active_tab) {
-                    this.active_tab--;
+                if (result < this.activeTab) {
+                    this.activeTab--;
                 }
             }
             return true;
         }
         return false;
     };
-    /*
-        Function: TabBar.active(): Tab
-        returns active tab within TabBar
-    */
+    /**
+     * Description:
+     *      returns active Tab object within TabBar
+     */
     TabBar.prototype.active = function () {
-        return this.tabs[this.active_tab];
+        return this.tabs[this.activeTab];
     };
-    /*
-        Function: TabBar.activate(tab: Tab): void
-
-        Description:
-            activate the given tab, and set all other tabs in TabBar to inactive
-
-        Arguments:
-            tab: Tab - Tab object ot activate
-        
-        Return value:
-            none
-    */
+    /**
+     *  Description:
+     *      activate the given tab, and set all other tabs in TabBar to inactive
+     *  Return value:
+     *      none
+     *
+     * @param tab   Tab object to make active, make all others inactive.
+     */
     TabBar.prototype.activate = function (tab) {
-        var button = document.getElementById(tab.id);
+        // let button: HTMLElement = document.getElementById(tab.id);
         for (var index = 0; index < this.size(); index++) {
             this.tabs[index].active = this.tabs[index].id === tab.id;
             if (this.tabs[index].active) {
-                this.active_tab = index;
+                this.activeTab = index;
             }
         }
     };
-    /*
-        Function: TabBar.render(): void
-
-        Description:
-            Handles the rendering of multiple tabs and setting up tab buttons.
-            Currently assigns an on-click call to global Tabs variable.
-
-        Arguments:
-            none
-        
-        Return Value:
-            none
-    */
+    /**
+     * Description:
+     *      Handles the rendering of multiple tabs and setting up tab buttons.
+     *      Currently assigns an on-click call to global Tabs variable.
+     *
+     *  Return Value:
+     *      none
+     */
     TabBar.prototype.render = function () {
         var tabs = document.getElementById("tabs");
         tabs.innerHTML = "";
         var _loop_1 = function(index) {
-            var tabDiv = document.createElement("div"), tabTitle = document.createElement("div"), tabFavicon = document.createElement("div"), tabClose = document.createElement("div"), xButton = document.createElement("button"), tab = this_1.tabs[index];
+            var tabDiv = document.createElement("div");
+            var tabTitle = document.createElement("div");
+            var tabFavicon = document.createElement("div");
+            var tabClose = document.createElement("div");
+            var tab = this_1.tabs[index];
+            var tabFav = "http://www.google.com/s2/favicons?domain=" + tab.url;
             tabDiv.className = "chrome-tab";
             tabDiv.id = tab.id;
+            // Make the button title the name of the website not URL 
             tabTitle.title = tabTitle.innerHTML = tab.title;
-            var tab_fav = "http://www.google.com/s2/favicons?domain=" + tab.url;
-            // tabFavicon.innerHTML = `style="background-image: url(` + tab_fav + ")";
-            // tabFavicon.style = background-image: url( + tab_fav + ")" + `"`;
-            tabFavicon.innerHTML = "<img src = " + tab_fav + ">";
+            tabFavicon.innerHTML = "<img src = " + tabFav + ">";
             tabTitle.className = "chrome-tab-title";
             tabClose.className = "chrome-tab-close";
             tabFavicon.className = "chrome-tab-favicon";
             tabClose.onclick = function () {
-                Tabs.remove_tab(tabDiv.id);
+                if (!Tabs.removeTab(Tabs.activeUser(), tabDiv.id)) {
+                    require("electron").remote.app.quit();
+                }
                 Tabs.render();
             };
-            // Make the button title the name of the website not URL 
-            // tabDiv.title = tabDiv.innerHTML = tab.title;
             tabDiv.appendChild(tabFavicon);
             tabDiv.appendChild(tabTitle);
             tabDiv.appendChild(tabClose);
-            // xButton.innerHTML = "&#215";
-            // xButton.onclick = () => { Tabs.remove_tab(tabDiv.id); };
-            // tabDiv.appendChild(xButton);
             var click = function () {
-                Tabs.activate(tab);
+                Tabs.bars[Tabs.activeBar].activate(tab);
                 Tabs.render();
                 tabSwitch();
             };
@@ -225,63 +217,170 @@ var TabBar = (function () {
     };
     return TabBar;
 }());
-var Tabs = new TabBar();
+var TabBarSet = (function () {
+    function TabBarSet() {
+        this.bars = [];
+        this.activeBar = -1;
+    }
+    TabBarSet.prototype.size = function () {
+        return this.bars.length;
+    };
+    TabBarSet.prototype.get = function (user) {
+        for (var index = 0; index < this.size(); index++) {
+            if (user === this.bars[index].user) {
+                return this.bars[index];
+            }
+        }
+        return null;
+    };
+    TabBarSet.prototype.addTab = function (user, tab) {
+        var bar = this.get(user);
+        if (bar === null) {
+            bar = new TabBar(user);
+            bar.add_tab(tab);
+            this.bars.push(bar);
+        }
+        else {
+            bar.add_tab(tab);
+        }
+    };
+    TabBarSet.prototype.removeTab = function (user, tabID) {
+        var bar = this.get(user);
+        if (bar !== null) {
+            return bar.removeTab(tabID);
+        }
+        return false;
+    };
+    TabBarSet.prototype.removeUser = function (user) {
+        var result = -1;
+        for (var index = 0; index < this.size(); index++) {
+            if (this.bars[index].user === user) {
+                result = index;
+                break;
+            }
+        }
+        if (result > -1) {
+            var bar = this.bars.splice(result, 1)[0];
+            while (bar.size() > 0) {
+                bar.removeTab(bar.active().id);
+            }
+        }
+    };
+    TabBarSet.prototype.activate = function (user) {
+        var bar = this.get(user);
+        if (bar === null) {
+            console.error("attempt to activate user that does not exist");
+            return;
+        }
+        this.activeBar = -1;
+        // set all other tabs to inactive (hidden)
+        for (var index = 0; index < this.size(); index++) {
+            var tmpBar = this.bars[index];
+            if (tmpBar.user === bar.user) {
+                this.activeBar = index;
+            }
+            for (var barIndex = 0; barIndex < tmpBar.size(); barIndex++) {
+                tmpBar.tabs[barIndex].active = false;
+                tmpBar.tabs[barIndex].webview.style.width = "0px";
+                tmpBar.tabs[barIndex].webview.style.height = "0px";
+            }
+        }
+        // set tab state of active tab in bar to active
+        bar.active().active = true;
+        bar.render();
+    };
+    TabBarSet.prototype.activeTab = function () {
+        return this.bars[this.activeBar].active();
+    };
+    TabBarSet.prototype.activeUser = function () {
+        return this.bars[this.activeBar].user;
+    };
+    TabBarSet.prototype.getTab = function (tabID) {
+        for (var index = 0; index < this.size(); index++) {
+            var bar = this.bars[index];
+            for (var tabIndex = 0; tabIndex < bar.size(); tabIndex++) {
+                if (bar.tabs[tabIndex].id === tabID) {
+                    return bar.tabs[tabIndex];
+                }
+            }
+        }
+        return null;
+    };
+    TabBarSet.prototype.render = function () {
+        this.bars[this.activeBar].render();
+    };
+    return TabBarSet;
+}());
+var Tabs = new TabBarSet();
 window.onresize = doLayout;
 var isLoading = false;
 var ipc = require("electron").ipcRenderer;
 onload = function () {
-    Tabs.add_tab(new Tab({
+    Tabs.addTab("test", new Tab({
         url: "http://athenanet.athenahealth.com"
     }));
-    var reload = document.getElementById("reload"), urlBar = document.getElementById("location-form");
-    doLayout();
+    Tabs.activate("test");
+    var reload = document.getElementById("reload");
+    var urlBar = document.getElementById("location-form");
+    var addressBar = document.getElementById("location");
     urlBar.onsubmit = function () {
         var address = document.querySelector("#location").value;
-        Tabs.active().url = address;
-        navigateTo(Tabs.active().webview, address);
+        Tabs.activeTab().url = address;
+        navigateTo(Tabs.activeTab().webview, address);
         return false;
     };
+    doLayout();
+    addressBar.onfocus = function () {
+        addressBar.select();
+    };
+    // Navigation button controls
     document.getElementById("back").onclick = function () {
-        Tabs.active().webview.goBack();
+        Tabs.activeTab().webview.goBack();
     };
     document.getElementById("forward").onclick = function () {
-        Tabs.active().webview.goForward();
+        Tabs.activeTab().webview.goForward();
     };
     document.getElementById("home").onclick = function () {
-        navigateTo(Tabs.active().webview, "http://athenanet.athenahealth.com/");
+        navigateTo(Tabs.activeTab().webview, "http://athenanet.athenahealth.com/");
     };
     document.getElementById("add-tab").onclick = function () {
-        Tabs.add_tab(new Tab({
+        Tabs.addTab(Tabs.activeUser(), new Tab({
             url: "about:blank"
         }));
     };
     ipc.on("openPDF", function (event, filedata) {
-        debugger;
         var PDFViewerURL = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
         var PDFurl = PDFViewerURL + filedata.url;
         var hasOpenedPDF = false;
-        Tabs.tabs.forEach(function (tab) {
-            if (tab.url === filedata.url) {
-                navigateTo(tab.webview, PDFurl);
-                hasOpenedPDF = true;
-            }
+        Tabs.bars.forEach(function (bar) {
+            bar.tabs.forEach(function (tab) {
+                if (tab.url === filedata.url) {
+                    navigateTo(tab.webview, PDFurl);
+                    hasOpenedPDF = true;
+                }
+            });
         });
         // open in new tab
         if (!hasOpenedPDF) {
-            Tabs.add_tab(new Tab({
+            Tabs.addTab(Tabs.activeUser(), new Tab({
                 url: PDFurl
             }));
         }
     });
     reload.onclick = function () {
         if (isLoading) {
-            Tabs.active().webview.stop();
+            Tabs.activeTab().webview.stop();
         }
         else {
-            Tabs.active().webview.reload();
+            Tabs.activeTab().webview.reload();
         }
     };
 };
+/**
+ * Creates a new webview
+ *
+ * @returns A newly created webview tag.
+ */
 function createWebview() {
     var webview = document.createElement("webview");
     webview.addEventListener("did-start-loading", handleLoadStart);
@@ -295,6 +394,13 @@ function createWebview() {
     document.getElementById("webviews").appendChild(webview);
     return webview;
 }
+/**
+ * Navigates a tab to a new URL.
+ *
+ * @param webview   The webview to load the new URL into.
+ * @param url   The URL to navigate to.
+ * @param html   Whether the URL is local HTML to load.
+ */
 function navigateTo(webview, url, html) {
     var address = document.querySelector("#location");
     if (!url) {
@@ -306,56 +412,83 @@ function navigateTo(webview, url, html) {
     address.blur();
     webview.loadURL(url);
 }
+/**
+ * Resizes the elements in the window.
+ */
 function doLayout() {
-    var webview = Tabs.active().webview, controls = document.querySelector("#controls"), controlsHeight = controls.offsetHeight, windowWidth = document.documentElement.clientWidth, windowHeight = document.documentElement.clientHeight, webviewWidth = windowWidth, webviewHeight = windowHeight - controlsHeight;
+    var webview = Tabs.activeTab().webview;
+    var controls = document.querySelector("#controls");
+    var tabBar = document.querySelector("#tabs-shell");
+    var controlsHeight = controls.offsetHeight;
+    var tabBarHeight = tabBar.offsetHeight;
+    var windowWidth = document.documentElement.clientWidth;
+    var windowHeight = document.documentElement.clientHeight;
+    var webviewWidth = windowWidth;
+    var webviewHeight = windowHeight - controlsHeight - tabBarHeight;
     webview.style.width = webviewWidth + "px";
     webview.style.height = webviewHeight + "px";
 }
+/**
+ * Function to be called when a webview starts loading a new URL.
+ *
+ * @param event   The event triggered.
+ */
 function handleLoadStart(event) {
     document.body.classList.add("loading");
-    document.getElementById("reload").innerHTML = "&#10005";
+    document.getElementById("reload").innerHTML = "&#10005;";
     isLoading = true;
 }
+/**
+ * Function to be called when a webview stops loading a new URL.
+ *
+ * @param event   The event triggered.
+ */
 function handleLoadStop(event) {
     isLoading = false;
     var address = document.querySelector("#location");
-    var webview = Tabs.active().webview;
-    var tab = Tabs.get(webview.getAttribute("tab_id"));
+    var webview = event.target;
+    var tab = Tabs.getTab(webview.getAttribute("tabID"));
     tab.url = webview.getAttribute("src");
     tab.title = webview.getTitle();
     address.value = tab.url;
     Tabs.render();
 }
-/*
-function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
-    document.getElementById("reload").innerHTML = "&#10227";
-    isLoading = false;
-}
-*/
+/**
+ * Function to be called when a webview has committed to loading a URL.
+ *
+ * @param event   The event triggered.
+ */
 function handleLoadCommit(event) {
-    document.getElementById("reload").innerHTML = "&#10227";
-    console.log(event.srcElement);
+    document.getElementById("reload").innerHTML = "&#10227;";
     var address = document.querySelector("#location");
-    var webview = Tabs.active().webview;
+    var webview = event.target;
     address.value = event.url;
     document.querySelector("#back").disabled = !webview.canGoBack();
     document.querySelector("#forward").disabled = !webview.canGoForward();
 }
+/**
+ * Function to be called when a webview redirects.
+ *
+ * @param event   The event triggered.
+ */
 function handleLoadRedirect(event) {
     document.getElementById("location").value = event.newURL;
 }
+/**
+ * Function to be called when a webview fails loading a URL. Loads an error page instead.
+ *
+ * @param event   The event triggered.
+ */
 function handleFailLoad(event) {
     if (event.errorCode !== -3) {
-        navigateTo(Tabs.active().webview, "file://" + __dirname + "/error.html", true);
+        navigateTo(event.target, "file://" + __dirname + "/error.html", true);
     }
 }
 /**
-
  * Actions to happen upon a context switch from Tab to Tab.
-
  */
 function tabSwitch() {
-    var active = Tabs.active().webview;
+    var active = Tabs.activeTab().webview;
     // Re-evaluate the back/forward navigation buttons based on new active Tab
     document.querySelector("#back").disabled = !active.canGoBack();
     document.querySelector("#forward").disabled = !active.canGoForward();
@@ -365,5 +498,5 @@ function tabSwitch() {
     document.getElementById("forward").onclick = function () {
         active.goForward();
     };
-    document.getElementById("location").value = Tabs.active().webview.getURL();
+    document.getElementById("location").value = Tabs.activeTab().webview.getURL();
 }

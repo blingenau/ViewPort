@@ -9,12 +9,15 @@ var BrowserWindow = electron.BrowserWindow;
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
 var mainWindow = null;
-var ipcMain = require("electron").ipcMain;
+// The main process's IPC.
+var ipcMain = electron.ipcMain;
+// Electron's dialog API
+var dialog = require("electron").dialog;
 /**
  * Function to create a browser window
  */
 function createWindow() {
-    // CReate the browser window.
+    // Create the browser window.
     mainWindow = new BrowserWindow({ width: 800, height: 600 });
     // Load the index.html of the app
     mainWindow.loadURL("file://" + __dirname + "/index.html");
@@ -27,8 +30,22 @@ function createWindow() {
         // when you should delete the corresponding element.
         mainWindow = null;
     });
+    mainWindow.on("close", function (event) {
+        var options = {
+            type: "question",
+            title: "Close all tabs",
+            message: "Are you sure you want to close all your tabs?",
+            buttons: ["Yes", "No"]
+        };
+        var response = dialog.showMessageBox(options);
+        if (response === 1) {
+            event.preventDefault();
+        }
+    });
     mainWindow.webContents.session.on("will-download", function (event, item, webContents) {
         var itemURL = item.getURL();
+        // clicking the download button in the viewer opens a blob url, 
+        // so we don't want to open those in the viewer (since that would make it impossible to download a PDF)
         if (item.getMimeType() === "application/pdf" && itemURL.indexOf("blob:") !== 0) {
             event.preventDefault();
             mainWindow.webContents.send("openPDF", {
@@ -78,8 +95,9 @@ var template = [{
                 label: "Toggle Developer Tools",
                 accelerator: process.platform === "darwin" ? "Alt+Command+I" : "Ctrl+Shift+I",
                 click: function (item, focusedWindow) {
-                    if (focusedWindow)
+                    if (focusedWindow) {
                         focusedWindow.webContents.toggleDevTools();
+                    }
                 }
             },
             {
@@ -94,34 +112,40 @@ var template = [{
                 }
             }]
     }];
-function addUpdateMenuItems(items, position) {
-    var version = electron.app.getVersion();
-    var updateItems = [{
-            label: "Version " + version,
-            enabled: false
-        }, {
-            label: "Checking for Update",
-            enabled: false,
-            key: "checkingForUpdate"
-        }, {
-            label: "Check for Update",
-            visible: false,
-            key: "checkForUpdate",
-            click: function () {
-                require("electron").autoUpdater.checkForUpdates();
-            }
-        }, {
-            label: "Restart and Install Update",
-            enabled: true,
-            visible: false,
-            key: "restartToUpdate",
-            click: function () {
-                require("electron").autoUpdater.quitAndInstall();
-            }
-        }];
+/*
+function addUpdateMenuItems (items: any, position: any) {
+    const version = electron.app.getVersion();
+    let updateItems = [{
+    label: `Version ${version}`,
+    enabled: false
+    }, {
+    label: "Checking for Update",
+    enabled: false,
+    key: "checkingForUpdate"
+    }, {
+    label: "Check for Update",
+    visible: false,
+    key: "checkForUpdate",
+    click: function () {
+        require("electron").autoUpdater.checkForUpdates();
+    }
+    }, {
+    label: "Restart and Install Update",
+    enabled: true,
+    visible: false,
+    key: "restartToUpdate",
+    click: function () {
+        require("electron").autoUpdater.quitAndInstall();
+    }
+    }];
+
     items.splice.apply(items, [position, 0].concat(updateItems));
 }
+*/
 app.on("ready", function () {
     var menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
+});
+ipcMain.on("tabs-all-closed", function () {
+    app.quit();
 });
