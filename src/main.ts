@@ -40,6 +40,7 @@ function createWindow(): void {
     });
 
     mainWindow.on("close", (event: Electron.Event) => {
+        // potentially add some ipc here to request if it is OK to close without dialog (one tab, etc.)
         const options: Object = {
             type: "question",
             title: "Close all tabs",
