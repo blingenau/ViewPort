@@ -1,4 +1,4 @@
-var os = require("os");
+const os = require("os");
 document.getElementById("id1").innerHTML = os.cpus()[0].model;
 document.getElementById("id2").innerHTML = "Time Idle: " + os.cpus()[0].times.idle + " milliseconds";
 document.getElementById("id3").innerHTML = "Time IRQ: " + os.cpus()[0].times.irq + " milliseconds";
