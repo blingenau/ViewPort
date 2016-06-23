@@ -3,6 +3,9 @@ const merge = require("merge2");
 const ts = require("gulp-typescript");
 const tslint = require("gulp-tslint");
 const mocha = require("gulp-mocha");
+const npmFiles = require("gulp-npm-files");
+const clean = require("gulp-clean");
+const replace = require("gulp-replace");
 
 gulp.task("tslint", () => {
     return gulp
@@ -24,7 +27,7 @@ gulp.task("tsc", ["tslint"], () => {
     return tsProject
         .src()
         .pipe(ts(tsProject))
-        .js.pipe(gulp.dest("src"));
+        .js.pipe(gulp.dest("dist"));
 });
 
 gulp.task("tsc-test", ["tslint"], () => {
@@ -41,18 +44,39 @@ gulp.task("tsc-test", ["tslint"], () => {
 });
 
 gulp.task("unit-tests", ["tsc-test"], () => {
-    gulp.src(["test/generated-files/unit/*.js"], {read:false})
+    return gulp.src(["test/generated-files/unit/*.js"], {read:false})
         .pipe(mocha())
         .on("error", () => process.exit(1));
 });
 
-gulp.task("copy", () => {
-    return gulp
-        .src(["src/*.html", "src/*.css"])
+gulp.task("clean-dist", () => {
+    return gulp.src("dist", {read: false})
+        .pipe(clean());
+});
+
+gulp.task("copy-package-json", ["clean-dist"], () => {
+    gulp.src(["package.json"])
+        .pipe(replace("dist/", ""))
         .pipe(gulp.dest("dist"));
 });
 
-gulp.task("dist", ["unit-tests"], () => {
+gulp.task("copy-npm-dependencies", ["clean-dist"], () => {
+    return gulp.src(npmFiles(), {base: "./"})
+        .pipe(gulp.dest("dist"))
+});
+
+gulp.task("copy", ["clean-dist"], () => {
+    return gulp.src([
+            "src/**/*.html",
+            "src/**/*.css",
+            "src/pdfjs/**"
+        ], {
+            base: "src"
+        })
+        .pipe(gulp.dest("dist"));
+});
+
+gulp.task("dist", ["unit-tests", "copy-package-json", "copy-npm-dependencies", "copy"], () => {
     const tsProject = ts.createProject(
         "tsconfig.json",
         {
@@ -65,4 +89,4 @@ gulp.task("dist", ["unit-tests"], () => {
         .js.pipe(gulp.dest("dist"));
 });
 
-gulp.task("default", ["tslint", "tsc", "tsc-test", "unit-tests", "dist", "copy"]);
+gulp.task("default", ["tsc", "tsc-test", "unit-tests", "dist"]);

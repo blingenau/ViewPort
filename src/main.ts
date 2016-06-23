@@ -2,11 +2,12 @@
 /// <reference path="Definitions/node.d.ts" />
 
 const electron: Electron.ElectronMainAndRenderer = require("electron");
-const Menu = electron.Menu;
 // Module to control application life.
 const app: Electron.App = electron.app;
 // Module to create a native browser window.
 const BrowserWindow: typeof Electron.BrowserWindow = electron.BrowserWindow;
+// Electron's dialog API
+const {dialog} = require("electron");
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
@@ -14,9 +15,6 @@ let mainWindow: Electron.BrowserWindow = null;
 
 // The main process's IPC.
 const ipcMain: Electron.IpcMain = electron.ipcMain;
-
-// Electron's dialog API
-const {dialog} = require("electron");
 
 /**
  * Function to create a browser window
@@ -93,76 +91,6 @@ app.on("activate", () => {
     if (mainWindow === null) {
         createWindow();
     }
-});
-
-let template = [{
-  label: "Extra",
-  submenu: [{
-    label: "System Usage",
-    click: function () {
-        const modalPath = `file://${__dirname}/sysinfo.html`;
-        let win = new BrowserWindow({ width: 400, height: 320 });
-        win.on("closed", function () { win = null; });
-        win.loadURL(modalPath);
-        win.show();
-    }
-    },
-    {
-        label: "Toggle Developer Tools",
-        accelerator: process.platform === "darwin" ? "Alt+Command+I" : "Ctrl+Shift+I",
-        click(item: any, focusedWindow: any) {
-            if (focusedWindow) {
-                focusedWindow.webContents.toggleDevTools();
-            }
-      }
-      },
-      {
-      label: "Fileupload",
-      click: function () {
-        const modalPath = `file://${__dirname}/fileupload.html`;
-        let win2 = new BrowserWindow({ width: 1000, height: 1000 });
-        win2.on("closed", function () { win2 = null; });
-        win2.loadURL(modalPath);
-        win2.webContents.openDevTools();
-        win2.show();
-      }
-      }]
-}];
-
-/*
-function addUpdateMenuItems (items: any, position: any) {
-    const version = electron.app.getVersion();
-    let updateItems = [{
-    label: `Version ${version}`,
-    enabled: false
-    }, {
-    label: "Checking for Update",
-    enabled: false,
-    key: "checkingForUpdate"
-    }, {
-    label: "Check for Update",
-    visible: false,
-    key: "checkForUpdate",
-    click: function () {
-        require("electron").autoUpdater.checkForUpdates();
-    }
-    }, {
-    label: "Restart and Install Update",
-    enabled: true,
-    visible: false,
-    key: "restartToUpdate",
-    click: function () {
-        require("electron").autoUpdater.quitAndInstall();
-    }
-    }];
-
-    items.splice.apply(items, [position, 0].concat(updateItems));
-}
-*/
-
-app.on("ready", () => {
-    const menu = Menu.buildFromTemplate(template);
-    Menu.setApplicationMenu(menu);
 });
 
 ipcMain.on("tabs-all-closed", (): void => {
