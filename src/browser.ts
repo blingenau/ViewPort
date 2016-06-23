@@ -197,6 +197,7 @@ class TabBar {
             tabFavicon.className = "chrome-tab-favicon";
             tabClose.onclick = () => {
                 if (!Tabs.removeTab(Tabs.activeUser(), tabDiv.id)) {
+                    // if there are no more tabs close application. Temporary
                     require("electron").remote.app.quit();
                 }
                 Tabs.render();
@@ -226,6 +227,14 @@ class TabBar {
     }
 }
 
+/**
+ * class TabBarSet:
+ * 
+ * Description:
+ *      Overarching handler for Tabs and TabBars. 
+ *      Essentially TabBarSet organizes multiple TabBars with their user.
+ *      A user must have a non-zero number of tabs to have a TabBar
+ */
 class TabBarSet {
     bars: TabBar[];
     active_bar: number;
@@ -233,9 +242,19 @@ class TabBarSet {
         this.bars = [];
         this.active_bar = -1;
     }
+    /**
+     *  Description:
+     *      returns the number of TabBar objects within the set
+     */
     public size(): number {
         return this.bars.length;
     }
+    /**
+     * Description:
+     *      returns the TabBar associated with the user input, null if not found
+     * 
+     * @param user   username accociated with the returned TabBar
+     */
     public get(user: string): TabBar {
         for (let index = 0; index < this.size(); index++) {
             if (user === this.bars[index].user) {
@@ -244,6 +263,15 @@ class TabBarSet {
         }
         return null;
     }
+    /**
+     *  Description
+     *      adds a Tab to a users TabBar. 
+     *      Creates a TabBar for them if they don't have one.
+     *      Use this to create the TabBar for a user
+     * 
+     *  @param user   user who owns the tab
+     *  @param tab   Tab object to add
+     */
     public addTab(user: string, tab: Tab): void {
         let bar: TabBar = this.get(user);
         if (bar === null) {
@@ -256,6 +284,15 @@ class TabBarSet {
         }
 
     }
+    /**
+     *  Description:
+     *      removes tab with tab.id = tab_id from the input users bar
+     *  
+     *  Return Value:
+     *      boolean indicating success of removal, false is problematic (TabBar is now empty and needs to be handled)
+     *  @param user   username of tab owner
+     *  @param tab_id   id of tab to remove
+     */
     public removeTab(user: string, tab_id: string): boolean {
         let bar: TabBar = this.get(user);
         if (bar !== null) {
@@ -263,6 +300,12 @@ class TabBarSet {
         }
         return false;
     }
+    /**
+     *  Description:
+     *      removes user and destroys all their tabs and TabBar
+     *  
+     *  @param user   user to remove
+     */
     public removeUser(user: string): void {
         let result: number = -1;
         for (let index = 0; index < this.size(); index++) {
@@ -278,6 +321,12 @@ class TabBarSet {
             }
         }
     }
+    /**
+     *  Description:
+     *      makes the given user the current user and sets up their active tab as the displayed tab
+     *  
+     *  @param user   user to activate
+     */
     public activate(user: string): void {
         let bar: TabBar = this.get(user);
         if (bar === null) {
@@ -293,20 +342,36 @@ class TabBarSet {
             }
             for (let bar_index = 0; bar_index < tmpBar.size(); bar_index++) {
                 tmpBar.tabs[bar_index].active = false;
-                tmpBar.tabs[bar_index].webview.style.width = "0px";
-                tmpBar.tabs[bar_index].webview.style.height = "0px";
+                if (tmpBar.tabs[bar_index].id !== bar.active().id) {
+                    // setting the size to zero of the active webview causes rendering issue
+                    tmpBar.tabs[bar_index].webview.style.width = "0px";
+                    tmpBar.tabs[bar_index].webview.style.height = "0px";
+                }
             }
         }
         // set tab state of active tab in bar to active
         bar.active().active = true;
         bar.render();
     }
+    /**
+     *  Description:
+     *      returns the active Tab object from the active user's TabBar
+     */
     public activeTab(): Tab {
         return this.bars[this.active_bar].active();
     }
+    /**
+     *  Description:
+     *      returns the current active user
+     */
     public activeUser(): string {
         return this.bars[this.active_bar].user;
     }
+    /**
+     * Description:
+     *      returns the Tab object associated with the given id
+     *  @param tab_id   tab id to search for
+     */
     public getTab(tab_id: string): Tab {
         for (let index = 0; index < this.size(); index++) {
             let bar: TabBar = this.bars[index];
@@ -318,7 +383,10 @@ class TabBarSet {
         }
     return null;
     }
-
+    /**
+     *  Description:
+     *      handles rendering of the current user's TabBar.
+     */
     public render(): void {
         this.bars[this.active_bar].render();
     }
@@ -367,25 +435,12 @@ onload = () => {
 
 
     ipc.on("openPDF", function (event, filedata) {
-        debugger;
         let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
         let PDFurl: string = PDFViewerURL + filedata.url;
         let hasOpenedPDF: boolean = false;
-
-        Tabs.bars.forEach(function (bar) {
-            bar.tabs.forEach(function (tab){
-                if (tab.url === filedata.url) {
-                    navigateTo(tab.webview, PDFurl);
-                    hasOpenedPDF = true;
-                }
-            });
-        });
-        // open in new tab
-        if (!hasOpenedPDF) {
-            Tabs.addTab(Tabs.activeUser(), new Tab({
+        Tabs.addTab(Tabs.activeUser(), new Tab({
                 url: PDFurl
-            }));
-        }
+        }));
     });
 
     reload.onclick = function () {
