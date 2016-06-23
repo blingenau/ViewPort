@@ -1,0 +1,73 @@
+{
+  "_args": [
+    [
+      {
+        "name": "@types/jquery",
+        "raw": "@types/jquery",
+        "rawSpec": "",
+        "scope": "@types",
+        "spec": "latest",
+        "type": "tag"
+      },
+      "/Users/eflannery/Documents/ViewPort"
+    ]
+  ],
+  "_from": "@types/jquery@latest",
+  "_id": "@types/jquery@1.10.21-alpha",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/@types/jquery",
+  "_nodeVersion": "5.5.0",
+  "_npmOperationalInternal": {
+    "host": "packages-16-east.internal.npmjs.com",
+    "tmp": "tmp/jquery-1.10.21-alpha.tgz_1464153060308_0.7677393215708435"
+  },
+  "_npmUser": {
+    "email": "ryan.cavanaugh@microsoft.com",
+    "name": "types"
+  },
+  "_npmVersion": "3.8.2",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "@types/jquery",
+    "raw": "@types/jquery",
+    "rawSpec": "",
+    "scope": "@types",
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@types/jquery/-/jquery-1.10.21-alpha.tgz",
+  "_shasum": "19b7305c1824ad6b7f0cf125ad68b15a8e00a93a",
+  "_shrinkwrap": null,
+  "_spec": "@types/jquery",
+  "_where": "/Users/eflannery/Documents/ViewPort",
+  "author": {
+    "email": "https://github.com/borisyankov/",
+    "name": "Boris Yankov"
+  },
+  "dependencies": {},
+  "description": "TypeScript definitions for jQuery 1.10.x / 2.0.x",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "shasum": "19b7305c1824ad6b7f0cf125ad68b15a8e00a93a",
+    "tarball": "https://registry.npmjs.org/@types/jquery/-/jquery-1.10.21-alpha.tgz"
+  },
+  "license": "MIT",
+  "main": "",
+  "maintainers": [
+    {
+      "email": "ryan.cavanaugh@microsoft.com",
+      "name": "types"
+    }
+  ],
+  "name": "@types/jquery",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "scripts": {},
+  "typings": "index.d.ts",
+  "version": "1.10.21-alpha"
+}
