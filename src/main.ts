@@ -15,6 +15,9 @@ let mainWindow: Electron.BrowserWindow = null;
 // The main process's IPC.
 const ipcMain: Electron.IpcMain = electron.ipcMain;
 
+// Electron's dialog API
+const {dialog} = require("electron");
+
 /**
  * Function to create a browser window
  */
@@ -34,6 +37,20 @@ function createWindow(): void {
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
         mainWindow = null;
+    });
+
+    mainWindow.on("close", (event: Electron.Event) => {
+        const options: Object = {
+            type: "question",
+            title: "Close all tabs",
+            message: "Are you sure you want to close all your tabs?",
+            buttons: ["Yes", "No"]
+        };
+        let response: Number = dialog.showMessageBox(options);
+
+        if (response === 1) {
+            event.preventDefault();
+        }
     });
 
     mainWindow.webContents.session.on("will-download", function (event, item, webContents) {

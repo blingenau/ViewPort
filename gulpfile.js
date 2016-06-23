@@ -63,12 +63,6 @@ gulp.task("dist", ["unit-tests"], () => {
         .src()
         .pipe(ts(tsProject))
         .js.pipe(gulp.dest("dist"));
-    /*
-    return merge([
-        tsResult.dts.pipe(gulp.dest("dist")),
-        tsResult.js.pipe(gulp.dest("dist"))
-    ]);
-    */
 });
 
 gulp.task("default", ["tslint", "tsc", "tsc-test", "unit-tests", "dist", "copy"]);
