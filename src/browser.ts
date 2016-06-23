@@ -234,6 +234,13 @@ class TabBar {
         doLayout();
     }
 }
+/**
+ *  Description:
+ *      define interface for user->TabBar dictionary
+ */
+interface IUserMap {
+    [user: string]: TabBar;
+}
 
 /**
  * class TabBarSet:
@@ -245,7 +252,7 @@ class TabBar {
  */
 class TabBarSet {
     // figure out how to make this typed as string -> TabBar instead of any
-    public bars: any;
+    public bars: IUserMap;
     public activeUser: string;
     constructor() {
         this.bars = {};
@@ -315,7 +322,7 @@ class TabBarSet {
      */
     public removeUser(user: string): void {
        if (this.bars.hasOwnProperty(user)) {
-           this.bars[user].removeAllTabs();
+           this.bars[user].clearAllTabs();
        }
        if (user === this.activeUser) {
            this.activeUser = "";
