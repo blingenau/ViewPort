@@ -15,6 +15,7 @@
   "devDependencies": {
     "@types/jquery": "^1.10.21-alpha",
     "chai": "^3.5.0",
+    "chai-as-promised": "^5.3.0",
     "electron-packager": "^7.0.4",
     "electron-prebuilt": "^1.2.2",
     "gulp": "^3.9.1",
@@ -26,6 +27,7 @@
     "merge2": "^1.0.2",
     "mocha": "^2.5.3",
     "requirejs": "^2.2.0",
+    "spectron": "^3.2.3",
     "tslint": "^3.11.0",
     "typescript": "^1.8.10"
   }
