@@ -9,6 +9,8 @@
   },
   "author": "Blake Lingenau",
   "dependencies": {
+    "jquery": "^3.0.0",
+    "jquery-ui": "^1.10.5"
   },
   "devDependencies": {
     "@types/jquery": "^1.10.21-alpha",
@@ -21,8 +23,6 @@
     "gulp-npm-files": "^0.1.3",
     "gulp-tslint": "^5.0.0",
     "gulp-typescript": "^2.13.6",
-    "jquery": "^3.0.0",
-    "jquery-ui": "^1.10.5",
     "merge2": "^1.0.2",
     "mocha": "^2.5.3",
     "requirejs": "^2.2.0",
