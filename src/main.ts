@@ -38,6 +38,11 @@ function createWindow(): void {
     });
 
     mainWindow.on("close", (event: Electron.Event) => {
+        if (process.env.athenahealth_viewport_test) {
+            // we don't want to present the close dialog during testing
+            return;
+        }
+
         // potentially add some ipc here to request if it is OK to close without dialog (one tab, etc.)
         const options: Object = {
             type: "question",
