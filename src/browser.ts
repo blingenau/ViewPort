@@ -1,6 +1,11 @@
 /// <reference path="Definitions/github-electron.d.ts" />
 /// <reference path="Definitions/node.d.ts" />
+/// <reference path="Definitions/jquery/index.d.ts" />
+/// <reference path="Definitions/jqueryui/jqueryui.d.ts" />
+
 import {Tab, TabBar, TabBarSet, IDOM} from "./tabs";
+const jquery = require("jquery");
+require("jquery-ui");
 
 /**
  * class DOM 
@@ -99,7 +104,7 @@ class BrowserDOM implements IDOM {
             let tab: Tab = bar.tabs[index];
             let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getURL();
 
-            tabDiv.className = "chrome-tab";
+            tabDiv.className = "ui-state-default";
             tabDiv.id = tab.getID();
 
             // Make the button title the name of the website not URL 
@@ -128,6 +133,12 @@ class BrowserDOM implements IDOM {
             if (!tab.getActive()) {
                 tab.hide();
             }
+
+            jquery(function() {
+                jquery("#tabs").sortable({
+                    revert:true
+                });
+            });
         }
         doLayout();
     }
