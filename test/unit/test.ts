@@ -1,6 +1,4 @@
-/// <reference path="../../src/Definitions/node.d.ts" />
-/// <reference path="../Definitions/mocha/mocha.d.ts" />
-/// <reference path="../Definitions/chai/chai.d.ts" />
+/// <reference path="../../typings/index.d.ts" />
 
 require("chai").should();
 

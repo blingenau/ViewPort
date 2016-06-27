@@ -46,9 +46,18 @@ gulp.task("tsc-test", ["tslint"], () => {
 });
 
 gulp.task("unit-tests", ["tsc-test"], () => {
-    return gulp.src(["test/generated-files/unit/*.js"], {read:false})
+    return gulp.src([
+            "test/generated-files/unit/**/*.js",
+            "!**/_*.js"
+        ], {
+            read: false
+        })
         .pipe(mocha())
-        .on("error", () => process.exit(1));
+        .on("error", (err) => {
+            console.log("Unit tests failed:");
+            console.log(err);
+            process.exit(1);
+        });
 });
 
 gulp.task("clean-dist", () => {
@@ -96,7 +105,7 @@ gulp.task("dist", [
         .js.pipe(gulp.dest("dist"));
 });
 
-gulp.task("package", ["dist"], (callback) => {
+gulp.task("package", ["dist"], (done) => {
     var options = {
         dir: "dist",
         name: package.productName,
@@ -111,8 +120,23 @@ gulp.task("package", ["dist"], (callback) => {
         if (err) {
             return console.log(err);
         }
-        callback();
+        done();
     });
+});
+
+gulp.task("integration-tests", ["tsc-test", "package"], () => {
+    gulp.src([
+            "test/generated-files/integration/**/*.js",
+            "!**/_*.js"
+        ], {
+            read:false
+        })
+        .pipe(mocha())
+        .on("error", (err) => {
+            console.log("Integration tests failed:");
+            console.log(err);
+            process.exit(1);
+        });
 });
 
 gulp.task("default", ["dist"]);
