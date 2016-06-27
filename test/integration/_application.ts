@@ -1,7 +1,5 @@
-/// <reference path="../../src/Definitions/node.d.ts" />
-/// <reference path="../Definitions/chai/chai.d.ts" />
-/// <reference path="../Definitions/chai-as-promised/chai-as-promised.d.ts" />
-/// <reference path="../Definitions/spectron/spectron.d.ts" />
+/// <reference path="../../typings/index.d.ts" />
+/// <reference path="_spectron.d.ts" />
 
 const packageJson = require("../../../package.json");
 

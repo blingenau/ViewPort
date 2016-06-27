@@ -1,4 +1,4 @@
-/// <reference path="../promises-a-plus/promises-a-plus.d.ts" />
+/// <reference path="../../typings/index.d.ts" />
 
 declare namespace Spectron {
 
@@ -26,7 +26,12 @@ declare namespace Spectron {
         chromeDriverLogPath: string;
         api: any;
         client: Client;
-   }
+        electron: any;
+        browserWindow: any;
+        webContents: any;
+        mainProcess: any;
+        renderProcess: any;
+    }
 
     interface ApplicationOptions {
         path: string;
@@ -46,14 +51,22 @@ declare namespace Spectron {
         requireName?: boolean;
     }
 
-    interface Client extends PromisesAPlus.Thenable<void> {
+    interface ThenOrShould<T> extends PromisesAPlus.Thenable<T> {
+        should: Chai.Assertion;
+    }
+
+    interface Client extends ThenOrShould<void> {
         waitUntilTextExists(selector: string, text: string, timeout?: number): Client;
         waitUntilWindowLoaded(timeout?: number): Client;
-        getWindowCount(): Object;
-        windowByIndex(index: number): Object;
-        getSelectedText(): Object;
-        getRenderProcessLogs(): Object;
-        getMainProcessLogs(): Object;
+        getWindowCount(): ThenOrShould<number>;
+        windowByIndex(index: number): ThenOrShould<Object>;
+        getSelectedText(): ThenOrShould<string>;
+        getRenderProcessLogs(): ThenOrShould<Object[]>;
+        getMainProcessLogs(): ThenOrShould<string[]>;
+        electron: any;
+        browserWindow: any;
+        webContents: any;
+        renderProcess: any;
     }
 
 }
