@@ -1,210 +1,109 @@
 /// <reference path="Definitions/github-electron.d.ts" />
 /// <reference path="Definitions/node.d.ts" />
+import {Tab, TabBar, TabBarSet, IDOM} from "./tabs";
 
 /**
- *  Class Tab:
+ * class DOM 
  * 
- *  Description: 
- *      Organizes information needed to display a tab and webview
- *  
- *  Properties:
- *      url: string - url of the tab
- *      id: string - random unique ID for the tab
- *      active: boolean - is the tab the current active tab on screen
- *      webview: Electron.WebViewElement - webview element of tab
+ *  Description:
+ *      Used to interface with the document and handles various global calls for tab management
  */
-class Tab {
-    public url: string;
-    public id: string;
-    public title: string;
-    public active: boolean;
-    public webview: Electron.WebViewElement;
-
-    constructor (tab: any) {
-        this.url = tab.url || "";
-        this.id = Math.round(Math.random() * 100000000000000000).toString();
-        this.title = tab.title || "";
-        this.webview = tab.webview || createWebview();
-        this.active = tab.active || true;
-        this.webview.src = this.url;
-        this.webview.setAttribute("tabID", this.id);
-    }
-}
-/** 
- *  Class TabBar:
- * 
- *  Description: 
- *      Organizes Tab objects and handles displaying them in some way
- *  Properties:
- *      user: string - user_id associated with a set of tabs
- *      tabs: Tab[] - list of Tab objects (see Tab class)
- *      activeTab: number - index of tab in the list that is the active tab 
- */
-class TabBar {
-    public tabs: Tab[];
-    public activeTab: number;
-    constructor(user: string = "") {
-        this.tabs = [];
-        this.activeTab = -1 ;
-    }
-    /**   
-     *  Description:
-     *      gets a Tab from within the list with id matching input
-     * 
-     *  Return Value:
-     *      Tab object matching id input if found, else null
-     * 
-     * @param id   id of tab to return.
-     */
-    public get(id: string): Tab {
-        for (let index: number = 0; index < this.size(); index++) {
-            if (this.tabs[index].id === id) {
-                return this.tabs[index];
-            }
-        }
-        return null;
-    }
-    /**
-     *  Description: 
-     *      returns number of tabs currently in the TabBar
-     */
-    public size(): number {
-        return this.tabs.length;
-    }
+class BrowserDOM implements IDOM {
     /**
      *  Description:
-     *      pushes a Tab into list of tabs
+     *      creates webview element and writes it into document
      * 
      *  Return Value:
      *      none
-     * 
-     *  @param tab   Tab object to insert
-     *  @param background   if true open tab in background (not active), default false 
-     */
-    public add_tab(tab: Tab, background: boolean = false): void {
-        this.tabs.push(tab);
-        if (this.activeTab === -1) {
-            this.activeTab = 0;
-        }
-        if (!background) {
-            // if tab not a background tab then set it as active tab
-            this.activeTab = this.size() - 1;
-            this.activate(tab);
-        } else {
-            tab.active = false;
-        }
-    }
-    /**
-     *  Description:
-     *      Removes a tab matching tabID input.
-     * 
-     *  Return Value:
-     *      returns remove state (true is good, false means TabBar is empty (closed) or error)
-     * 
-     * @param tabID   id of tab to find and remove.
-     */
-    public removeTab(tabID: string): boolean {
-        if (this.size() === 0) {
-            // this should not happen
-            console.log("Popping from empty TabBar");
-            return false;
-        } else if (this.size() === 1) {
-            ipc.send("tabs-all-closed");
-            return true;
-        }
-
-        let result: number = -1;
-        for (let index = 0; index < this.size(); index++) {
-            if (this.tabs[index].id === tabID) {
-                result = index;
-                break;
-            }
-        }
-        if (result > -1) {
-            let tab: Tab = this.tabs.splice(result, 1)[0];
-            document.getElementById("webviews").removeChild(tab.webview);
-            if (this.size() === 0) {
-                return false;
-            }
-            if (tab.active) {
-                // tab was active, activate another.
-                this.activate(this.tabs[Math.min(result, this.size() - 1)]);
-            } else {
-                if (result < this.activeTab) {
-                    this.activeTab--;
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-    /**
-     * Description:
-     *      returns active Tab object within TabBar
-     */
-    public active(): Tab {
-        return this.tabs[this.activeTab];
-    }
-    /**
-     *  Description:
-     *      activate the given tab, and set all other tabs in TabBar to inactive
-     *  Return value:
-     *      none
-     * 
-     * @param tab   Tab object to make active, make all others inactive.
-     */
-    public activate(tab: Tab): void {
-        for (let index = 0; index < this.size(); index++) {
-            this.tabs[index].active = this.tabs[index].id === tab.id;
-            if (this.tabs[index].active) {
-                this.activeTab = index;
-            }
-        }
-    }
-    /**
-     *  Description:
-     *      Clears all tabs from bar
-     */
-    public clearAllTabs(): void {
-        while (this.size()) {
-            this.removeTab(this.active().id);
-        }
-    }
-    /**
-     *  Description:
-     *      Sets all tabs to inactive and hides webviews
-     */
-    public hideTabs(): void {
-        this.tabs.forEach(function (tab: Tab) {
-            tab.active = false;
-            tab.webview.style.width = "0px";
-            tab.webview.style.height = "0px";
-        });
-    }
-    /**
-     * Description:
-     *      Handles the rendering of multiple tabs and setting up tab buttons.
-     *      Currently assigns an on-click call to global Tabs variable. 
      *  
-     *  Return Value: 
-     *      none
+     *  @param url   string for webview src
+     *  @param id   ID to link webview to tab with attribute tabID
      */
-    public render(): void {
+    public createWebview(url: string, id: string): void {
+        let webview: Electron.WebViewElement = document.createElement("webview");
+        webview.addEventListener("did-start-loading", handleLoadStart);
+        webview.addEventListener("did-stop-loading", handleLoadStop);
+        webview.addEventListener("did-fail-load", handleFailLoad);
+        webview.addEventListener("load-commit", handleLoadCommit);
+        webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
+        webview.style.display = "flex";
+        webview.style.width = "640px";
+        webview.style.height = "480px";
+        webview.src = url;
+        webview.setAttribute("tabID", id);
+        document.getElementById("webviews").appendChild(webview);
+    }
+
+    /**
+     *  Description:
+     *      queries document for webview element matching input id. 
+     *      If no id provided then get active webview. 
+     *  
+     *  Return Value:
+     *      Electron.WebViewElement
+     * 
+     *  @param id   string ID corresponding to the webview's tabID to return, if empty return active webview
+     */
+    public getWebview(id: string = ""): Electron.WebViewElement {
+        id = id || Tabs.activeTab().getID();
+        return <Electron.WebViewElement>document.querySelector("[tabID='"+id+"']");
+    }
+
+    /**
+     *  Description:
+     *      removes webview element from document that matches id = tabID 
+     *      If no id provided then remove active webview. 
+     *  
+     *  Return Value:
+     *      none
+     * 
+     *  @param id   string ID corresponding to the webview's tabID to remove, if empty remove active webview
+     */
+    public removeWebview(id: string = ""): void {
+        document.getElementById("webviews").removeChild(this.getWebview(id));
+    }
+
+    /**
+     *  Description:
+     *      hides webview element from document that matches id = tabID 
+     *      If no id provided then hide active webview. 
+     *  
+     *  Return Value:
+     *      none
+     * 
+     *  @param id   string ID corresponding to the webview's tabID to hide, if empty hide active webview
+     */
+    public hideWebview(id: string): void {
+        let webview: Electron.WebViewElement = this.getWebview(id);
+        webview.style.width = "0px";
+        webview.style.height = "0px";
+    }
+
+    /**
+     *  Description:
+     *      Main render function for tabs. Handles rendering a TabBar object
+     *  
+     *  Return Value:
+     *      none
+     *  
+     *  @param bar   TabBar object to render
+     */
+    public render(bar: TabBar): void {
         let tabs: HTMLElement = document.getElementById("tabs");
         tabs.innerHTML = "";
-        for (let index = 0; index < this.size(); index++) {
+        for (let index = 0; index < bar.size(); index++) {
             let tabDiv: HTMLDivElement = document.createElement("div");
             let tabTitle: HTMLDivElement = document.createElement("div");
             let tabFavicon: HTMLDivElement = document.createElement("div");
             let tabClose: HTMLDivElement = document.createElement("div");
-            let tab: Tab = this.tabs[index];
-            let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.url;
+            let tab: Tab = bar.tabs[index];
+            let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getURL();
 
             tabDiv.className = "chrome-tab";
-            tabDiv.id = tab.id;
+            tabDiv.id = tab.getID();
 
             // Make the button title the name of the website not URL 
-            tabTitle.title = tabTitle.innerHTML = tab.title;
+            tabTitle.title = tabTitle.innerHTML = tab.getTitle();
 
             tabFavicon.innerHTML = "<img src = " + tabFav + ">";
             tabTitle.className = "chrome-tab-title";
@@ -215,184 +114,26 @@ class TabBar {
                     // if there are no more tabs close application. Temporary
                     require("electron").remote.app.quit();
                 }
-                Tabs.render();
+                Doc.render(bar);
             };
 
             tabDiv.appendChild(tabFavicon); tabDiv.appendChild(tabTitle); tabDiv.appendChild(tabClose);
             let click = function () {
                 Tabs.bars[Tabs.activeUser].activate(tab);
-                Tabs.render();
+                Doc.render(bar);
                 tabSwitch();
             };
             tabDiv.onclick = () => { click(); };
             tabs.appendChild(tabDiv);
-            if (!tab.active) {
-                tab.webview.style.width = "0px";
-                tab.webview.style.height = "0px";
+            if (!tab.getActive()) {
+                tab.hide();
             }
         }
         doLayout();
     }
 }
-/**
- *  Description:
- *      define interface for user->TabBar dictionary
- */
-interface IUserMap {
-    [user: string]: TabBar;
-}
 
-/**
- * class TabBarSet:
- * 
- * Description:
- *      Overarching handler for Tabs and TabBars. 
- *      Essentially TabBarSet organizes multiple TabBars with their user.
- *      A user must have a non-zero number of tabs to have a TabBar
- */
-class TabBarSet {
-    // figure out how to make this typed as string -> TabBar instead of any
-    public bars: IUserMap;
-    public activeUser: string;
-    constructor() {
-        this.bars = {};
-        this.activeUser = "";
-    }
-    /**
-     *  Description:
-     *      returns the number of TabBar objects within the set
-     */
-    public size(): number {
-        return Object.keys(this.bars).length;
-    }
-    /**
-     * Description:
-     *      returns the TabBar associated with the user input, null if not found
-     * 
-     * @param user   username accociated with the returned TabBar
-     */
-    public get(user: string): TabBar {
-        if (this.bars.hasOwnProperty(user)) {
-            return this.bars[user];
-        }
-        return null;
-    }
-    /**
-     *  Description
-     *      adds a Tab to a users TabBar. 
-     *      Creates a TabBar for them if they don't have one.
-     *      Use this to create the TabBar for a user
-     * 
-     *  @param user   user who owns the tab
-     *  @param tab   Tab object to add
-     */
-    public addTab(user: string, tab: Tab): void {
-        let bar: TabBar = this.get(user);
-        if (bar === null) {
-            bar = new TabBar();
-            bar.add_tab(tab);
-            this.bars[user] = bar;
-        }else {
-            bar.add_tab(tab);
-        }
-
-    }
-    /**
-     *  Description:
-     *      removes tab with tab.id = tabID from the input users bar
-     *  
-     *  Return Value:
-     *      boolean indicating success of removal, false is problematic (TabBar is now empty and needs to be handled)
-     *  @param user   username of tab owner
-     *  @param tabID   id of tab to remove
-     */
-    public removeTab(user: string, tabID: string): boolean {
-        // potentially handle case where removing tab causes empty TabBar
-        let bar: TabBar = this.get(user);
-        if (bar !== null) {
-            return bar.removeTab(tabID);
-        }
-        return false;
-    }
-    /**
-     *  Description:
-     *      removes user and destroys all their tabs and TabBar
-     *  
-     *  @param user   user to remove
-     */
-    public removeUser(user: string): void {
-       if (this.bars.hasOwnProperty(user)) {
-           this.bars[user].clearAllTabs();
-       }
-       if (user === this.activeUser) {
-           this.activeUser = "";
-       }
-       delete this.bars[user];
-    }
-    /**
-     *  Description:
-     *      makes the given user the current user and sets up their active tab as the displayed tab
-     *  
-     *  @param user   user to activate
-     */
-    public activate(user: string): void {
-        let bar: TabBar = this.get(user);
-        if (bar === null) {
-            console.error("attempt to activate user that does not exist");
-            return;
-        }
-        this.activeUser = user;
-        // set all other tabs to inactive (hidden)
-        let self: TabBarSet = this;
-        Object.keys(this.bars).forEach(function (key: string){
-            self.bars[key].hideTabs();
-        });
-        // set tab state of active tab in bar to active
-        bar.active().active = true;
-        bar.render();
-    }
-    /**
-     *  Description:
-     *      returns the active Tab object from the active user's TabBar
-     */
-    public activeTab(): Tab {
-        return this.bars[this.activeUser].active();
-    }
-    /**
-     * Description:
-     *      returns the Tab object associated with the given id
-     *  @param tab_id   tab id to search for
-     */
-    public getTab(tabID: string): Tab {
-        let self: TabBarSet = this;
-        let result: Tab = Object.keys(this.bars).map( function (key: string) {
-            return self.bars[key].get(tabID);
-        }).find(function (val: Tab){
-            return val !== null;
-        });
-        if (result !== undefined) {
-            return result;
-        }
-        return null;
-    }
-    /**
-     *  Description:
-     *      handles rendering of the current user's TabBar.
-     */
-    public render(): void {
-        this.bars[this.activeUser].render();
-    }
-
-    /**
-     *  Description: 
-     *      returns list of current users.
-     */
-    public getUsers(): string[] {
-        return Object.keys(this.bars);
-    }
-
-}
-
+let Doc: BrowserDOM = new BrowserDOM();
 let Tabs: TabBarSet = new TabBarSet();
 window.onresize = doLayout;
 let isLoading: boolean = false;
@@ -400,7 +141,7 @@ const ipc = require("electron").ipcRenderer;
 const homepage = "http://athenanet.athenahealth.com";
 
 onload = () => {
-    Tabs.addTab("test", new Tab({
+    Tabs.addTab("test", new Tab(Doc, {
         url: homepage
     }));
     Tabs.activate("test");
@@ -410,8 +151,8 @@ onload = () => {
 
     urlBar.onsubmit = (): boolean => {
         let address: string = (<HTMLInputElement>document.querySelector("#location")).value;
-        Tabs.activeTab().url = address;
-        navigateTo(Tabs.activeTab().webview, address);
+        Tabs.activeTab().setURL(address);
+        navigateTo(Doc.getWebview(), address);
         return false;
     };
 
@@ -423,19 +164,19 @@ onload = () => {
 
     // Navigation button controls
     document.getElementById("back").onclick = function () {
-        Tabs.activeTab().webview.goBack();
+        Doc.getWebview().goBack();
     };
 
     document.getElementById("forward").onclick = function () {
-        Tabs.activeTab().webview.goForward();
+        Doc.getWebview().goForward();
     };
 
     document.getElementById("home").onclick = function () {
-        navigateTo(Tabs.activeTab().webview, homepage);
+        navigateTo(Doc.getWebview(), homepage);
     };
 
     document.getElementById("add-tab").onclick = function () {
-        Tabs.addTab(Tabs.activeUser, new Tab({
+        Tabs.addTab(Tabs.activeUser, new Tab(Doc, {
             url: "about:blank"
         }));
     };
@@ -443,16 +184,16 @@ onload = () => {
     ipc.on("openPDF", function (event, filedata) {
         let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
         let PDFurl: string = PDFViewerURL + filedata.url;
-        Tabs.addTab(Tabs.activeUser, new Tab({
+        Tabs.addTab(Tabs.activeUser, new Tab(Doc, {
                 url: PDFurl
         }));
     });
 
     reload.onclick = function () {
         if (isLoading) {
-            Tabs.activeTab().webview.stop();
+            Doc.getWebview().stop();
         } else {
-            Tabs.activeTab().webview.reload();
+            Doc.getWebview().reload();
         }
     };
 };
@@ -462,7 +203,7 @@ onload = () => {
  *
  * @returns A newly created webview tag.
  */
-function createWebview(): Electron.WebViewElement {
+/*function createWebview(): Electron.WebViewElement {
     let webview: Electron.WebViewElement = document.createElement("webview");
     webview.addEventListener("did-start-loading", handleLoadStart);
     webview.addEventListener("did-stop-loading", handleLoadStop);
@@ -474,7 +215,7 @@ function createWebview(): Electron.WebViewElement {
     webview.style.height = "480px";
     document.getElementById("webviews").appendChild(webview);
     return webview;
-}
+}*/
 
 /**
  * Navigates a tab to a new URL.
@@ -500,7 +241,7 @@ function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolea
  * Resizes the elements in the window.
  */
 function doLayout(): void {
-    let webview: Electron.WebViewElement = Tabs.activeTab().webview;
+    let webview: Electron.WebViewElement = Doc.getWebview();
     let controls: HTMLDivElement = <HTMLDivElement>document.querySelector("#controls");
     let tabBar: HTMLDivElement = <HTMLDivElement>document.querySelector("#tabs-shell");
     let controlsHeight: number = controls.offsetHeight;
@@ -535,10 +276,10 @@ function handleLoadStop(event: Event): void {
     let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
     let tab = Tabs.getTab(webview.getAttribute("tabID"));
-    tab.url = webview.getAttribute("src");
-    tab.title = webview.getTitle();
-    address.value = tab.url;
-    Tabs.render();
+    tab.setURL(webview.getAttribute("src"));
+    tab.setTitle(webview.getTitle());
+    address.value = tab.getURL();
+    Doc.render(Tabs.activeBar());
 }
 
 /**
@@ -580,7 +321,7 @@ function handleFailLoad(event: Electron.WebViewElement.DidFailLoadEvent): void {
  * Actions to happen upon a context switch from Tab to Tab.
  */
 function tabSwitch(): void {
-    let active: Electron.WebViewElement = Tabs.activeTab().webview;
+    let active: Electron.WebViewElement = Doc.getWebview();
 
     // Re-evaluate the back/forward navigation buttons based on new active Tab
     (<HTMLButtonElement>document.querySelector("#back")).disabled = !active.canGoBack();
@@ -594,5 +335,5 @@ function tabSwitch(): void {
         active.goForward();
     };
 
-    (<HTMLInputElement>document.getElementById("location")).value = Tabs.activeTab().webview.getURL();
+    (<HTMLInputElement>document.getElementById("location")).value = active.getURL();
 }
