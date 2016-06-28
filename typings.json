@@ -8,6 +8,8 @@
     "jqueryui": "registry:dt/jqueryui#1.9.0+20160627030821",
     "mocha": "registry:dt/mocha#2.2.5+20160619032855",
     "node": "registry:dt/node#6.0.0+20160621231320",
-    "promises-a-plus": "registry:dt/promises-a-plus#0.0.0+20160317120654"
+    "promises-a-plus": "registry:dt/promises-a-plus#0.0.0+20160317120654",
+    "q": "registry:dt/q#0.0.0+20160613154756",
+    "webdriverio": "registry:dt/webdriverio#3.3.0+20160316155526"
   }
 }

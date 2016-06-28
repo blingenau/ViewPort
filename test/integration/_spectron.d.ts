@@ -26,11 +26,11 @@ declare namespace Spectron {
         chromeDriverLogPath: string;
         api: any;
         client: Client;
-        electron: any;
-        browserWindow: any;
-        webContents: any;
-        mainProcess: any;
-        renderProcess: any;
+        electron: Electron.ElectronMainAndRenderer;
+        browserWindow: BrowserWindow;
+        webContents: WebContents;
+        mainProcess: NodeJS.Process;
+        renderProcess: NodeJS.Process;
     }
 
     interface ApplicationOptions {
@@ -51,11 +51,11 @@ declare namespace Spectron {
         requireName?: boolean;
     }
 
-    interface ThenOrShould<T> extends PromisesAPlus.Thenable<T> {
-        should: Chai.Assertion;
+    interface BrowserWindow extends Electron.BrowserWindow {
+        capturePage(rect: Electron.Rectangle): ThenOrShould<Electron.NativeImage>;
     }
 
-    interface Client extends ThenOrShould<void> {
+    interface Client extends WebdriverIO.Client<Client> {
         waitUntilTextExists(selector: string, text: string, timeout?: number): Client;
         waitUntilWindowLoaded(timeout?: number): Client;
         getWindowCount(): ThenOrShould<number>;
@@ -63,10 +63,21 @@ declare namespace Spectron {
         getSelectedText(): ThenOrShould<string>;
         getRenderProcessLogs(): ThenOrShould<Object[]>;
         getMainProcessLogs(): ThenOrShould<string[]>;
-        electron: any;
-        browserWindow: any;
-        webContents: any;
-        renderProcess: any;
+        electron: Electron.ElectronMainAndRenderer;
+        browserWindow: BrowserWindow;
+        webContents: WebContents;
+        renderProcess: NodeJS.Process;
+    }
+
+    interface ThenOrShould<T> extends PromisesAPlus.Thenable<T> {
+        should: Chai.Assertion;
+    }
+
+    interface WebContents extends Electron.WebContents {
+		savePage(fullPath: string, saveType: 'HTMLOnly' | 'HTMLComplete' | 'MHTML',
+                 callback?: (eror: Error) => void): boolean;
+        savePage(fullPath: string, saveType: 'HTMLOnly' | 'HTMLComplete' | 'MHTML'):
+            ThenOrShould<void>;
     }
 
 }

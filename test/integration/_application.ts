@@ -31,5 +31,10 @@ export default function createApplication() {
         return null;
     }
 
-    return new spectron.Application({path: appPath});
+    return new spectron.Application({
+        path: appPath,
+        env: {
+            athenahealth_viewport_test: appPath
+        }
+    });
 }

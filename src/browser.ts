@@ -38,6 +38,38 @@ class BrowserDOM implements IDOM {
         webview.setAttribute("tabID", id);
         document.getElementById("webviews").appendChild(webview);
     }
+    /**
+     * Description:
+     *      sets the Z index for active tabs
+     * 
+     * Return Value:
+     *      none
+     * 
+     * @param id string ID corresponding to the new active tab
+     */
+    public setZIndexActive(id: string = ""): void {
+        id = id || Tabs.activeTab().getID();
+        jquery( "#" + id ).sortable({
+        zIndex: 1000
+        });
+    }
+
+    /**
+     * Description:
+     *      sets the Z index for active tabs
+     * 
+     * Return Value:
+     *      none
+     * 
+     * @param id string ID corresponding to the old active tab
+     */
+
+    public setZIndexInative(id: string = ""): void {
+        id = id || Tabs.activeTab().getID();
+        jquery( "#" + id ).sortable({
+        zIndex: 9999
+        });
+    }
 
     /**
      *  Description:
@@ -151,6 +183,7 @@ class BrowserDOM implements IDOM {
                     require("electron").remote.app.quit();
                 }
                 Doc.render(bar);
+                ipc.send("update-num-tabs", Tabs.activeBar().size());
             };
 
             tabDiv.appendChild(tabFavicon); tabDiv.appendChild(tabTitle); tabDiv.appendChild(tabClose);
@@ -167,9 +200,15 @@ class BrowserDOM implements IDOM {
 
             jquery(function() {
                 jquery("#tabs").sortable({
-                    revert:true
+                    revert:true,
+                    axis: "x"
                 });
             });
+            /*
+            if (!tab.getActive()) {
+                this.setZIndexInative(tab.getID());
+            }
+            */
         }
         doLayout();
     }
@@ -221,6 +260,7 @@ onload = () => {
         Tabs.addTab(Tabs.activeUser, new Tab(Doc, {
             url: "about:blank"
         }));
+        ipc.send("update-num-tabs", Tabs.activeBar().size());
     };
 
     ipc.on("openPDF", function (event, filedata) {
