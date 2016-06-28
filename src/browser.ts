@@ -295,15 +295,22 @@ function doLayout(): void {
     let webview: Electron.WebViewElement = Doc.getWebview();
     let controls: HTMLDivElement = <HTMLDivElement>document.querySelector("#controls");
     let tabBar: HTMLDivElement = <HTMLDivElement>document.querySelector("#tabs-shell");
+    let tabs: NodeListOf<Element> = document.querySelectorAll(".ui-state-default");
     let controlsHeight: number = controls.offsetHeight;
     let tabBarHeight: number = tabBar.offsetHeight;
     let windowWidth: number = document.documentElement.clientWidth;
     let windowHeight: number = document.documentElement.clientHeight;
     let webviewWidth: number = windowWidth;
     let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
+    let tabWidth: string = tabs.length < 6 ? "15%" : (100/tabs.length).toString() + "%";
 
     webview.style.width = webviewWidth + "px";
     webview.style.height = webviewHeight + "px";
+
+    // Resize the tabs if there are many or the window is too small
+    for (let i = 0; i < tabs.length; i++) {
+        (<HTMLDivElement>tabs[i]).style.width = tabWidth;
+    }
 }
 
 /**
