@@ -45,7 +45,6 @@ function createWindow(): void {
             // we don't want to present the close dialog during testing
             return;
         }
-        console.log(numTabs);
         // potentially add some ipc here to request if it is OK to close without dialog (one tab, etc.)
         if (numTabs > 1) {
             const options: Object = {
