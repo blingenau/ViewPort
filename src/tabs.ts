@@ -57,6 +57,22 @@ export interface IDOM {
      *  @param bar   TabBar object to render
      */
     render(bar: TabBar): void;
+
+    /**
+     *  Description:
+     *      Queries document for the ordered list of current tabs 
+     * 
+     *  Return Value:
+     *      List of Tab objects in the order that they are displayed on screen
+     */
+    getAllTabs(): Tab[];
+    /**
+     *  Description:
+     *      Given an input active tab id, return id of tab corresponding to the next active tab. 
+     * 
+     *  @param id   tab id that is active, use to fight neighboring tab to return.
+     */
+    getNextActiveTabID(id: string): string;
 }
 /**
  *  Class Tab:
@@ -165,6 +181,10 @@ export class Tab {
         this.title = title;
     }
 }
+
+interface ITabMap {
+    [id: string]: Tab;
+}
 /** 
  *  Class TabBar:
  * 
@@ -176,11 +196,13 @@ export class Tab {
  *      activeTab: number - index of tab in the list that is the active tab 
  */
 export class TabBar {
-    public tabs: Tab[];
-    public activeTab: number;
-    constructor(user: string = "") {
-        this.tabs = [];
-        this.activeTab = -1 ;
+    public tabs: ITabMap;
+    public activeTab: string;
+    private dom: IDOM;
+    constructor(d: IDOM) {
+        this.tabs = {};
+        this.activeTab = "";
+        this.dom = d;
     }
     /**   
      *  Description:
@@ -192,10 +214,8 @@ export class TabBar {
      * @param id   id of Tab to return.
      */
     public get(id: string): Tab {
-        for (let index: number = 0; index < this.size(); index++) {
-            if (this.tabs[index].getID() === id) {
-                return this.tabs[index];
-            }
+        if (this.tabs.hasOwnProperty(id)) {
+            return this.tabs[id];
         }
         return null;
     }
@@ -204,30 +224,21 @@ export class TabBar {
      *      returns number of tabs currently in the TabBar
      */
     public size(): number {
-        return this.tabs.length;
+        return Object.keys(this.tabs).length;
     }
     /**
      *  Description:
-     *      pushes a Tab into list of tabs
+     *      Adds a tab to the current set of tabs
      * 
      *  Return Value:
      *      none
      * 
      *  @param tab   Tab object to insert
-     *  @param background   if true open tab in background (not active), default false 
      */
-    public add_tab(tab: Tab, background: boolean = false): void {
-        this.tabs.push(tab);
-        if (this.activeTab === -1) {
-            this.activeTab = 0;
-        }
-        if (!background) {
-            // if tab not a background tab then set it as active tab
-            this.activeTab = this.size() - 1;
-            this.activate(tab);
-        } else {
-            tab.setActive(false);
-        }
+    public add_tab(tab: Tab): void {
+        // if there is an active tab currently, set it to inactive
+        this.tabs[tab.getID()] = tab;
+        this.activate(tab);
     }
     /**
      *  Description:
@@ -248,29 +259,16 @@ export class TabBar {
             return true;
         }
 
-        let result: number = -1;
-        for (let index = 0; index < this.size(); index++) {
-            if (this.tabs[index].getID() === tabID) {
-                result = index;
-                break;
-            }
-        }
-        if (result > -1) {
-            let tab: Tab = this.tabs.splice(result, 1)[0];
-            tab.remove();
-            if (this.size() === 0) {
-                return false;
-            }
+        let tab: Tab = this.get(tabID);
+        if (tab !== null) {
             if (tab.getActive()) {
-                // tab was active, activate another.
-                this.activate(this.tabs[Math.min(result, this.size() - 1)]);
-            } else {
-                if (result < this.activeTab) {
-                    this.activeTab--;
-                }
+                this.activeTab = this.dom.getNextActiveTabID(tabID);
             }
+            tab.remove();
+            delete this.tabs[tabID];
             return true;
         }
+        // if we make it here the tab wasn't found or the bar is empty
         return false;
     }
     /**
@@ -278,7 +276,7 @@ export class TabBar {
      *      returns active Tab object within TabBar
      */
     public active(): Tab {
-        return this.tabs[this.activeTab];
+        return this.get(this.activeTab);
     }
     /**
      *  Description:
@@ -289,12 +287,12 @@ export class TabBar {
      * @param tab   Tab object to make active, make all others inactive.
      */
     public activate(tab: Tab): void {
-        for (let index = 0; index < this.size(); index++) {
-            this.tabs[index].setActive(this.tabs[index].getID() === tab.getID());
-            if (this.tabs[index].getActive()) {
-                this.activeTab = index;
-            }
+        let active: Tab = this.active();
+        if (active !== null) {
+            active.setActive(false);
         }
+        tab.setActive(true);
+        this.activeTab = tab.getID();
     }
     /**
      *  Description:
@@ -310,8 +308,9 @@ export class TabBar {
      *      Sets all tabs to inactive and hides webviews
      */
     public hideTabs(): void {
-        this.tabs.forEach(function (tab: Tab) {
-            tab.hide();
+        let self: TabBar = this;
+        Object.keys(this.tabs).forEach(function (key: string) {
+            self.tabs[key].hide();
         });
     }
 }
@@ -336,9 +335,11 @@ export class TabBarSet {
     // figure out how to make this typed as string -> TabBar instead of any
     public bars: IUserMap;
     public activeUser: string;
-    constructor() {
+    private dom: IDOM;
+    constructor(d: IDOM) {
         this.bars = {};
         this.activeUser = "";
+        this.dom = d;
     }
     /**
      *  Description:
@@ -371,7 +372,7 @@ export class TabBarSet {
     public addTab(user: string, tab: Tab): void {
         let bar: TabBar = this.get(user);
         if (bar === null) {
-            bar = new TabBar();
+            bar = new TabBar(this.dom);
             bar.add_tab(tab);
             this.bars[user] = bar;
         }else {
