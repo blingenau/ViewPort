@@ -115,6 +115,16 @@ class BrowserDOM implements IDOM {
         webview.style.width = "0px";
         webview.style.height = "0px";
     }
+    public updateTab(tab: Tab): void {
+        let tabElt: HTMLElement = document.getElementById(tab.getID());
+        // update favicon
+        let tabFavicon: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-favicon");
+        let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getURL();
+        tabFavicon[0].innerHTML = "<img src = " + tabFav + ">";
+        // update tab title
+        let tabTitle: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-title");
+        tabTitle[0].innerHTML = tab.getTitle();
+    }
 
     /**
      *  Description:
@@ -127,58 +137,81 @@ class BrowserDOM implements IDOM {
      */
     public render(bar: TabBar): void {
         let tabs: HTMLElement = document.getElementById("tabs");
-        tabs.innerHTML = "";
-        for (let index = 0; index < bar.size(); index++) {
-            let tabDiv: HTMLDivElement = document.createElement("div");
-            let tabTitle: HTMLDivElement = document.createElement("div");
-            let tabFavicon: HTMLDivElement = document.createElement("div");
-            let tabClose: HTMLDivElement = document.createElement("div");
-            let tab: Tab = bar.tabs[index];
-            let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getURL();
-
-            tabDiv.className = "ui-state-default";
-            tabDiv.id = tab.getID();
-
-            // Make the button title the name of the website not URL 
-            tabTitle.title = tabTitle.innerHTML = tab.getTitle();
-
-            tabFavicon.innerHTML = "<img src = " + tabFav + ">";
-            tabTitle.className = "chrome-tab-title";
-            tabClose.className = "chrome-tab-close";
-            tabFavicon.className = "chrome-tab-favicon";
-            tabClose.onclick = () => {
-                if (!Tabs.removeTab(Tabs.activeUser, tabDiv.id)) {
-                    // if there are no more tabs close application. Temporary
-                    require("electron").remote.app.quit();
-                }
-                Doc.render(bar);
-                ipc.send("update-num-tabs", Tabs.activeBar().size());
-            };
-
-            tabDiv.appendChild(tabFavicon); tabDiv.appendChild(tabTitle); tabDiv.appendChild(tabClose);
-            let click = function () {
-                Tabs.bars[Tabs.activeUser].activate(tab);
-                Doc.render(bar);
-                tabSwitch();
-            };
-            tabDiv.onclick = () => { click(); };
-            tabs.appendChild(tabDiv);
-            if (!tab.getActive()) {
-                tab.hide();
-            }
-
-            jquery(function() {
-                jquery("#tabs").sortable({
-                    revert:true,
-                    axis: "x"
-                });
-            });
-            if (!tab.getActive()) {
-                this.setZIndexInative(tab.getID());
+        // tabs.innerHTML = "";
+        let allTabs: NodeListOf<Element> = document.getElementsByClassName("ui-state-default");
+        // Loop through all of the front end and delete element if not found in back end
+        for (let index = 0; index < allTabs.length; index++) {
+            if (bar.get(allTabs[index].id) === null) {
+                let element = allTabs[index];
+                element.parentNode.removeChild(element);
             }
         }
+        // Loop through all of the back end and add a new element to the front end if not found in front end
+        for (let index = 0; index < bar.size(); index++) {
+            let elt = bar.tabs[index];
+
+            // elt in tab bar but not the document, create new element
+            if (document.getElementById(elt.getID()) === null) {
+                let tabDiv: HTMLDivElement = document.createElement("div");
+                let tabTitle: HTMLDivElement = document.createElement("div");
+                let tabFavicon: HTMLDivElement = document.createElement("div");
+                let tabClose: HTMLDivElement = document.createElement("div");
+                let tab: Tab = bar.tabs[index];
+                let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getURL();
+
+                tabDiv.className = "ui-state-default";
+                tabDiv.id = tab.getID();
+
+                // Make the title the name of the website not URL 
+                tabTitle.title = tabTitle.innerHTML = tab.getTitle();
+
+                tabFavicon.innerHTML = "<img src = " + tabFav + ">";
+                tabTitle.className = "chrome-tab-title";
+                tabClose.className = "chrome-tab-close";
+                tabFavicon.className = "chrome-tab-favicon";
+                tabClose.onclick = () => {
+                    if (!Tabs.removeTab(Tabs.activeUser, tabDiv.id)) {
+                        // if there are no more tabs close application. Temporary
+                        require("electron").remote.app.quit();
+                    }
+                    Doc.render(bar);
+                    ipc.send("update-num-tabs", Tabs.activeBar().size());
+                };
+
+                tabDiv.appendChild(tabFavicon); tabDiv.appendChild(tabTitle); tabDiv.appendChild(tabClose);
+                let click = function () {
+                    Tabs.activeBar().hideTabs();
+                    Tabs.bars[Tabs.activeUser].activate(tab);
+                    // setTimeout(() => { Doc.render(bar);},1000);
+                    tabSwitch();
+                    doLayout();
+                };
+                tabDiv.onclick = () => { click(); };
+                tabs.appendChild(tabDiv);
+                if (!tab.getActive()) {
+                    tab.hide();
+                }
+
+                jquery(function() {
+                    jquery("#tabs").sortable({
+                        revert:true,
+                        axis: "x"
+                    });
+                });
+            } // if
+            if (!elt.getActive()) {
+                    elt.hide();
+                    let tabInact =  document.getElementById(elt.getID());
+                    tabInact.className = "ui-state-default";
+                }
+            if (elt.getActive()) {
+                let tabAct: HTMLElement = document.getElementById(elt.getID());
+                tabAct.className = "ui-state-default active";
+                this.updateTab(elt);
+            }
+        } // for
         doLayout();
-    }
+    } // render fcn
 }
 
 let Doc: BrowserDOM = new BrowserDOM();
