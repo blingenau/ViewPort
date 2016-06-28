@@ -16,6 +16,9 @@ let mainWindow: Electron.BrowserWindow = null;
 // The main process's IPC.
 const ipcMain: Electron.IpcMain = electron.ipcMain;
 
+// A global variable to keep track of the number of tabs
+let numTabs: number = 1;
+
 /**
  * Function to create a browser window
  */
@@ -42,18 +45,20 @@ function createWindow(): void {
             // we don't want to present the close dialog during testing
             return;
         }
-
+        console.log(numTabs);
         // potentially add some ipc here to request if it is OK to close without dialog (one tab, etc.)
-        const options: Object = {
-            type: "question",
-            title: "Close all tabs",
-            message: "Are you sure you want to close all your tabs?",
-            buttons: ["Yes", "No"]
-        };
-        let response: Number = dialog.showMessageBox(options);
+        if (numTabs > 1) {
+            const options: Object = {
+                type: "question",
+                title: "Close all tabs",
+                message: "Are you sure you want to close all your tabs?",
+                buttons: ["Yes", "No"]
+            };
+            let response: Number = dialog.showMessageBox(options);
 
-        if (response === 1) {
-            event.preventDefault();
+            if (response === 1) {
+                event.preventDefault();
+            }
         }
     });
 
@@ -100,4 +105,8 @@ app.on("activate", () => {
 
 ipcMain.on("tabs-all-closed", (): void => {
     app.quit();
+});
+
+ipcMain.on("update-num-tabs", (event: Electron.IpcMainEvent, tabs: number): void => {
+    numTabs = tabs;
 });

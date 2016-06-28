@@ -120,6 +120,7 @@ class BrowserDOM implements IDOM {
                     require("electron").remote.app.quit();
                 }
                 Doc.render(bar);
+                ipc.send("update-num-tabs", Tabs.activeBar().size());
             };
 
             tabDiv.appendChild(tabFavicon); tabDiv.appendChild(tabTitle); tabDiv.appendChild(tabClose);
@@ -190,6 +191,7 @@ onload = () => {
         Tabs.addTab(Tabs.activeUser, new Tab(Doc, {
             url: "about:blank"
         }));
+        ipc.send("update-num-tabs", Tabs.activeBar().size());
     };
 
     ipc.on("openPDF", function (event, filedata) {
