@@ -6,6 +6,7 @@ const npmFiles = require("gulp-npm-files");
 const os = require("os");
 const package = require("./package.json");
 const packager = require("electron-packager");
+const replace = require("gulp-replace");
 const ts = require("gulp-typescript");
 const tslint = require("gulp-tslint");
 
@@ -42,10 +43,11 @@ gulp.task("tsc-test", ["tslint", "clean-test"], () => {
             noImplicitAny: true,
             target: "es5"
         }))
+        .pipe(replace("../../src/", "../../../dist/"))
         .pipe(gulp.dest("test/generated-files"));
 });
 
-gulp.task("unit-tests", ["tsc-test"], () => {
+gulp.task("unit-tests", ["tsc", "tsc-test"], () => {
     return gulp.src([
             "test/generated-files/unit/**/*.js",
             "!**/_*.js"
