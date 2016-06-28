@@ -115,6 +115,35 @@ class BrowserDOM implements IDOM {
         webview.style.width = "0px";
         webview.style.height = "0px";
     }
+    /**
+     *  Description:
+     *      Queries document for the ordered list of current tabs 
+     * 
+     *  Return Value:
+     *      List of Tab objects in the order that they are displayed on screen
+     */
+    public getAllTabs(): Tab[] {
+        return Array.prototype.slice.call(document.getElementById("tabs")
+        .childNodes).map(function (arg: HTMLElement) {
+            return Tabs.getTab(arg.id);
+        }).filter(function (arg: Tab) {
+            return arg !== null;
+        });
+    }
+    /**
+     *  Description:
+     *      Given an input active tab id, return id of tab corresponding to the next active tab. 
+     * 
+     *  @param id   tab id that is active, use to fight neighboring tab to return.
+     */
+    public getNextActiveTabID(id: string): string {
+        let tab: HTMLElement = document.getElementById(id);
+        let next: Element = tab.nextElementSibling || tab.previousElementSibling;
+        if (next === null) {
+            return "";
+        }
+        return next.id;
+    }
 
     /**
      *  Description:
@@ -128,12 +157,14 @@ class BrowserDOM implements IDOM {
     public render(bar: TabBar): void {
         let tabs: HTMLElement = document.getElementById("tabs");
         tabs.innerHTML = "";
-        for (let index = 0; index < bar.size(); index++) {
+        let tabIDs: string[] = Object.keys(bar.tabs);
+        for (let index = 0; index < tabIDs.length; index++) {
+            // stuff 
             let tabDiv: HTMLDivElement = document.createElement("div");
             let tabTitle: HTMLDivElement = document.createElement("div");
             let tabFavicon: HTMLDivElement = document.createElement("div");
             let tabClose: HTMLDivElement = document.createElement("div");
-            let tab: Tab = bar.tabs[index];
+            let tab: Tab = bar.get(tabIDs[index]);
             let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getURL();
 
             tabDiv.className = "ui-state-default";
@@ -184,11 +215,11 @@ class BrowserDOM implements IDOM {
 }
 
 let Doc: BrowserDOM = new BrowserDOM();
-let Tabs: TabBarSet = new TabBarSet();
+let Tabs: TabBarSet = new TabBarSet(Doc);
 window.onresize = doLayout;
 let isLoading: boolean = false;
 const ipc = require("electron").ipcRenderer;
-const homepage = "http://athenanet.athenahealth.com";
+const homepage = "https://athenanet.athenahealth.com";
 
 onload = () => {
     Tabs.addTab("test", new Tab(Doc, {
@@ -248,25 +279,6 @@ onload = () => {
         }
     };
 };
-
-/**
- * Creates a new webview
- *
- * @returns A newly created webview tag.
- */
-/*function createWebview(): Electron.WebViewElement {
-    let webview: Electron.WebViewElement = document.createElement("webview");
-    webview.addEventListener("did-start-loading", handleLoadStart);
-    webview.addEventListener("did-stop-loading", handleLoadStop);
-    webview.addEventListener("did-fail-load", handleFailLoad);
-    webview.addEventListener("load-commit", handleLoadCommit);
-    webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
-    webview.style.display = "flex";
-    webview.style.width = "640px";
-    webview.style.height = "480px";
-    document.getElementById("webviews").appendChild(webview);
-    return webview;
-}*/
 
 /**
  * Navigates a tab to a new URL.

@@ -32,7 +32,7 @@ gulp.task("tsc", ["tslint", "clean-dist"], () => {
         .js.pipe(gulp.dest("dist"));
 });
 
-gulp.task("tsc-test", ["tslint"], () => {
+gulp.task("tsc-test", ["tslint", "clean-test"], () => {
     return gulp.src([
             "test/**/*.ts",
             "!**/*.d.ts",
@@ -62,6 +62,11 @@ gulp.task("unit-tests", ["tsc-test"], () => {
 
 gulp.task("clean-dist", () => {
     return gulp.src("dist", {read: false})
+        .pipe(clean());
+});
+
+gulp.task("clean-test", () => {
+    return gulp.src("test/generated-files", {read: false})
         .pipe(clean());
 });
 
