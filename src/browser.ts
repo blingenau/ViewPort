@@ -173,9 +173,11 @@ class BrowserDOM implements IDOM {
                     axis: "x"
                 });
             });
+            /*
             if (!tab.getActive()) {
                 this.setZIndexInative(tab.getID());
             }
+            */
         }
         doLayout();
     }
