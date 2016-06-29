@@ -6,6 +6,7 @@ const npmFiles = require("gulp-npm-files");
 const os = require("os");
 const package = require("./package.json");
 const packager = require("electron-packager");
+const replace = require("gulp-replace");
 const ts = require("gulp-typescript");
 const tslint = require("gulp-tslint");
 
@@ -32,7 +33,7 @@ gulp.task("tsc", ["tslint", "clean-dist"], () => {
         .js.pipe(gulp.dest("dist"));
 });
 
-gulp.task("tsc-test", ["tslint"], () => {
+gulp.task("tsc-test", ["tslint", "clean-test"], () => {
     return gulp.src([
             "test/**/*.ts",
             "!**/*.d.ts",
@@ -42,10 +43,11 @@ gulp.task("tsc-test", ["tslint"], () => {
             noImplicitAny: true,
             target: "es5"
         }))
+        .pipe(replace("../../src/", "../../../dist/"))
         .pipe(gulp.dest("test/generated-files"));
 });
 
-gulp.task("unit-tests", ["tsc-test"], () => {
+gulp.task("unit-tests", ["tsc", "tsc-test"], () => {
     return gulp.src([
             "test/generated-files/unit/**/*.js",
             "!**/_*.js"
@@ -62,6 +64,11 @@ gulp.task("unit-tests", ["tsc-test"], () => {
 
 gulp.task("clean-dist", () => {
     return gulp.src("dist", {read: false})
+        .pipe(clean());
+});
+
+gulp.task("clean-test", () => {
+    return gulp.src("test/generated-files", {read: false})
         .pipe(clean());
 });
 
