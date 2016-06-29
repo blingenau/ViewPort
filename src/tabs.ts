@@ -286,7 +286,7 @@ export class TabBar {
      * @param tab   Tab object to make active, make all others inactive.
      */
     public activate(tab: Tab): void { // maybe should be activateTab
-        let activeTab: Tab = this.active(); 
+        let activeTab: Tab = this.active();
         if (activeTab !== null) {
             activeTab.setActive(false);
         }
@@ -297,7 +297,10 @@ export class TabBar {
      *  Description:
      *      Clears all tabs from bar
      */
-    public clearAllTabs(): void { // removeAllTabs // ask user if they are ready to navigate away??? // should be used when you close the window 
+    public clearAllTabs(): void {
+        // removeAllTabs 
+        // ask user if they are ready to navigate away??? 
+        // should be used when you close the window 
         while (this.size()) {
             this.removeTab(this.active().getID());
         }
@@ -322,7 +325,8 @@ export class TabBar {
      *      Tab[] : list of Tab objects
      */
     public getAllTabs(): Tab[] {
-        return Object.keys(this.tabs).map((key: string) => this.tabs[key]); // look at a better way to do this maybe? jQuery?
+        return Object.keys(this.tabs).map((key: string) => this.tabs[key]);
+        // look at a better way to do this maybe? jQuery?
     }
 }
 /**
@@ -462,11 +466,11 @@ export class TabBarSet {
             return val !== null;
         });*/
         let result: string[] = Object.keys(this.bars).filter(function (key: string) {
-            return self.getTab(key)!== null;
+            return self.bars[key].get(tabID)!== null;
         });
 
         if (result.length) {
-            return this.getTab(result[0]);
+            return this.bars[(result[0])].get(tabID);
         }
         return null;
     }
