@@ -115,6 +115,17 @@ class BrowserDOM implements IDOM {
         webview.style.width = "0px";
         webview.style.height = "0px";
     }
+
+    public updateTab(tab: Tab): void {
+        let tabElt: HTMLElement = document.getElementById(tab.getID());
+        // update favicon
+        let tabFavicon: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-favicon");
+        let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getURL();
+        tabFavicon[0].innerHTML = "<img src = " + tabFav + ">";
+        // update tab title
+        let tabTitle: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-title");
+        tabTitle[0].innerHTML = tab.getTitle();
+    }
     /**
      *  Description:
      *      Queries document for the ordered list of current tabs 
@@ -156,62 +167,82 @@ class BrowserDOM implements IDOM {
      */
     public render(bar: TabBar): void {
         let tabs: HTMLElement = document.getElementById("tabs");
-        tabs.innerHTML = "";
-        let tabIDs: string[] = Object.keys(bar.tabs);
-        for (let index = 0; index < tabIDs.length; index++) {
-            // stuff 
-            let tabDiv: HTMLDivElement = document.createElement("div");
-            let tabTitle: HTMLDivElement = document.createElement("div");
-            let tabFavicon: HTMLDivElement = document.createElement("div");
-            let tabClose: HTMLDivElement = document.createElement("div");
-            let tab: Tab = bar.get(tabIDs[index]);
-            let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getURL();
-
-            tabDiv.className = "ui-state-default";
-            tabDiv.id = tab.getID();
-
-            // Make the button title the name of the website not URL 
-            tabTitle.title = tabTitle.innerHTML = tab.getTitle();
-
-            tabFavicon.innerHTML = "<img src = " + tabFav + ">";
-            tabTitle.className = "chrome-tab-title";
-            tabClose.className = "chrome-tab-close";
-            tabFavicon.className = "chrome-tab-favicon";
-            tabClose.onclick = () => {
-                if (!Tabs.removeTab(Tabs.activeUser, tabDiv.id)) {
-                    // if there are no more tabs close application. Temporary
-                    require("electron").remote.app.quit();
-                }
-                Doc.render(bar);
-                ipc.send("update-num-tabs", Tabs.activeBar().size());
-            };
-
-            tabDiv.appendChild(tabFavicon); tabDiv.appendChild(tabTitle); tabDiv.appendChild(tabClose);
-            let click = function () {
-                Tabs.bars[Tabs.activeUser].activate(tab);
-                Doc.render(bar);
-                tabSwitch();
-            };
-            tabDiv.onclick = () => { click(); };
-            tabs.appendChild(tabDiv);
-            if (!tab.getActive()) {
-                tab.hide();
+        // tabs.innerHTML = "";
+        let allTabs: NodeListOf<Element> = document.getElementsByClassName("ui-state-default");
+        // Loop through all of the front end and delete element if not found in back end
+        for (let index = 0; index < allTabs.length; index++) {
+            if (bar.get(allTabs[index].id) === null) {
+                let element = allTabs[index];
+                element.parentNode.removeChild(element);
             }
-
-            jquery(function() {
-                jquery("#tabs").sortable({
-                    revert:true,
-                    axis: "x"
-                });
-            });
-            /*
-            if (!tab.getActive()) {
-                this.setZIndexInative(tab.getID());
-            }
-            */
         }
+        let tabIDs: string[] = Object.keys(bar.tabs);
+        // Loop through all of the back end and add a new element to the front end if not found in front end
+        for (let index = 0; index < bar.size(); index++) {
+            let elt = bar.get(tabIDs[index]);
+
+            // elt in tab bar but not the document, create new element
+            if (document.getElementById(elt.getID()) === null) {
+                let tabDiv: HTMLDivElement = document.createElement("div");
+                let tabTitle: HTMLDivElement = document.createElement("div");
+                let tabFavicon: HTMLDivElement = document.createElement("div");
+                let tabClose: HTMLDivElement = document.createElement("div");
+                let tab: Tab = elt;
+                let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getURL();
+
+                tabDiv.className = "ui-state-default";
+                tabDiv.id = tab.getID();
+
+                // Make the title the name of the website not URL 
+                tabTitle.title = tabTitle.innerHTML = tab.getTitle();
+
+                tabFavicon.innerHTML = "<img src = " + tabFav + ">";
+                tabTitle.className = "chrome-tab-title";
+                tabClose.className = "chrome-tab-close";
+                tabFavicon.className = "chrome-tab-favicon";
+                tabClose.onclick = () => {
+                    if (!Tabs.removeTab(Tabs.activeUser, tabDiv.id)) {
+                        // if there are no more tabs close application. Temporary
+                        require("electron").remote.app.quit();
+                    }
+                    Doc.render(bar);
+                    ipc.send("update-num-tabs", Tabs.activeBar().size());
+                };
+
+                tabDiv.appendChild(tabFavicon); tabDiv.appendChild(tabTitle); tabDiv.appendChild(tabClose);
+                let click = function () {
+                    Tabs.activeBar().hideTabs();
+                    Tabs.bars[Tabs.activeUser].activate(tab);
+                    // setTimeout(() => { Doc.render(bar);},1000);
+                    tabSwitch();
+                    doLayout();
+                };
+                tabDiv.onclick = () => { click(); };
+                tabs.appendChild(tabDiv);
+                if (!tab.getActive()) {
+                    tab.hide();
+                }
+
+                jquery(function() {
+                    jquery("#tabs").sortable({
+                        revert:true,
+                        axis: "x"
+                    });
+                });
+            } // if
+            if (!elt.getActive()) {
+                    elt.hide();
+                    let tabInact =  document.getElementById(elt.getID());
+                    tabInact.className = "ui-state-default";
+                }
+            if (elt.getActive()) {
+                let tabAct: HTMLElement = document.getElementById(elt.getID());
+                tabAct.className = "ui-state-default active";
+                this.updateTab(elt);
+            }
+        } // for
         doLayout();
-    }
+    } // render fcn
 }
 
 let Doc: BrowserDOM = new BrowserDOM();
@@ -306,8 +337,10 @@ function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolea
 function doLayout(): void {
     let webview: Electron.WebViewElement = Doc.getWebview();
     let controls: HTMLDivElement = <HTMLDivElement>document.querySelector("#controls");
-    let tabBar: HTMLDivElement = <HTMLDivElement>document.querySelector("#tabs-shell");
+    let tabBar: HTMLDivElement = <HTMLDivElement>document.querySelector("#tabs");
     let tabs: NodeListOf<Element> = document.querySelectorAll(".ui-state-default");
+    let tabFav: NodeListOf<Element> = document.querySelectorAll(".chrome-tab-favicon");
+    let tabTitle: NodeListOf<Element> = document.querySelectorAll(".chrome-tab-title");
     let controlsHeight: number = controls.offsetHeight;
     let tabBarHeight: number = tabBar.offsetHeight;
     let windowWidth: number = document.documentElement.clientWidth;
@@ -322,6 +355,11 @@ function doLayout(): void {
     // Resize the tabs if there are many or the window is too small
     for (let i = 0; i < tabs.length; i++) {
         (<HTMLDivElement>tabs[i]).style.width = tabWidth;
+        if (tabs[i].clientWidth <= 60) {
+            (<HTMLDivElement>tabFav[i]).hidden = (<HTMLDivElement>tabTitle[i]).hidden = true;
+        } else {
+            (<HTMLDivElement>tabFav[i]).hidden = (<HTMLDivElement>tabTitle[i]).hidden = false;
+        }
     }
 }
 
