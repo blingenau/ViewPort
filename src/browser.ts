@@ -171,7 +171,7 @@ class BrowserDOM implements IDOM {
             tabDiv.id = tab.getID();
 
             // Make the button title the name of the website not URL 
-            tabTitle.title = tabTitle.innerHTML = tab.getTitle();
+            tabDiv.title = tabTitle.innerHTML = tab.getTitle();
 
             tabFavicon.innerHTML = "<img src = " + tabFav + ">";
             tabTitle.className = "chrome-tab-title";
@@ -306,8 +306,10 @@ function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolea
 function doLayout(): void {
     let webview: Electron.WebViewElement = Doc.getWebview();
     let controls: HTMLDivElement = <HTMLDivElement>document.querySelector("#controls");
-    let tabBar: HTMLDivElement = <HTMLDivElement>document.querySelector("#tabs-shell");
+    let tabBar: HTMLDivElement = <HTMLDivElement>document.querySelector("#tabs");
     let tabs: NodeListOf<Element> = document.querySelectorAll(".ui-state-default");
+    let tabFav: NodeListOf<Element> = document.querySelectorAll(".chrome-tab-favicon");
+    let tabTitle: NodeListOf<Element> = document.querySelectorAll(".chrome-tab-title");
     let controlsHeight: number = controls.offsetHeight;
     let tabBarHeight: number = tabBar.offsetHeight;
     let windowWidth: number = document.documentElement.clientWidth;
@@ -322,6 +324,11 @@ function doLayout(): void {
     // Resize the tabs if there are many or the window is too small
     for (let i = 0; i < tabs.length; i++) {
         (<HTMLDivElement>tabs[i]).style.width = tabWidth;
+        if (tabs[i].clientWidth <= 60) {
+            (<HTMLDivElement>tabFav[i]).hidden = (<HTMLDivElement>tabTitle[i]).hidden = true;
+        } else {
+            (<HTMLDivElement>tabFav[i]).hidden = (<HTMLDivElement>tabTitle[i]).hidden = false;
+        }
     }
 }
 
