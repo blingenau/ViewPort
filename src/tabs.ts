@@ -89,10 +89,11 @@ export interface IDOM {
 export class Tab {
     private url: string;
     private id: string;
-    private title: string;
+    private title: string; // get rid of this 
     private active: boolean;
     private dom: IDOM;
 
+    // come back and change to options? and create new constructor
     /**
      *  Description:
      *      constructor for Tab class
@@ -100,11 +101,11 @@ export class Tab {
      *  @param d   DOM object for handling document interaction
      *  @param tab   object to populate url, title, and active status of Tab
      */
-    constructor (d: IDOM, tab: any) {
+    constructor (dom: IDOM, tab: any) {
         this.url = tab.url || "";
-        this.id = Math.round(Math.random() * 100000000000000000).toString();
+        this.id = Math.round(Math.random() * 100000000000000000).toString(); // generate random string using library 
         this.title = tab.title || "";
-        this.dom = d;
+        this.dom = dom;
         this.active = tab.active || true;
         this.dom.createWebview(this.url, this.id);
     }
@@ -132,20 +133,21 @@ export class Tab {
     public getURL(): string {
         return this.url;
     }
+    // possibly come back and re-evaluate getters and setters 
     /**
      *  Description:
      *      sets url of Tab 
      * 
      *  @param url   url to assign to Tab
      */
-    public setURL(url: string): void {
+    public setURL(url: string): void { // change the webview here?? // just the first letter setUrl
         this.url = url;
     }
     /**
      *  Description:
      *      returns string ID of Tab
      */
-    public getID(): string {
+    public getID(): string { // getId
         return this.id;
     }
     /**
@@ -192,6 +194,9 @@ export class Tab {
  *      tabs: Tab[] - list of Tab objects (see Tab class)
  *      activeTab: number - index of tab in the list that is the active tab 
  */
+// variables should be private 
+// active tab maybe should be a tab or renamed tabId
+
 export class TabBar {
     public tabs: {[id: string]: Tab};
     public activeTab: string;
@@ -211,10 +216,7 @@ export class TabBar {
      * @param id   id of Tab to return.
      */
     public get(id: string): Tab {
-        if (this.tabs.hasOwnProperty(id)) {
-            return this.tabs[id];
-        }
-        return null;
+        return this.tabs[id] || null;
     }
     /**
      *  Description: 
@@ -249,9 +251,9 @@ export class TabBar {
     public removeTab(tabID: string): boolean {
         if (this.size() === 0) {
             // this should not happen
-            console.log("Popping from empty TabBar");
+            // console.log("Popping from empty TabBar"); Remove and Test in unit tests 
             return false;
-        } else if (this.size() === 1) {
+        } else if (this.size() === 1) { // come back to this 
             require("electron").ipcRenderer.send("tabs-all-closed");
             return true;
         }
@@ -272,7 +274,7 @@ export class TabBar {
      * Description:
      *      returns active Tab object within TabBar
      */
-    public active(): Tab {
+    public active(): Tab { // change name to getActiveTab 
         return this.get(this.activeTab);
     }
     /**
@@ -283,10 +285,10 @@ export class TabBar {
      * 
      * @param tab   Tab object to make active, make all others inactive.
      */
-    public activate(tab: Tab): void {
-        let active: Tab = this.active();
-        if (active !== null) {
-            active.setActive(false);
+    public activate(tab: Tab): void { // maybe should be activateTab
+        let activeTab: Tab = this.active(); 
+        if (activeTab !== null) {
+            activeTab.setActive(false);
         }
         tab.setActive(true);
         this.activeTab = tab.getID();
@@ -295,7 +297,7 @@ export class TabBar {
      *  Description:
      *      Clears all tabs from bar
      */
-    public clearAllTabs(): void {
+    public clearAllTabs(): void { // removeAllTabs // ask user if they are ready to navigate away??? // should be used when you close the window 
         while (this.size()) {
             this.removeTab(this.active().getID());
         }
@@ -320,13 +322,11 @@ export class TabBar {
      *      Tab[] : list of Tab objects
      */
     public getAllTabs(): Tab[] {
-        return Object.keys(this.tabs).map((key: string) => {
-            return this.tabs[key];
-        });
+        return Object.keys(this.tabs).map((key: string) => this.tabs[key]); // look at a better way to do this maybe? jQuery?
     }
 }
 /**
- * class TabBarSet:
+ * class TabBarSet: // change to user tab bar maybe 
  * 
  * Description:
  *      Overarching handler for Tabs and TabBars. 
@@ -355,7 +355,7 @@ export class TabBarSet {
      * 
      * @param user   username accociated with the returned TabBar
      */
-    public get(user: string): TabBar {
+    public get(user: string): TabBar { // change to getUserTabBar
         if (this.bars.hasOwnProperty(user)) {
             return this.bars[user];
         }
@@ -419,10 +419,10 @@ export class TabBarSet {
      *  
      *  @param user   user to activate
      */
-    public activate(user: string): void {
+    public activate(user: string): void { // activate tabUser
         let bar: TabBar = this.get(user);
         if (bar === null) {
-            console.error("attempt to activate user that does not exist");
+            console.error("attempt to activate user that does not exist"); // throw exception!
             return;
         }
         this.activeUser = user;
@@ -438,14 +438,14 @@ export class TabBarSet {
      *  Description:
      *      returns the active Tab object from the active user's TabBar
      */
-    public activeTab(): Tab {
+    public activeTab(): Tab { // rename activateTabBar
         return this.activeBar().active();
     }
     /**
      *  Description:
      *      returns the active TabBar object 
      */
-    public activeBar(): TabBar {
+    public activeBar(): TabBar { // getActiveTabBar
         return this.bars[this.activeUser];
     }
     /**
@@ -461,14 +461,12 @@ export class TabBarSet {
         }).find(function (val: Tab) {
             return val !== null;
         });*/
-        let result: Tab[] = Object.keys(this.bars).map( function (key: string) {
-            return self.bars[key].get(tabID);
-        }).filter(function (val: Tab) {
-            return val !== null;
+        let result: string[] = Object.keys(this.bars).filter(function (key: string) {
+            return self.getTab(key)!== null;
         });
 
         if (result.length) {
-            return result[0];
+            return this.getTab(result[0]);
         }
         return null;
     }
@@ -481,3 +479,5 @@ export class TabBarSet {
         return Object.keys(this.bars);
     }
 }
+
+// create a tab factory and tabBar factory class
