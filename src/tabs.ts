@@ -182,9 +182,6 @@ export class Tab {
     }
 }
 
-interface ITabMap {
-    [id: string]: Tab;
-}
 /** 
  *  Class TabBar:
  * 
@@ -196,7 +193,7 @@ interface ITabMap {
  *      activeTab: number - index of tab in the list that is the active tab 
  */
 export class TabBar {
-    public tabs: ITabMap;
+    public tabs: {[id: string]: Tab};
     public activeTab: string;
     private dom: IDOM;
     constructor(d: IDOM) {
@@ -235,7 +232,7 @@ export class TabBar {
      * 
      *  @param tab   Tab object to insert
      */
-    public add_tab(tab: Tab): void {
+    public addTab(tab: Tab): void {
         // if there is an active tab currently, set it to inactive
         this.tabs[tab.getID()] = tab;
         this.activate(tab);
@@ -262,7 +259,7 @@ export class TabBar {
         let tab: Tab = this.get(tabID);
         if (tab !== null) {
             if (tab.getActive()) {
-                this.activeTab = this.dom.getNextActiveTabID(tabID);
+                this.activeTab = this.dom.getNextActiveTabID(tabID) || "";
             }
             tab.remove();
             delete this.tabs[tabID];
@@ -313,16 +310,21 @@ export class TabBar {
             self.tabs[key].hide();
         });
     }
-}
 
-/**
- *  Description:
- *      define interface for user->TabBar dictionary
- */
-interface IUserMap {
-    [user: string]: TabBar;
+    /**
+     *  Description:
+     *      Returns list of tab objects contained in the TabBar. 
+     *      Note: order may not be same as order on page. 
+     * 
+     *  Return Value:
+     *      Tab[] : list of Tab objects
+     */
+    public getAllTabs(): Tab[] {
+        return Object.keys(this.tabs).map((key: string) => {
+            return this.tabs[key];
+        });
+    }
 }
-
 /**
  * class TabBarSet:
  * 
@@ -332,8 +334,7 @@ interface IUserMap {
  *      A user must have a non-zero number of tabs to have a TabBar
  */
 export class TabBarSet {
-    // figure out how to make this typed as string -> TabBar instead of any
-    public bars: IUserMap;
+    public bars: {[user: string]: TabBar};
     public activeUser: string;
     private dom: IDOM;
     constructor(d: IDOM) {
@@ -373,10 +374,10 @@ export class TabBarSet {
         let bar: TabBar = this.get(user);
         if (bar === null) {
             bar = new TabBar(this.dom);
-            bar.add_tab(tab);
+            bar.addTab(tab);
             this.bars[user] = bar;
-        }else {
-            bar.add_tab(tab);
+        } else {
+            bar.addTab(tab);
         }
 
     }
@@ -427,7 +428,7 @@ export class TabBarSet {
         this.activeUser = user;
         // set all other tabs to inactive (hidden)
         let self: TabBarSet = this;
-        Object.keys(this.bars).forEach(function (key: string){
+        Object.keys(this.bars).forEach(function (key: string) {
             self.bars[key].hideTabs();
         });
         // set tab state of active tab in bar to active
@@ -454,14 +455,15 @@ export class TabBarSet {
      */
     public getTab(tabID: string): Tab {
         let self: TabBarSet = this;
+        // commented out as you cannot yet use find with es5
         /*let result: Tab = Object.keys(this.bars).map( function (key: string) {
             return self.bars[key].get(tabID);
-        }).find(function (val: Tab){
+        }).find(function (val: Tab) {
             return val !== null;
         });*/
         let result: Tab[] = Object.keys(this.bars).map( function (key: string) {
             return self.bars[key].get(tabID);
-        }).filter(function (val: Tab){
+        }).filter(function (val: Tab) {
             return val !== null;
         });
 

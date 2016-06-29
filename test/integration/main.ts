@@ -4,7 +4,7 @@ import createApplication from "./_application";
 
 describe("application launch", function() {
     // default timeout for async operations
-    const msTimeout: number = 2000;
+    const msTimeout: number = 5000;
     this.timeout(msTimeout);
 
     let app: Spectron.Application = null;
@@ -49,4 +49,5 @@ describe("application launch", function() {
                 .should.eventually.be.true;
         });
     });
+
 });
