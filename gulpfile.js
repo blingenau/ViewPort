@@ -1,5 +1,6 @@
 const clean = require("gulp-clean");
 const gulp = require("gulp");
+const istanbul = require("gulp-istanbul");
 const merge = require("merge2");
 const mocha = require("gulp-mocha");
 const npmFiles = require("gulp-npm-files");
@@ -47,7 +48,13 @@ gulp.task("tsc-test", ["tslint", "clean-test"], () => {
         .pipe(gulp.dest("test/generated-files"));
 });
 
-gulp.task("unit-tests", ["tsc", "tsc-test"], () => {
+gulp.task("unit-test-cover", ["tsc", "tsc-test"], () => {
+    return gulp.src(["dist/**/*.js"])
+        .pipe(istanbul())
+        .pipe(istanbul.hookRequire());
+});
+
+gulp.task("unit-tests", ["unit-test-cover"], () => {
     return gulp.src([
             "test/generated-files/unit/**/*.js",
             "!**/_*.js"
@@ -59,7 +66,13 @@ gulp.task("unit-tests", ["tsc", "tsc-test"], () => {
             console.log("Unit tests failed:");
             console.log(err);
             process.exit(1);
-        });
+        })
+        .pipe(istanbul.writeReports())
+        .pipe(istanbul.enforceThresholds({
+            thresholds: {
+                global: 50
+            }
+        }));
 });
 
 gulp.task("clean-dist", () => {
