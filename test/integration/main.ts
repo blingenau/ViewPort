@@ -53,7 +53,7 @@ describe("application launch", function() {
     it("can remove the second tab", function() {
         return app.client.click("#tabs > div:nth-child(2) div.chrome-tab-close")
             .then(function() {
-                tabCountEquals(2).should.eventually.be.true;
+                return tabCountEquals(2).should.eventually.be.true;
             });
     });
 });
