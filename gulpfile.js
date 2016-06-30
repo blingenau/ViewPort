@@ -42,7 +42,8 @@ gulp.task("tsc-test", ["tslint", "clean-test"], () => {
         ])
         .pipe(ts({
             noImplicitAny: true,
-            target: "es5"
+            "target": "es2015",
+            "module": "commonjs"
         }))
         .pipe(replace("../../src/", "../../../dist/"))
         .pipe(gulp.dest("test/generated-files"));
