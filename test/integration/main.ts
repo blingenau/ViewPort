@@ -3,9 +3,8 @@
 import createApplication from "./_application";
 
 describe("application launch", function() {
-    // default timeout for async operations
-    const msTimeout: number = 5000;
-    this.timeout(msTimeout);
+    // default timeout (ms) for async operations
+    this.timeout(5000);
 
     let app: Spectron.Application = null;
 
@@ -19,8 +18,12 @@ describe("application launch", function() {
     });
 
     function tabCountEquals(n: number): Q.IPromise<boolean> {
-        return app.client.elements("#tabs > div").then(result =>
-            result.value.length === n);
+        // wait until
+        // (a) there is no (n+1)th child
+        // (b) there is an nth child
+        return app.client
+            .waitForExist(`#tabs > div:nth-child(${n+1})`, undefined, true)
+            .waitForExist(`#tabs > div:nth-child(${n})`);
     }
 
     it("shows an initial window", function() {
@@ -28,26 +31,29 @@ describe("application launch", function() {
     });
 
     it("has a tab bar", function() {
-        return app.client.getHTML("#tabs", true).should.eventually.exist;
+        return app.client.waitForExist("#tabs").should.eventually.be.true;
     });
 
     it("has a tab", function() {
-        return app.client.waitUntil(() => tabCountEquals(1), msTimeout)
-            .should.eventually.be.true;
+        return tabCountEquals(1).should.eventually.be.true;
     });
 
     it("can add a second tab", function() {
         return app.client.click("#add-tab").then(function() {
-            return app.client.waitUntil(() => tabCountEquals(2), msTimeout)
-                .should.eventually.be.true;
+            return tabCountEquals(2).should.eventually.be.true;
         });
     });
 
     it("can add a third tab", function() {
         return app.client.click("#add-tab").then(function() {
-            return app.client.waitUntil(() => tabCountEquals(3), msTimeout)
-                .should.eventually.be.true;
+            return tabCountEquals(3).should.eventually.be.true;
         });
     });
 
+    it("can remove the second tab", function() {
+        return app.client.click("#tabs > div:nth-child(2) div.chrome-tab-close")
+            .then(function() {
+                tabCountEquals(2).should.eventually.be.true;
+            });
+    });
 });
