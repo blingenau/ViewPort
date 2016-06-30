@@ -39,6 +39,9 @@ class BrowserDOM implements IDOM {
         document.getElementById("webviews").appendChild(webview);
     }
 
+    public allTabsClosed(): void {
+        require("electron").ipcRenderer.send("tabs-all-closed");
+    }
     /**
      * Creates a new tab element and places it in the Tabs div in the document.
      * 
@@ -50,7 +53,7 @@ class BrowserDOM implements IDOM {
      * @param tab   The Tab object associated with this new element.
      */
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
-        // let url: string = this.getWebview(id).getURL();
+        // let url: string = this.getWebview(id).getUrl();
         $("#tabs")
             .append($("<div>")
                 .addClass("ui-state-default")
@@ -101,7 +104,7 @@ class BrowserDOM implements IDOM {
      * @param id string ID corresponding to the new active tab
      */
     public setZIndexActive(id: string = ""): void {
-        id = id || Tabs.getActiveTab().getID();
+        id = id || Tabs.getActiveTab().getId();
         jquery( "#" + id ).sortable({
         zIndex: 1000
         });
@@ -118,7 +121,7 @@ class BrowserDOM implements IDOM {
      */
 
     public setZIndexInative(id: string = ""): void {
-        id = id || Tabs.getActiveTab().getID();
+        id = id || Tabs.getActiveTab().getId();
         jquery( "#" + id ).sortable({
         zIndex: 9999
         });
@@ -135,7 +138,7 @@ class BrowserDOM implements IDOM {
      *  @param id   string ID corresponding to the webview's tabID to return, if empty return active webview
      */
     public getWebview(id: string = ""): Electron.WebViewElement {
-        id = id || Tabs.getActiveTab().getID();
+        id = id || Tabs.getActiveTab().getId();
         return <Electron.WebViewElement>document.querySelector("[tabID='"+id+"']");
     }
 
@@ -144,7 +147,7 @@ class BrowserDOM implements IDOM {
      * If no id provided then get the active tab element.
      */
     public getTabElement(id: string = ""): HTMLDivElement {
-        id = id || Tabs.getActiveTab().getID();
+        id = id || Tabs.getActiveTab().getId();
         return <HTMLDivElement>document.querySelector(`#${id}`);
     }
 
@@ -188,10 +191,10 @@ class BrowserDOM implements IDOM {
     }
 
     public updateTab(tab: Tab): void {
-        let tabElt: HTMLElement = document.getElementById(tab.getID());
+        let tabElt: HTMLElement = document.getElementById(tab.getId());
         // update favicon
         let tabFavicon: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-favicon");
-        let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getURL();
+        let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getUrl();
         tabFavicon[0].innerHTML = "<img src = " + tabFav + ">";
         // update tab title
         let tabTitle: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-title");
@@ -218,7 +221,7 @@ class BrowserDOM implements IDOM {
      * 
      *  @param id   tab id that is active, use to fight neighboring tab to return.
      */
-    public getNextActiveTabID(id: string): string {
+    public getNextActiveTabId(id: string): string {
         let tab: HTMLElement = document.getElementById(id);
         let next: Element = tab.nextElementSibling || tab.previousElementSibling;
         if (next === null) {
@@ -270,7 +273,7 @@ onload = () => {
 
     urlBar.onsubmit = (): boolean => {
         let address: string = (<HTMLInputElement>document.querySelector("#location")).value;
-        Tabs.getActiveTab().setURL(address);
+        Tabs.getActiveTab().setUrl(address);
         navigateTo(Doc.getWebview(), address);
         return false;
     };
@@ -402,9 +405,9 @@ function handleLoadStop(event: Event): void {
     let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
     let tab: Tab = Tabs.getTab(webview.getAttribute("tabID"));
-    tab.setURL(webview.getAttribute("src"));
+    tab.setUrl(webview.getAttribute("src"));
     tab.setTitle(webview.getTitle());
-    address.value = tab.getURL();
+    address.value = tab.getUrl();
     tabSwitch();
 }
 

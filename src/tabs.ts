@@ -11,7 +11,7 @@ export interface IDOM {
      *  @param id   ID to link webview to tab with attribute tabID
      */
     createWebview(url: string, id: string): void;
-
+    allTabsClosed(): void;
     /**
      * Creates a new tab element and places it in the Tabs div in the document.
      * 
@@ -87,7 +87,7 @@ export interface IDOM {
      * 
      *  @param id   tab id that is active, use to fight neighboring tab to return.
      */
-    getNextActiveTabID(id: string): string;
+    getNextActiveTabId(id: string): string;
 
     /**
      * Updates the title and innerHTML of the tab element when a new page is loaded.
@@ -163,7 +163,7 @@ export class Tab {
      *  Description:
      *      returns url string of Tab 
      */
-    public getURL(): string {
+    public getUrl(): string {
         return this.url;
     }
     // possibly come back and re-evaluate getters and setters 
@@ -173,7 +173,7 @@ export class Tab {
      * 
      *  @param url   url to assign to Tab
      */
-    public setURL(url: string): void { // change the webview here?? // just the first letter setUrl
+    public setUrl(url: string): void { // change the webview here?? // just the first letter setUrl
         this.url = url;
         this.dom.setTabFavicon(this.id, url);
     }
@@ -181,7 +181,7 @@ export class Tab {
      *  Description:
      *      returns string ID of Tab
      */
-    public getID(): string { // getId
+    public getId(): string { // getId
         return this.id;
     }
     /**
@@ -283,7 +283,7 @@ export class TabBar {
      */
     public addTab(tab: Tab): void {
         // if there is an active tab currently, set it to inactive
-        this.tabs[tab.getID()] = tab;
+        this.tabs[tab.getId()] = tab;
         this.activateTab(tab);
     }
     /**
@@ -295,6 +295,7 @@ export class TabBar {
      * 
      * @param tabID   id of tab to find and remove.
      */
+    /*
     public removeTab(tabID: string): boolean {
         if (this.size() === 0) {
             // this should not happen
@@ -308,7 +309,7 @@ export class TabBar {
         let tab: Tab = this.getTab(tabID);
         if (tab !== null) {
             if (tab.getActiveStatus()) {
-                this.activeTab = this.dom.getNextActiveTabID(tabID) || "";
+                this.activeTab = this.dom.getNextActiveTabId(tabID) || "";
             }
             tab.remove();
             delete this.tabs[tabID];
@@ -316,6 +317,20 @@ export class TabBar {
         }
         // if we make it here the tab wasn't found or the bar is empty
         return false;
+    }
+    */
+    public removeTab(tabID: string): void {
+        let tab: Tab = this.getTab(tabID);
+        if (tab !== null) {
+            if (this.size() === 1) { // come back to this 
+                this.dom.allTabsClosed();
+            }
+            if (tab.getActiveStatus()) {
+                this.activeTab = this.dom.getNextActiveTabId(tabID) || "";
+            }
+            tab.remove();
+            delete this.tabs[tabID];
+        }
     }
     /**
      * Description:
@@ -338,7 +353,7 @@ export class TabBar {
             activeTab.setActiveStatus(false);
         }
         tab.setActiveStatus(true);
-        this.activeTab = tab.getID();
+        this.activeTab = tab.getId();
     }
     /**
      *  Description:
@@ -349,7 +364,7 @@ export class TabBar {
         // ask user if they are ready to navigate away??? 
         // should be used when you close the window 
         while (this.size()) {
-            this.removeTab(this.getActiveTab().getID());
+            this.removeTab(this.getActiveTab().getId());
         }
     }
     /**
@@ -432,8 +447,8 @@ export class UserTabBar {
      * @param tab   Tab object to add
      * @param user   Optional property to add the new Tab to a specific user
      */
-    public addTab(tab: Tab, user?: string): void {
-        let bar: TabBar = this.getUserTabBar(user === undefined ? this.activeUser : user);
+    public addTab(tab: Tab, user: string = ""): void {
+        let bar: TabBar = this.getUserTabBar(user);
         if (bar === null) {
             bar = new TabBar(this.dom);
             bar.addTab(tab);
@@ -452,13 +467,12 @@ export class UserTabBar {
      * 
      *  @param tabID   id of tab to remove
      */
-    public removeTab(tabID: string): boolean {
+    public removeTab(tabID: string): void {
         // potentially handle case where removing tab causes empty TabBar
         let bar: TabBar = this.getUserTabBar(this.activeUser);
         if (bar !== null) {
-            return bar.removeTab(tabID);
+            bar.removeTab(tabID);
         }
-        return false;
     }
     /**
      *  Description:
@@ -484,8 +498,7 @@ export class UserTabBar {
     public activateUser(user: string): void { // activate tabUser
         let bar: TabBar = this.getUserTabBar(user);
         if (bar === null) {
-            console.error("attempt to activate user that does not exist"); // throw exception!
-            return;
+            throw new Error("attempt to activate user that does not exist"); // throw exception!
         }
         this.activeUser = user;
         // set all other tabs to inactive (hidden)
