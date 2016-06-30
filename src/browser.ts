@@ -3,7 +3,7 @@
 /// <reference path="Definitions/jquery/index.d.ts" />
 /// <reference path="Definitions/jqueryui/jqueryui.d.ts" />
 
-import {Tab, TabBar, TabBarSet, IDOM} from "./tabs";
+import {Tab, TabBar, UserTabBar, IDOM} from "./tabs";
 const $ = require("jquery");
 require("jquery-ui");
 
@@ -184,7 +184,7 @@ class BrowserDOM implements IDOM {
                 // change back 
                 let click = function () {
                     Tabs.activeBar().hideTabs();
-                    Tabs.bars[Tabs.activeUser].activate(tab);
+                    Tabs.bars[Tabs.activeUser].activateTab(tab);
                     tabSwitch();
                     doLayout();
                 };
@@ -217,7 +217,7 @@ class BrowserDOM implements IDOM {
 }
 
 let Doc: BrowserDOM = new BrowserDOM();
-let Tabs: TabBarSet = new TabBarSet(Doc);
+let Tabs: UserTabBar = new UserTabBar(Doc);
 window.onresize = doLayout;
 let isLoading: boolean = false;
 const ipc = require("electron").ipcRenderer;
@@ -227,7 +227,7 @@ onload = () => {
     Tabs.addTab("test", new Tab(Doc, {
         url: homepage
     }));
-    Tabs.activate("test");
+    Tabs.activateTabUser("test");
     let reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload");
     let urlBar: HTMLFormElement = <HTMLFormElement>document.getElementById("location-form");
     let addressBar: HTMLInputElement = <HTMLInputElement>document.getElementById("location");

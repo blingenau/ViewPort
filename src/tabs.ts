@@ -246,7 +246,7 @@ export class TabBar {
     public addTab(tab: Tab): void {
         // if there is an active tab currently, set it to inactive
         this.tabs[tab.getId()] = tab;
-        this.activate(tab);
+        this.activateTab(tab);
     }
     /**
      *  Description:
@@ -259,8 +259,6 @@ export class TabBar {
      */
     public removeTab(tabID: string): boolean {
         if (this.size() === 0) {
-            // this should not happen
-            // console.log("Popping from empty TabBar"); Remove and Test in unit tests 
             return false;
         } else if (this.size() === 1) { // come back to this 
             require("electron").ipcRenderer.send("tabs-all-closed");
@@ -276,7 +274,6 @@ export class TabBar {
             delete this.tabs[tabID];
             return true;
         }
-        // if we make it here the tab wasn't found or the bar is empty
         return false;
     }
     /**
@@ -294,7 +291,7 @@ export class TabBar {
      * 
      * @param tab   Tab object to make active, make all others inactive.
      */
-    public activate(tab: Tab): void { // maybe should be activateTab
+    public activateTab(tab: Tab): void { // maybe should be activateTab
         let tabId: Tab = this.active();
         if (tabId !== null) {
             tabId.setActive(false);
@@ -339,14 +336,14 @@ export class TabBar {
     }
 }
 /**
- * class TabBarSet: // change to user tab bar maybe 
- * 
+ * class UserTabBar:
+ *
  * Description:
- *      Overarching handler for Tabs and TabBars. 
- *      Essentially TabBarSet organizes multiple TabBars with their user.
+ *      Overarching handler for Tabs and TabBars.
+ *      Essentially UserTabBar organizes multiple TabBars with their user.
  *      A user must have a non-zero number of tabs to have a TabBar
  */
-export class TabBarSet {
+export class UserTabBar {
     public bars: {[user: string]: TabBar};
     public activeUser: string;
     private dom: IDOM;
@@ -368,7 +365,7 @@ export class TabBarSet {
      * 
      * @param user   username accociated with the returned TabBar
      */
-    public get(user: string): TabBar { // change to getUserTabBar
+    public getUserTabBar(user: string): TabBar {
         if (this.bars.hasOwnProperty(user)) {
             return this.bars[user];
         }
@@ -384,7 +381,7 @@ export class TabBarSet {
      *  @param tab   Tab object to add
      */
     public addTab(user: string, tab: Tab): void {
-        let bar: TabBar = this.get(user);
+        let bar: TabBar = this.getUserTabBar(user);
         if (bar === null) {
             bar = new TabBar(this.dom);
             bar.addTab(tab);
@@ -405,7 +402,7 @@ export class TabBarSet {
      */
     public removeTab(user: string, tabID: string): boolean {
         // potentially handle case where removing tab causes empty TabBar
-        let bar: TabBar = this.get(user);
+        let bar: TabBar = this.getUserTabBar(user);
         if (bar !== null) {
             return bar.removeTab(tabID);
         }
@@ -432,15 +429,15 @@ export class TabBarSet {
      *  
      *  @param user   user to activate
      */
-    public activate(user: string): void { // activate tabUser
-        let bar: TabBar = this.get(user);
+    public activateTabUser(user: string): void { // activate tabUser
+        let bar: TabBar = this.getUserTabBar(user);
         if (bar === null) {
             console.error("attempt to activate user that does not exist"); // throw exception!
             return;
         }
         this.activeUser = user;
         // set all other tabs to inactive (hidden)
-        let self: TabBarSet = this;
+        let self: UserTabBar = this;
         Object.keys(this.bars).forEach(function (key: string) {
             self.bars[key].hideTabs();
         });
@@ -467,7 +464,7 @@ export class TabBarSet {
      *  @param tab_id   tab id to search for
      */
     public getTab(tabID: string): Tab {
-        let self: TabBarSet = this;
+        let self: UserTabBar = this;
         let result: string[] = Object.keys(this.bars).filter(function (key: string) {
             return self.bars[key].getTab(tabID)!== null;
         });

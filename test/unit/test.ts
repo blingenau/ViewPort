@@ -1,6 +1,6 @@
 /// <reference path="../../typings/index.d.ts" />
 
-import {Tab, TabBar, TabBarSet, IDOM} from "../../src/tabs";
+import {Tab, TabBar, UserTabBar, IDOM} from "../../src/tabs";
 const should = require("chai").should();
 
 class Calculator {
@@ -131,13 +131,13 @@ class MockDOM implements IDOM {
 
 describe("startup test", () => {
     let doc: MockDOM = new MockDOM();
-    let Tabs: TabBarSet = null;
+    let Tabs: UserTabBar = null;
     beforeEach(() => {
-        Tabs = new TabBarSet(doc);
+        Tabs = new UserTabBar(doc);
     });
 
-    it("test TabBarSet functionality", function() {
-        Tabs = <TabBarSet>Tabs;
+    it("test UserTabBar functionality", function() {
+        Tabs = <UserTabBar>Tabs;
         let tab1: Tab = new Tab(doc,{
             url:"about:blank"
         });
@@ -150,7 +150,7 @@ describe("startup test", () => {
         tab1.getActive().should.equal(false);
         tab2.getActive().should.equal(true);
 
-        Tabs.activate("test");
+        Tabs.activateTabUser("test");
         Tabs.size().should.equal(1);
         Tabs.activeUser.should.equal("test");
         Tabs.activeBar().getTab(tab1.getId()).getId().should.equal(tab1.getId());
