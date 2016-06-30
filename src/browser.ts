@@ -4,7 +4,7 @@
 /// <reference path="Definitions/jqueryui/jqueryui.d.ts" />
 
 import {Tab, TabBar, TabBarSet, IDOM} from "./tabs";
-const jquery = require("jquery");
+const $ = require("jquery");
 require("jquery-ui");
 
 /**
@@ -31,46 +31,13 @@ class BrowserDOM implements IDOM {
         webview.addEventListener("did-fail-load", handleFailLoad);
         webview.addEventListener("load-commit", handleLoadCommit);
         webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
-        webview.style.display = "flex";
-        webview.style.width = "640px";
-        webview.style.height = "480px";
+        webview.style.display = "flex"; // should be in CSS
+        // webview.style.width = "640px";
+        // webview.style.height = "480px";
         webview.src = url;
         webview.setAttribute("tabID", id);
         document.getElementById("webviews").appendChild(webview);
     }
-    /**
-     * Description:
-     *      sets the Z index for active tabs
-     * 
-     * Return Value:
-     *      none
-     * 
-     * @param id string ID corresponding to the new active tab
-     */
-    public setZIndexActive(id: string = ""): void {
-        id = id || Tabs.activeTab().getID();
-        jquery( "#" + id ).sortable({
-        zIndex: 1000
-        });
-    }
-
-    /**
-     * Description:
-     *      sets the Z index for active tabs
-     * 
-     * Return Value:
-     *      none
-     * 
-     * @param id string ID corresponding to the old active tab
-     */
-
-    public setZIndexInative(id: string = ""): void {
-        id = id || Tabs.activeTab().getID();
-        jquery( "#" + id ).sortable({
-        zIndex: 9999
-        });
-    }
-
     /**
      *  Description:
      *      queries document for webview element matching input id. 
@@ -82,7 +49,7 @@ class BrowserDOM implements IDOM {
      *  @param id   string ID corresponding to the webview's tabID to return, if empty return active webview
      */
     public getWebview(id: string = ""): Electron.WebViewElement {
-        id = id || Tabs.activeTab().getID();
+        id = id || Tabs.tabId().getId();
         return <Electron.WebViewElement>document.querySelector("[tabID='"+id+"']");
     }
 
@@ -110,22 +77,25 @@ class BrowserDOM implements IDOM {
      * 
      *  @param id   string ID corresponding to the webview's tabID to hide, if empty hide active webview
      */
+    // class with 0 height and width, ie inactive 
     public hideWebview(id: string): void {
         let webview: Electron.WebViewElement = this.getWebview(id);
         webview.style.width = "0px";
         webview.style.height = "0px";
     }
 
-    public updateTab(tab: Tab): void {
-        let tabElt: HTMLElement = document.getElementById(tab.getID());
+    // write description
+    public updateTab(tab: Tab): void { // full name
+        let tabElt: HTMLElement = document.getElementById(tab.getId());
         // update favicon
         let tabFavicon: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-favicon");
         let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getURL();
-        tabFavicon[0].innerHTML = "<img src = " + tabFav + ">";
+        tabFavicon[0].innerHTML = "<img src = " + tabFav + ">"; // create new img using jQuery and append 
         // update tab title
-        let tabTitle: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-title");
-        tabTitle[0].innerHTML = tab.getTitle();
+        let tabTitle: Element = tabElt.getElementsByClassName("chrome-tab-title")[0]; // fix this to put on one line
+        tabTitle.innerHTML = tab.getTitle();
     }
+    // Delete fcn below?
     /**
      *  Description:
      *      Queries document for the ordered list of current tabs 
@@ -141,13 +111,14 @@ class BrowserDOM implements IDOM {
             return arg !== null;
         });
     }
+    // .next and selector for tab class 
     /**
      *  Description:
      *      Given an input active tab id, return id of tab corresponding to the next active tab. 
      * 
      *  @param id   tab id that is active, use to fight neighboring tab to return.
      */
-    public getNextActiveTabID(id: string): string {
+    public getNexttabIdID(id: string): string {
         let tab: HTMLElement = document.getElementById(id);
         let next: Element = tab.nextElementSibling || tab.previousElementSibling;
         if (next === null) {
@@ -167,22 +138,21 @@ class BrowserDOM implements IDOM {
      */
     public render(bar: TabBar): void {
         let tabs: HTMLElement = document.getElementById("tabs");
-        // tabs.innerHTML = "";
         let allTabs: NodeListOf<Element> = document.getElementsByClassName("ui-state-default");
         // Loop through all of the front end and delete element if not found in back end
         for (let index = 0; index < allTabs.length; index++) {
-            if (bar.get(allTabs[index].id) === null) {
+            if (bar.getTab(allTabs[index].id) === null) {
                 let element = allTabs[index];
                 element.parentNode.removeChild(element);
             }
         }
-        let tabIDs: string[] = Object.keys(bar.tabs);
+        let tabIDs: string[] = Object.keys(bar.getTabs());
         // Loop through all of the back end and add a new element to the front end if not found in front end
         for (let index = 0; index < bar.size(); index++) {
-            let elt = bar.get(tabIDs[index]);
+            let elt = bar.getTab(tabIDs[index]); // use full names
 
             // elt in tab bar but not the document, create new element
-            if (document.getElementById(elt.getID()) === null) {
+            if (document.getElementById(elt.getId()) === null) {
                 let tabDiv: HTMLDivElement = document.createElement("div");
                 let tabTitle: HTMLDivElement = document.createElement("div");
                 let tabFavicon: HTMLDivElement = document.createElement("div");
@@ -191,15 +161,16 @@ class BrowserDOM implements IDOM {
                 let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getURL();
 
                 tabDiv.className = "ui-state-default";
-                tabDiv.id = tab.getID();
+                tabDiv.id = tab.getId();
 
                 // Make the title the name of the website not URL 
                 tabTitle.title = tabTitle.innerHTML = tab.getTitle();
 
-                tabFavicon.innerHTML = "<img src = " + tabFav + ">";
-                tabTitle.className = "chrome-tab-title";
-                tabClose.className = "chrome-tab-close";
-                tabFavicon.className = "chrome-tab-favicon";
+                tabFavicon.innerHTML = "<img src = " + tabFav + ">"; // put quotes in
+                tabTitle.className = "chrome-tab-title"; // change name, also in css
+                tabClose.className = "chrome-tab-close"; // change name, also in css
+                tabFavicon.className = "chrome-tab-favicon"; // // change name, also in css
+                // changes needed here 
                 tabClose.onclick = () => {
                     if (!Tabs.removeTab(Tabs.activeUser, tabDiv.id)) {
                         // if there are no more tabs close application. Temporary
@@ -210,10 +181,10 @@ class BrowserDOM implements IDOM {
                 };
 
                 tabDiv.appendChild(tabFavicon); tabDiv.appendChild(tabTitle); tabDiv.appendChild(tabClose);
+                // change back 
                 let click = function () {
                     Tabs.activeBar().hideTabs();
                     Tabs.bars[Tabs.activeUser].activate(tab);
-                    // setTimeout(() => { Doc.render(bar);},1000);
                     tabSwitch();
                     doLayout();
                 };
@@ -222,9 +193,9 @@ class BrowserDOM implements IDOM {
                 if (!tab.getActive()) {
                     tab.hide();
                 }
-
-                jquery(function() {
-                    jquery("#tabs").sortable({
+                // moved 
+                $(function() {
+                    $("#tabs").sortable({
                         revert:true,
                         axis: "x"
                     });
@@ -232,12 +203,12 @@ class BrowserDOM implements IDOM {
             } // if
             if (!elt.getActive()) {
                     elt.hide();
-                    let tabInact =  document.getElementById(elt.getID());
+                    let tabInact =  document.getElementById(elt.getId());
                     tabInact.className = "ui-state-default";
                 }
             if (elt.getActive()) {
-                let tabAct: HTMLElement = document.getElementById(elt.getID());
-                tabAct.className = "ui-state-default active";
+                let tabAct: HTMLElement = document.getElementById(elt.getId());
+                tabAct.className = "ui-state-default active"; // add and remove class 
                 this.updateTab(elt);
             }
         } // for
@@ -263,7 +234,7 @@ onload = () => {
 
     urlBar.onsubmit = (): boolean => {
         let address: string = (<HTMLInputElement>document.querySelector("#location")).value;
-        Tabs.activeTab().setURL(address);
+        Tabs.tabId().setUrl(address);
         navigateTo(Doc.getWebview(), address);
         return false;
     };
@@ -347,7 +318,7 @@ function doLayout(): void {
     let windowHeight: number = document.documentElement.clientHeight;
     let webviewWidth: number = windowWidth;
     let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
-    let tabWidth: string = tabs.length < 6 ? "15%" : (100/tabs.length).toString() + "%";
+    let tabWidth: string = tabs.length <= 6 ? "15%" : (100/tabs.length).toString() + "%";
 
     webview.style.width = webviewWidth + "px";
     webview.style.height = webviewHeight + "px";
@@ -384,7 +355,7 @@ function handleLoadStop(event: Event): void {
     let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
     let tab = Tabs.getTab(webview.getAttribute("tabID"));
-    tab.setURL(webview.getAttribute("src"));
+    tab.setUrl(webview.getAttribute("src"));
     tab.setTitle(webview.getTitle());
     address.value = tab.getURL();
     Doc.render(Tabs.activeBar());

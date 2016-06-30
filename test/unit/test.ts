@@ -105,10 +105,10 @@ class MockDOM implements IDOM {
      * 
      *  @param id   tab id that is active, use to fight neighboring tab to return.
      */
-    public getNextActiveTabID(id: string): string {
+    public getNexttabIdID(id: string): string {
         for (let index = 0; index < this.tabs.length; index++) {
-            if (this.tabs[index].getID() !== id) {
-                return this.tabs[index].getID();
+            if (this.tabs[index].getId() !== id) {
+                return this.tabs[index].getId();
             }
         }
         return "";
@@ -153,14 +153,14 @@ describe("startup test", () => {
         Tabs.activate("test");
         Tabs.size().should.equal(1);
         Tabs.activeUser.should.equal("test");
-        Tabs.activeBar().get(tab1.getID()).getID().should.equal(tab1.getID());
-        Tabs.activeBar().get(tab2.getID()).getID().should.equal(tab2.getID());
-        Tabs.activeBar().get(tab2.getID()).getID().should.not.equal(tab1.getID());
+        Tabs.activeBar().getTab(tab1.getId()).getId().should.equal(tab1.getId());
+        Tabs.activeBar().getTab(tab2.getId()).getId().should.equal(tab2.getId());
+        Tabs.activeBar().getTab(tab2.getId()).getId().should.not.equal(tab1.getId());
 
         doc.render(Tabs.activeBar());
-        Tabs.removeTab("test",tab1.getID());
-        Tabs.activeBar().get(tab2.getID()).getActive().should.equal(true);
-        should.not.exist(Tabs.activeBar().get(tab1.getID()));
+        Tabs.removeTab("test",tab1.getId());
+        Tabs.activeBar().getTab(tab2.getId()).getActive().should.equal(true);
+        should.not.exist(Tabs.activeBar().getTab(tab1.getId()));
         return;
     });
 });
