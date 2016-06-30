@@ -429,7 +429,7 @@ export class UserTabBar {
      *  
      *  @param user   user to activate
      */
-    public activateTabUser(user: string): void { // activate tabUser
+    public activateTabUser(user: string): void {
         let bar: TabBar = this.getUserTabBar(user);
         if (bar === null) {
             console.error("attempt to activate user that does not exist"); // throw exception!
