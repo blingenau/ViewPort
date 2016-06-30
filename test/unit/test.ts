@@ -145,12 +145,12 @@ describe("startup test", () => {
             url:"about:blank"
         });
         Tabs.addTab("test", tab1);
-        tab1.getActive().should.equal(true);
+        tab1.getActiveStatus().should.equal(true);
         Tabs.addTab("test", tab2);
-        tab1.getActive().should.equal(false);
-        tab2.getActive().should.equal(true);
+        tab1.getActiveStatus().should.equal(false);
+        tab2.getActiveStatus().should.equal(true);
 
-        Tabs.activateTabUser("test");
+        Tabs.activateUser("test");
         Tabs.size().should.equal(1);
         Tabs.activeUser.should.equal("test");
         Tabs.activeBar().getTab(tab1.getId()).getId().should.equal(tab1.getId());
@@ -159,7 +159,7 @@ describe("startup test", () => {
 
         doc.render(Tabs.activeBar());
         Tabs.removeTab("test",tab1.getId());
-        Tabs.activeBar().getTab(tab2.getId()).getActive().should.equal(true);
+        Tabs.activeBar().getTab(tab2.getId()).getActiveStatus().should.equal(true);
         should.not.exist(Tabs.activeBar().getTab(tab1.getId()));
         return;
     });

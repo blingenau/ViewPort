@@ -190,7 +190,7 @@ class BrowserDOM implements IDOM {
                 };
                 tabDiv.onclick = () => { click(); };
                 tabs.appendChild(tabDiv);
-                if (!tab.getActive()) {
+                if (!tab.getActiveStatus()) {
                     tab.hide();
                 }
                 // moved 
@@ -201,12 +201,12 @@ class BrowserDOM implements IDOM {
                     });
                 });
             } // if
-            if (!elt.getActive()) {
+            if (!elt.getActiveStatus()) {
                     elt.hide();
                     let tabInact =  document.getElementById(elt.getId());
                     tabInact.className = "ui-state-default";
                 }
-            if (elt.getActive()) {
+            if (elt.getActiveStatus()) {
                 let tabAct: HTMLElement = document.getElementById(elt.getId());
                 tabAct.className = "ui-state-default active"; // add and remove class 
                 this.updateTab(elt);
@@ -227,7 +227,7 @@ onload = () => {
     Tabs.addTab("test", new Tab(Doc, {
         url: homepage
     }));
-    Tabs.activateTabUser("test");
+    Tabs.activateUser("test");
     let reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload");
     let urlBar: HTMLFormElement = <HTMLFormElement>document.getElementById("location-form");
     let addressBar: HTMLInputElement = <HTMLInputElement>document.getElementById("location");

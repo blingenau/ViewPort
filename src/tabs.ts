@@ -153,7 +153,7 @@ export class Tab {
      *  Description:
      *      returns boolean active status of tab 
      */
-    public getActive(): boolean {
+    public getActiveStatus(): boolean {
         return this.active;
     }
     /**
@@ -162,7 +162,7 @@ export class Tab {
      * 
      *  @param active   boolean to assign to active state of Tab
      */
-    public setActive(active: boolean): void {
+    public setActiveStatus(active: boolean): void {
         this.active = active;
     }
     /**
@@ -267,7 +267,7 @@ export class TabBar {
 
         let tab: Tab = this.getTab(tabID);
         if (tab !== null) {
-            if (tab.getActive()) {
+            if (tab.getActiveStatus()) {
                 this.tabId = this.dom.getNexttabIdID(tabID) || "";
             }
             tab.remove();
@@ -280,7 +280,7 @@ export class TabBar {
      * Description:
      *      returns active Tab object within TabBar
      */
-    public active(): Tab { // change name to gettabId 
+    public getActiveTab(): Tab { // change name to gettabId 
         return this.getTab(this.tabId);
     }
     /**
@@ -291,12 +291,12 @@ export class TabBar {
      * 
      * @param tab   Tab object to make active, make all others inactive.
      */
-    public activateTab(tab: Tab): void { // maybe should be activateTab
-        let tabId: Tab = this.active();
+    public activateTab(tab: Tab): void {
+        let tabId: Tab = this.getActiveTab();
         if (tabId !== null) {
-            tabId.setActive(false);
+            tabId.setActiveStatus(false);
         }
-        tab.setActive(true);
+        tab.setActiveStatus(true);
         this.tabId = tab.getId();
     }
     /**
@@ -308,7 +308,7 @@ export class TabBar {
         // ask user if they are ready to navigate away??? 
         // should be used when you close the window 
         while (this.size()) {
-            this.removeTab(this.active().getId());
+            this.removeTab(this.getActiveTab().getId());
         }
     }
     /**
@@ -429,7 +429,7 @@ export class UserTabBar {
      *  
      *  @param user   user to activate
      */
-    public activateTabUser(user: string): void {
+    public activateUser(user: string): void {
         let bar: TabBar = this.getUserTabBar(user);
         if (bar === null) {
             console.error("attempt to activate user that does not exist"); // throw exception!
@@ -442,14 +442,14 @@ export class UserTabBar {
             self.bars[key].hideTabs();
         });
         // set tab state of active tab in bar to active
-        bar.active().setActive(true);
+        bar.getActiveTab().setActiveStatus(true);
     }
     /**
      *  Description:
      *      returns the active Tab object from the active user's TabBar
      */
     public tabId(): Tab { // rename activateTabBar
-        return this.activeBar().active();
+        return this.activeBar().getActiveTab();
     }
     /**
      *  Description:
