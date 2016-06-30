@@ -11,5 +11,8 @@
     "promises-a-plus": "registry:dt/promises-a-plus#0.0.0+20160317120654",
     "q": "registry:dt/q#0.0.0+20160613154756",
     "webdriverio": "registry:dt/webdriverio#3.3.0+20160316155526"
+  },
+  "dependencies": {
+    "es6-promise": "registry:npm/es6-promise#3.0.0+20160211003958"
   }
 }
