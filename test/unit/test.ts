@@ -103,17 +103,19 @@ class MockDOM implements IDOM {
 }
 
 describe("Tab functionality test", () => {
-    let doc: MockDOM = new MockDOM();
-    let tab: Tab = new Tab(doc,{});
-    tab.getActiveStatus().should.equal(true);
-    tab.hide();
-    tab.getActiveStatus().should.equal(false);
-    tab.getUrl().should.equal("");
-    tab.setUrl("test");
-    tab.getUrl().should.equal("test");
-    tab.getTitle().should.equal("");
-    tab.setTitle("test title");
-    tab.getTitle().should.equal("test title");
+    it("can create and access tab info", () => {
+        let doc: MockDOM = new MockDOM();
+        let tab: Tab = new Tab(doc,{});
+        tab.getActiveStatus().should.equal(true);
+        tab.hide();
+        tab.getActiveStatus().should.equal(false);
+        tab.getUrl().should.equal("");
+        tab.setUrl("test");
+        tab.getUrl().should.equal("test");
+        tab.getTitle().should.equal("");
+        tab.setTitle("test title");
+        tab.getTitle().should.equal("test title");
+    });
 });
 
 describe("TabBarSet functionality tests", () => {
@@ -153,7 +155,6 @@ describe("TabBarSet functionality tests", () => {
         Tabs.getTab(tab1.getId()).should.not.equal(tab2);
         expect(()=> Tabs.activateUser("invalid user"))
         .to.throw("attempt to activate user that does not exist");
-        console.log(Tabs);
         assert(true);
     });
 

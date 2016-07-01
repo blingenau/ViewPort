@@ -70,6 +70,7 @@ class BrowserDOM implements IDOM {
                     .addClass("chrome-tab-close")
                     .click(() => {
                         Tabs.removeTab(id);
+                        tabSwitch();
                         doLayout();
                         ipc.send("update-num-tabs", Tabs.activeBar().size());
                     }))
@@ -327,7 +328,14 @@ onload = () => {
     jquery(function() {
         jquery("#tabs").sortable({
             revert:true,
-            axis: "x"
+            axis: "x",
+            scroll: false,
+            forcePlaceholderSize: true,
+        });
+        $( "#tabs" ).on( "sortactivate", function( event, ui ) {
+            ui.placeholder[0].style.width = ui.item[0].style.width;
+            ui.item[0].top = ui.originalPosition.top;
+            console.log(ui);
         });
     });
 };
@@ -390,9 +398,12 @@ function doLayout(): void {
  * @param event   The event triggered.
  */
 function handleLoadStart(event: Event): void {
-    document.body.classList.add("loading");
-    document.getElementById("reload").innerHTML = "&#10005;";
-    isLoading = true;
+    let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
+    if (Tabs.getActiveTab().getId() === webview.getAttribute("tabID")) {
+        document.body.classList.add("loading");
+        document.getElementById("reload").innerHTML = "&#10005;";
+        isLoading = true;
+    }
 }
 
 /**
@@ -401,13 +412,15 @@ function handleLoadStart(event: Event): void {
  * @param event   The event triggered.
  */
 function handleLoadStop(event: Event): void {
-    isLoading = false;
     let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
     let tab: Tab = Tabs.getTab(webview.getAttribute("tabID"));
     tab.setUrl(webview.getAttribute("src"));
     tab.setTitle(webview.getTitle());
-    address.value = tab.getUrl();
+    if (Tabs.getActiveTab().getId() === tab.getId()) {
+        isLoading = false;
+        address.value = tab.getUrl();
+    }
     tabSwitch();
 }
 
@@ -417,13 +430,14 @@ function handleLoadStop(event: Event): void {
  * @param event   The event triggered.
  */
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
-    document.getElementById("reload").innerHTML = "&#10227;";
-    // let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
-
-    // address.value = event.url;
-    (<HTMLButtonElement>document.querySelector("#back")).disabled = !webview.canGoBack();
-    (<HTMLButtonElement>document.querySelector("#forward")).disabled = !webview.canGoForward();
+    if (Tabs.getTab(webview.getAttribute("tabID")).getActiveStatus()) {
+        document.getElementById("reload").innerHTML = "&#10227;";
+        // let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
+        // address.value = event.url;
+        (<HTMLButtonElement>document.querySelector("#back")).disabled = !webview.canGoBack();
+        (<HTMLButtonElement>document.querySelector("#forward")).disabled = !webview.canGoForward();
+    }
 }
 
 /**
@@ -432,7 +446,9 @@ function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void 
  * @param event   The event triggered.
  */
 function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequestEvent): void {
-    (<HTMLInputElement>document.getElementById("location")).value = event.newURL;
+    if (Tabs.getActiveTab().getId() === (<Electron.WebViewElement>event.target).getAttribute("tabID")) {
+        (<HTMLInputElement>document.getElementById("location")).value = event.newURL;
+    }
 }
 
 /**
@@ -455,6 +471,12 @@ function tabSwitch(): void {
     // Re-evaluate the back/forward navigation buttons based on new active Tab
     (<HTMLButtonElement>document.querySelector("#back")).disabled = !active.canGoBack();
     (<HTMLButtonElement>document.querySelector("#forward")).disabled = !active.canGoForward();
+    isLoading = active.isLoading();
+    if (isLoading) {
+        document.getElementById("reload").innerHTML = "&#10005;";
+    } else {
+        document.getElementById("reload").innerHTML = "&#10227;";
+    }
 
     document.getElementById("back").onclick = function () {
         active.goBack();
