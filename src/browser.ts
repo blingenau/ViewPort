@@ -288,7 +288,7 @@ onload = () => {
             scroll: false,
             forcePlaceholderSize: true,
         });
-        $( "#tabs" ).on( "sortactivate", function( event : Event, ui : any) {
+        $( "#tabs" ).on( "sortactivate", function( event: Event, ui: any) {
             ui.placeholder[0].style.width = ui.item[0].style.width;
             ui.item[0].top = ui.originalPosition.top;
             console.log(ui);
