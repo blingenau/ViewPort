@@ -134,7 +134,7 @@ export class Tab {
      */
     constructor (dom: IDOM, tab: any) {
         this.url = tab.url || "";
-        this.id = Math.round(Math.random() * 100000000000000000).toString(); // generate random string using library 
+        this.id = Math.round(Math.random() * 100000000000000000).toString();
         this.title = tab.title || "";
         this.dom = dom;
         this.active = tab.active || true;
@@ -173,7 +173,7 @@ export class Tab {
      * 
      *  @param url   url to assign to Tab
      */
-    public setUrl(url: string): void { // change the webview here?? // just the first letter setUrl
+    public setUrl(url: string): void {
         this.url = url;
         this.dom.setTabFavicon(this.id, url);
     }
@@ -229,9 +229,6 @@ export class Tab {
  *      tabs: Tab[] - list of Tab objects (see Tab class)
  *      activeTab: number - index of tab in the list that is the active tab 
  */
-// variables should be private 
-// active tab maybe should be a tab or renamed tabId
-
 export class TabBar {
     private tabs: {[id: string]: Tab};
     private activeTab: string;
@@ -295,30 +292,6 @@ export class TabBar {
      * 
      * @param tabID   id of tab to find and remove.
      */
-    /*
-    public removeTab(tabID: string): boolean {
-        if (this.size() === 0) {
-            // this should not happen
-            // console.log("Popping from empty TabBar"); Remove and Test in unit tests 
-            return false;
-        } else if (this.size() === 1) { // come back to this 
-            require("electron").ipcRenderer.send("tabs-all-closed");
-            return true;
-        }
-
-        let tab: Tab = this.getTab(tabID);
-        if (tab !== null) {
-            if (tab.getActiveStatus()) {
-                this.activeTab = this.dom.getNextActiveTabId(tabID) || "";
-            }
-            tab.remove();
-            delete this.tabs[tabID];
-            return true;
-        }
-        // if we make it here the tab wasn't found or the bar is empty
-        return false;
-    }
-    */
     public removeTab(tabID: string): void {
         let tab: Tab = this.getTab(tabID);
         if (tab !== null) {
@@ -392,7 +365,7 @@ export class TabBar {
     }
 }
 /**
- * class TabBarSet: // change to user tab bar maybe 
+ * class UserTabBar:
  * 
  * Description:
  *      Overarching handler for Tabs and TabBars. 
@@ -495,10 +468,10 @@ export class UserTabBar {
      *  
      *  @param user   user to activate
      */
-    public activateUser(user: string): void { // activate tabUser
+    public activateUser(user: string): void {
         let bar: TabBar = this.getUserTabBar(user);
         if (bar === null) {
-            throw new Error("attempt to activate user that does not exist"); // throw exception!
+            throw new Error("attempt to activate user that does not exist");
         }
         this.activeUser = user;
         // set all other tabs to inactive (hidden)

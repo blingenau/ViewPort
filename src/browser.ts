@@ -4,7 +4,7 @@
 /// <reference path="Definitions/jqueryui/jqueryui.d.ts" />
 
 import {Tab, UserTabBar, IDOM} from "./tabs";
-const jquery = require("jquery");
+const $ = require("jquery");
 require("jquery-ui");
 
 /**
@@ -53,7 +53,6 @@ class BrowserDOM implements IDOM {
      * @param tab   The Tab object associated with this new element.
      */
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
-        // let url: string = this.getWebview(id).getUrl();
         $("#tabs")
             .append($("<div>")
                 .addClass("ui-state-default")
@@ -70,6 +69,7 @@ class BrowserDOM implements IDOM {
                     .addClass("chrome-tab-close")
                     .click(() => {
                         Tabs.removeTab(id);
+                        tabSwitch();
                         doLayout();
                         ipc.send("update-num-tabs", Tabs.activeBar().size());
                     }))
@@ -82,49 +82,6 @@ class BrowserDOM implements IDOM {
                     }
                 })
             );
-    }
-
-    /**
-     * Description:
-     *      Creates a new tab element to be placed in the DOM.
-     * 
-     * Return Value:
-     *      none
-     * 
-     * @param url
-     */
-
-    /**
-     * Description:
-     *      sets the Z index for active tabs
-     * 
-     * Return Value:
-     *      none
-     * 
-     * @param id string ID corresponding to the new active tab
-     */
-    public setZIndexActive(id: string = ""): void {
-        id = id || Tabs.getActiveTab().getId();
-        jquery( "#" + id ).sortable({
-        zIndex: 1000
-        });
-    }
-
-    /**
-     * Description:
-     *      sets the Z index for active tabs
-     * 
-     * Return Value:
-     *      none
-     * 
-     * @param id string ID corresponding to the old active tab
-     */
-
-    public setZIndexInative(id: string = ""): void {
-        id = id || Tabs.getActiveTab().getId();
-        jquery( "#" + id ).sortable({
-        zIndex: 9999
-        });
     }
 
     /**
@@ -324,10 +281,11 @@ onload = () => {
         }
     };
 
-    jquery(function() {
-        jquery("#tabs").sortable({
+    $(function() {
+        $("#tabs").sortable({
             revert:true,
-            axis: "x"
+            axis: "x",
+            scroll: false
         });
     });
 };
