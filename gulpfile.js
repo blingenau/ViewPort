@@ -71,7 +71,7 @@ gulp.task("unit-tests", ["unit-test-cover"], () => {
         .pipe(istanbul.writeReports())
         .pipe(istanbul.enforceThresholds({
             thresholds: {
-                global: 50
+                global: 80
             }
         }));
 });
