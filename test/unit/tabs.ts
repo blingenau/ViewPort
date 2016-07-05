@@ -1,25 +1,137 @@
 /// <reference path="../../typings/index.d.ts" />
 
 import * as chai from "chai";
+import * as sinon from "sinon";
 
-import {Tab, UserTabBar} from "../../src/tabs";
+import {IDOM, Tab, UserTabBar} from "../../src/tabs";
 import {MockTabsDOM} from "./_mock-tabs-dom";
 
 chai.should();
 const {assert, expect} = chai;
 
-describe("Tab functionality test", () => {
-    let doc: MockTabsDOM = new MockTabsDOM();
-    let tab: Tab = new Tab(doc,{});
-    tab.getActiveStatus().should.equal(true);
-    tab.hide();
-    tab.getActiveStatus().should.equal(false);
-    tab.getUrl().should.equal("");
-    tab.setUrl("test");
-    tab.getUrl().should.equal("test");
-    tab.getTitle().should.equal("");
-    tab.setTitle("test title");
-    tab.getTitle().should.equal("test title");
+type ExpectationFunction = (e: sinon.SinonExpectation) => void;
+type StubFunction = (e: sinon.SinonStub) => void;
+
+interface IMockable {
+    mock(methods: {[method: string]: ExpectationFunction}): void;
+    stub(methods: {[method: string]: StubFunction}): void;
+    verify(): void;
+    restore(): void;
+};
+
+function mockingMock(methods: {[method: string]: ExpectationFunction}): void {
+    for (let method in methods) {
+        if (methods[method]) {
+            let expectation = this.mocked.expects(method);
+            methods[method](expectation);
+        }
+    }
+}
+
+function mockingStub(methods: {[method: string]: StubFunction}): void {
+    for (let method in methods) {
+        if (methods[method]) {
+            let stub = sinon.stub(this, method);
+            methods[method](stub);
+        }
+    }
+}
+
+function mockingVerify() {
+    this.mocked.verify();
+}
+
+function mockingRestore() {
+    this.mocked.restore();
+}
+
+function Stub<Interface>(methods: {[method: string]: Function}): Interface & IMockable {
+    let stub: any = {};
+    for (let method in methods) {
+        if (methods[method]) {
+            stub[method] = methods[method];
+        }
+    }
+
+    stub.mocked = sinon.mock(stub);
+
+    stub.mock = mockingMock;
+    stub.stub = mockingStub;
+    stub.verify = mockingVerify;
+    stub.restore = mockingRestore;
+
+    return <Interface & IMockable>stub;
+}
+
+describe("Tab creation", function() {
+    let dom = Stub<IDOM>({
+        createWebview: (url: string, id: string): void => void 0,
+        createTabElement: (title: string, id: string, url: string, tab: Tab): void => void 0,
+        hideWebview: (id: string): void => void 0,
+        setTitle: (id: string, title: string): void => void 0,
+        setTabFavicon: (id: string, url: string): void => void 0
+    });
+
+    afterEach(() => dom.restore());
+
+    it("can create a tab", function() {
+        dom.mock({
+            createWebview: e => e.once(),
+            createTabElement: e => e.once()
+        });
+
+        let tab: Tab = new Tab(dom, {});
+        assert(tab);
+
+        dom.verify();
+    });
+
+    it("can hide a tab", function() {
+        dom.mock({
+            hideWebview: e => e.once()
+        });
+
+        let tab: Tab = new Tab(dom, {});
+        tab.getActiveStatus().should.equal(true);
+        tab.hide();
+        tab.getActiveStatus().should.equal(false);
+
+        dom.verify();
+    });
+
+    it("can get tab url", function() {
+        let tab: Tab = new Tab(dom, {});
+        tab.getUrl().should.equal("");
+    });
+
+    it("can set tab url", function() {
+        dom.mock({
+            setTabFavicon: e => e.once()
+        });
+
+        let tab: Tab = new Tab(dom, {});
+        tab.setUrl("test");
+        tab.getUrl().should.equal("test");
+
+        dom.verify();
+    });
+
+    it("can get tab title", function() {
+        let tab: Tab = new Tab(dom, {});
+        tab.getTitle().should.equal("");
+    });
+
+    it("can set tab title", function() {
+        dom.mock({
+            setTitle: e => e.once()
+        });
+
+        let tab: Tab = new Tab(dom, {});
+        tab.setTitle("test title");
+        tab.getTitle().should.equal("test title");
+
+        dom.verify();
+    });
 });
 
 describe("TabBarSet functionality tests", () => {
