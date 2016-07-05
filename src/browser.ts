@@ -151,7 +151,7 @@ class BrowserDOM implements IDOM {
         let tabElt: HTMLElement = document.getElementById(tab.getId());
         // update favicon
         let tabFavicon: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-favicon");
-        let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getUrl();
+        let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getUrl().split("?")[0];
         tabFavicon[0].innerHTML = "<img src = " + tabFav + ">";
         // update tab title
         let tabTitle: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-title");
@@ -256,7 +256,7 @@ onload = () => {
 
     document.getElementById("add-tab").onclick = function () {
         let tab: Tab = new Tab(Doc, {
-            url: "about:blank"
+            url: "https://athenanet.athenahealth.com"
         });
         Tabs.addTab(tab);
         Tabs.activeBar().hideTabs();
