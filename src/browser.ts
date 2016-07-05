@@ -54,7 +54,7 @@ class BrowserDOM implements IDOM {
      */
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
         $("#tabs")
-            .append($("<div>")
+            .prepend($("<div>")
                 .addClass("ui-state-default")
                 .attr("id", id)
                 .append($("<div>")
@@ -287,11 +287,16 @@ onload = () => {
             axis: "x",
             scroll: false,
             forcePlaceholderSize: true,
+            items : ".ui-state-default",
         });
         $( "#tabs" ).on( "sortactivate", function( event: Event, ui: any) {
             ui.placeholder[0].style.width = ui.item[0].style.width;
             ui.item[0].top = ui.originalPosition.top;
             console.log(ui);
+            $(".non-sortable").hide();
+        });
+        $("#tabs").on("sortstop", function(){
+            $(".non-sortable").show();
         });
     });
 };
