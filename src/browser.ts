@@ -67,7 +67,8 @@ class BrowserDOM implements IDOM {
                         .attr("src", "https://www.google.com/s2/favicons?domain=" + url)))
                 .append($("<div>")
                     .addClass("chrome-tab-close")
-                    .click(() => {
+                    .click((event: JQueryMouseEventObject) => {
+                        event.stopPropagation();
                         Tabs.removeTab(id);
                         tabSwitch();
                         doLayout();
@@ -75,6 +76,7 @@ class BrowserDOM implements IDOM {
                     }))
                 .mousedown((event: JQueryMouseEventObject) => {
                     if (event.which === 1) {
+                        // event.stopPropagation();
                         Tabs.activeBar().hideTabs();
                         Tabs.getUserTabBar().activateTab(tab);
                         tabSwitch();
@@ -142,9 +144,12 @@ class BrowserDOM implements IDOM {
      *  @param id   string ID corresponding to the webview's tabID to hide, if empty hide active webview
      */
     public hideWebview(id: string): void {
-        let webview: Electron.WebViewElement = this.getWebview(id);
-        webview.style.width = "0px";
-        webview.style.height = "0px";
+        id = id || Tabs.getActiveTab().getId();
+        $(`[tabID='${id}']`).hide();
+    }
+    public showWebview(id: string): void {
+        id = id || Tabs.getActiveTab().getId();
+        $(`[tabID='${id}']`).show();
     }
 
     public updateTab(tab: Tab): void {
@@ -291,7 +296,6 @@ onload = () => {
         $( "#tabs" ).on( "sortactivate", function( event: Event, ui: any) {
             ui.placeholder[0].style.width = ui.item[0].style.width;
             ui.item[0].top = ui.originalPosition.top;
-            console.log(ui);
         });
     });
 };
@@ -333,7 +337,6 @@ function doLayout(): void {
     let webviewWidth: number = windowWidth;
     let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
     let tabWidth: string = tabs.length <= 6 ? "15%" : (100/tabs.length).toString() + "%";
-
     webview.style.width = webviewWidth + "px";
     webview.style.height = webviewHeight + "px";
 

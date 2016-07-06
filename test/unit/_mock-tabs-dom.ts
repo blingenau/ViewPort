@@ -20,6 +20,7 @@ export class MockTabsDOM implements IDOM {
     public hideWebview(id: string): void {
         return;
     }
+    public showWebview(id: string): void {;}
 
     public getAllTabs(): Tab[] {
         return;

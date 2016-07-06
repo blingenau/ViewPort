@@ -72,7 +72,7 @@ export interface IDOM {
      *  @param id   string ID corresponding to the webview's tabID to hide, if empty hide active webview
      */
     hideWebview(id: string): void;
-
+    showWebview(id: string): void;
     /**
      *  Description:
      *      Queries document for the ordered list of current tabs 
@@ -159,6 +159,9 @@ export class Tab {
         this.active = false;
         this.dom.hideWebview(this.id);
     }
+    public show(): void {
+        this.dom.showWebview(this.id);
+    }
     /**
      *  Description:
      *      returns url string of Tab 
@@ -227,15 +230,15 @@ export class Tab {
  *  Properties:
  *      user: string - user_id associated with a set of tabs
  *      tabs: Tab[] - list of Tab objects (see Tab class)
- *      activeTab: number - index of tab in the list that is the active tab 
+ *      activeTabId: number - index of tab in the list that is the active tab 
  */
 export class TabBar {
     private tabs: {[id: string]: Tab};
-    private activeTab: string;
+    private activeTabId: string;
     private dom: IDOM;
     constructor(d: IDOM) {
         this.tabs = {};
-        this.activeTab = "";
+        this.activeTabId = "";
         this.dom = d;
     }
     /**
@@ -299,7 +302,10 @@ export class TabBar {
                 this.dom.allTabsClosed();
             }
             if (tab.getActiveStatus()) {
-                this.activeTab = this.dom.getNextActiveTabId(tabID) || "";
+                this.activeTabId = this.dom.getNextActiveTabId(tabID) || "";
+                if (this.activeTabId) {
+                    this.activateTab(this.getActiveTab());
+                }
             }
             tab.remove();
             delete this.tabs[tabID];
@@ -310,7 +316,7 @@ export class TabBar {
      *      returns active Tab object within TabBar
      */
     public getActiveTab(): Tab { // change name to getActiveTab 
-        return this.getTab(this.activeTab);
+        return this.getTab(this.activeTabId);
     }
     /**
      *  Description:
@@ -326,7 +332,8 @@ export class TabBar {
             activeTab.setActiveStatus(false);
         }
         tab.setActiveStatus(true);
-        this.activeTab = tab.getId();
+        this.activeTabId = tab.getId();
+        tab.show();
     }
     /**
      *  Description:
@@ -477,7 +484,9 @@ export class UserTabBar {
         // set all other tabs to inactive (hidden)
         let self: UserTabBar = this;
         Object.keys(this.bars).forEach(function (key: string) {
-            self.bars[key].hideTabs();
+            if (key !== user) {
+                self.bars[key].hideTabs();
+            }
         });
         // set tab state of active tab in bar to active
         bar.getActiveTab().setActiveStatus(true);
