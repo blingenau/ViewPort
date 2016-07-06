@@ -39,9 +39,14 @@ class BrowserDOM implements IDOM {
         document.getElementById("webviews").appendChild(webview);
     }
 
+    /**
+     * Triggered when all tabs have been closed. Requests that the
+     * main process handle it. 
+     */
     public allTabsClosed(): void {
         require("electron").ipcRenderer.send("tabs-all-closed");
     }
+    
     /**
      * Creates a new tab element and places it in the Tabs div in the document.
      * 
