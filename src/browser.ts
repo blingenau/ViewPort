@@ -337,7 +337,7 @@ function doLayout(): void {
     let windowHeight: number = document.documentElement.clientHeight;
     let webviewWidth: number = windowWidth;
     let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
-    let tabWidth: string = tabs.length <= 6 ? "15%" : (100/tabs.length).toString() + "%";
+    let tabWidth: string = tabs.length <= 6 ? "15%" : (95/tabs.length).toString() + "%";
 
     webview.style.width = webviewWidth + "px";
     webview.style.height = webviewHeight + "px";
