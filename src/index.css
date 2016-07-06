@@ -31,6 +31,7 @@ button.tab {
 
 #controls {
   padding: 3px;
+  padding-left: 75px;
   border-bottom: solid 1px #ccc;
   background-color: #eee;
 }
@@ -60,6 +61,12 @@ button:active,
 input[type="submit"]:active {
   border-color: #bbb;
   background: -webkit-linear-gradient(bottom, #e2e2e2 0%, #bbbbbb 99%);
+}
+
+.draggable {
+  width: 15%;
+  height: 26px;
+  -webkit-app-region: drag;
 }
 
 /* These glyphs are on the small side, make them look more natural when

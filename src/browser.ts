@@ -436,10 +436,12 @@ function tabSwitch(): void {
         reload.html("&#10227;");
     }
 
+    back.off("click");
     back.on("click", (): void => {
         active.goBack();
     });
 
+    forward.off("click");
     forward.on("click", (): void => {
         active.goForward();
     });
