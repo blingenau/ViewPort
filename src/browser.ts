@@ -4,7 +4,7 @@
 /// <reference path="Definitions/jqueryui/jqueryui.d.ts" />
 
 import {Tab, UserTabBar, IDOM} from "./tabs";
-const $ = require("jquery");
+const $: JQueryStatic = require("jquery");
 require("jquery-ui");
 
 /**
@@ -100,7 +100,7 @@ class BrowserDOM implements IDOM {
      */
     public getWebview(id: string = ""): Electron.WebViewElement {
         id = id || Tabs.getActiveTab().getId();
-        return <Electron.WebViewElement>document.querySelector("[tabID='"+id+"']");
+        return <Electron.WebViewElement>$(`[tabID='${id}']`).get(0);
     }
 
     /**
@@ -109,7 +109,7 @@ class BrowserDOM implements IDOM {
      */
     public getTabElement(id: string = ""): HTMLDivElement {
         id = id || Tabs.getActiveTab().getId();
-        return <HTMLDivElement>document.querySelector(`#${id}`);
+        return <HTMLDivElement>$(`#${id}`).get(0);
     }
 
     /**
@@ -123,7 +123,7 @@ class BrowserDOM implements IDOM {
      *  @param id   string ID corresponding to the webview's tabID to remove, if empty remove active webview
      */
     public removeWebview(id: string = ""): void {
-        document.getElementById("webviews").removeChild(this.getWebview(id));
+        this.getWebview(id).remove();
     }
 
     /**
@@ -154,16 +154,6 @@ class BrowserDOM implements IDOM {
         $(`[tabID='${id}']`).show();
     }
 
-    public updateTab(tab: Tab): void {
-        let tabElt: HTMLElement = document.getElementById(tab.getId());
-        // update favicon
-        let tabFavicon: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-favicon");
-        let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getUrl().split("?")[0];
-        tabFavicon[0].innerHTML = "<img src = " + tabFav + ">";
-        // update tab title
-        let tabTitle: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-title");
-        tabTitle[0].innerHTML = tab.getTitle();
-    }
     /**
      *  Description:
      *      Queries document for the ordered list of current tabs 
@@ -189,10 +179,7 @@ class BrowserDOM implements IDOM {
         let tab = $(`#${id}`);
         let next: string = tab.next(".ui-state-default").attr("id")
                          || tab.prev(".ui-state-default").attr("id");
-        if (!next) {
-            return "";
-        }
-        return next;
+        return next || "";
     }
 
     /**
@@ -202,7 +189,7 @@ class BrowserDOM implements IDOM {
      * @param title   The new title to be set. 
      */
     public setTitle(id: string, title: string): void {
-        $(`#${id} > .chrome-tab-title`)
+        $(`#${id}`).find(".chrome-tab-title")
             .attr("title", title)
             .html(title);
     }
@@ -214,7 +201,7 @@ class BrowserDOM implements IDOM {
      * @param url   The domain where the favicon is found.
      */
     public setTabFavicon(id: string, url: string): void {
-        $(`#${id} > .chrome-tab-favicon > img`)
+        $(`#${id}`).find(".chrome-tab-favicon").find("img")
             .attr("src", "https://www.google.com/s2/favicons?domain=" + url);
     }
 }
@@ -232,37 +219,34 @@ onload = () => {
         url: homepage
     }), "test");
     Tabs.activateUser("test");
-    let reload: HTMLButtonElement = <HTMLButtonElement>document.getElementById("reload");
-    let urlBar: HTMLFormElement = <HTMLFormElement>document.getElementById("location-form");
-    let addressBar: HTMLInputElement = <HTMLInputElement>document.getElementById("location");
 
-    urlBar.onsubmit = (): boolean => {
-        let address: string = (<HTMLInputElement>document.querySelector("#location")).value;
+    $("#location-form").on("submit", (): boolean => {
+        let address: string = $("#location").val();
         Tabs.getActiveTab().setUrl(address);
         navigateTo(Doc.getWebview(), address);
         return false;
-    };
+    });
 
     doLayout();
 
-    addressBar.onfocus = (): void => {
-        addressBar.select();
-    };
+    $("#location").on("focus", (event: JQueryMouseEventObject): void => {
+        $(event.target).select();
+    });
 
     // Navigation button controls
-    document.getElementById("back").onclick = function () {
+    $("#back").on("click", (): void => {
         Doc.getWebview().goBack();
-    };
+    });
 
-    document.getElementById("forward").onclick = function () {
+    $("#forward").on("click", (): void => {
         Doc.getWebview().goForward();
-    };
+    });
 
-    document.getElementById("home").onclick = function () {
+    $("#home").on("click", (): void => {
         navigateTo(Doc.getWebview(), homepage);
-    };
+    });
 
-    document.getElementById("add-tab").onclick = function () {
+    $("#add-tab").on("click", (): void => {
         let tab: Tab = new Tab(Doc, {
             url: "https://athenanet.athenahealth.com"
         });
@@ -271,7 +255,7 @@ onload = () => {
         Tabs.getUserTabBar().activateTab(tab);
         doLayout();
         ipc.send("update-num-tabs", Tabs.activeBar().size());
-    };
+    });
 
     ipc.on("openPDF", function (event, filedata) {
         let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
@@ -281,13 +265,13 @@ onload = () => {
         }));
     });
 
-    reload.onclick = function () {
+    $("#reload").on("click", (): void => {
         if (isLoading) {
             Doc.getWebview().stop();
         } else {
             Doc.getWebview().reload();
         }
-    };
+    });
 
     $(function() {
         $("#tabs").sortable({
@@ -315,7 +299,6 @@ onload = () => {
  * @param html   Whether the URL is local HTML to load.
  */
 function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolean): void {
-    let address: HTMLInputElement = (<HTMLInputElement>document.querySelector("#location"));
     if (!url) {
         url = homepage;
     }
@@ -323,7 +306,7 @@ function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolea
     if (url.indexOf("http") === -1 && !html) {
         url = `http://${url}`;
     }
-    address.blur();
+    $("#location").blur();
     webview.loadURL(url);
 }
 
@@ -332,13 +315,14 @@ function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolea
  */
 function doLayout(): void {
     let webview: Electron.WebViewElement = Doc.getWebview();
-    let controls: HTMLDivElement = <HTMLDivElement>document.querySelector("#controls");
-    let tabBar: HTMLDivElement = <HTMLDivElement>document.querySelector("#tabs");
-    let tabs: NodeListOf<Element> = document.querySelectorAll(".ui-state-default");
-    let tabFav: NodeListOf<Element> = document.querySelectorAll(".chrome-tab-favicon");
-    let tabTitle: NodeListOf<Element> = document.querySelectorAll(".chrome-tab-title");
-    let controlsHeight: number = controls.offsetHeight;
-    let tabBarHeight: number = tabBar.offsetHeight;
+    // let tabs: NodeListOf<Element> = document.querySelectorAll(".ui-state-default");
+    let tabs: JQuery = $(".ui-state-default").not(".ui-sortable-placeholder");
+    // let tabFav: NodeListOf<Element> = document.querySelectorAll(".chrome-tab-favicon");
+    let tabFav: JQuery = $(".chrome-tab-favicon");
+    // let tabTitle: NodeListOf<Element> = document.querySelectorAll(".chrome-tab-title");
+    let tabTitle: JQuery = $(".chrome-tab-title");
+    let controlsHeight: number = $("#controls").outerHeight();
+    let tabBarHeight: number = $("#tabs").outerHeight();
     let windowWidth: number = document.documentElement.clientWidth;
     let windowHeight: number = document.documentElement.clientHeight;
     let webviewWidth: number = windowWidth;
@@ -348,13 +332,14 @@ function doLayout(): void {
     webview.style.height = webviewHeight + "px";
 
     // Resize the tabs if there are many or the window is too small
-    for (let i = 0; i < tabs.length; i++) {
-        (<HTMLDivElement>tabs[i]).style.width = tabWidth;
-        if (tabs[i].clientWidth <= 60) {
-            (<HTMLDivElement>tabFav[i]).hidden = (<HTMLDivElement>tabTitle[i]).hidden = true;
-        } else {
-            (<HTMLDivElement>tabFav[i]).hidden = (<HTMLDivElement>tabTitle[i]).hidden = false;
-        }
+    tabs.css("width", tabWidth);
+
+    if (tabs.get(0).clientWidth <= 60) {
+        tabFav.hide();
+        tabTitle.hide();
+    } else {
+        tabFav.show();
+        tabTitle.show();
     }
 }
 
@@ -378,15 +363,15 @@ function handleLoadStart(event: Event): void {
  * @param event   The event triggered.
  */
 function handleLoadStop(event: Event): void {
-    let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
     let tab: Tab = Tabs.getTab(webview.getAttribute("tabID"));
     tab.setUrl(webview.getAttribute("src"));
     tab.setTitle(webview.getTitle());
     if (Tabs.getActiveTab().getId() === tab.getId()) {
         isLoading = false;
-        address.value = tab.getUrl();
+        $("#location").val(tab.getUrl());
     }
+    $("#reload").html("&#10227;");
     tabSwitch();
 }
 
@@ -398,11 +383,10 @@ function handleLoadStop(event: Event): void {
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
     if (Tabs.getTab(webview.getAttribute("tabID")).getActiveStatus()) {
-        document.getElementById("reload").innerHTML = "&#10227;";
         // let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
         // address.value = event.url;
-        (<HTMLButtonElement>document.querySelector("#back")).disabled = !webview.canGoBack();
-        (<HTMLButtonElement>document.querySelector("#forward")).disabled = !webview.canGoForward();
+        (<HTMLButtonElement>$("#back").get(0)).disabled = !webview.canGoBack();
+        (<HTMLButtonElement>$("#forward").get(0)).disabled = !webview.canGoForward();
     }
 }
 
@@ -433,24 +417,27 @@ function handleFailLoad(event: Electron.WebViewElement.DidFailLoadEvent): void {
  */
 function tabSwitch(): void {
     let active: Electron.WebViewElement = Doc.getWebview();
+    let back: JQuery = $("#back");
+    let forward: JQuery = $("#forward");
+    let reload: JQuery = $("#reload");
 
     // Re-evaluate the back/forward navigation buttons based on new active Tab
-    (<HTMLButtonElement>document.querySelector("#back")).disabled = !active.canGoBack();
-    (<HTMLButtonElement>document.querySelector("#forward")).disabled = !active.canGoForward();
+    (<HTMLButtonElement>back.get(0)).disabled = !active.canGoBack();
+    (<HTMLButtonElement>forward.get(0)).disabled = !active.canGoForward();
     isLoading = active.isLoading();
     if (isLoading) {
-        document.getElementById("reload").innerHTML = "&#10005;";
+        reload.html("&#10005;");
     } else {
-        document.getElementById("reload").innerHTML = "&#10227;";
+        reload.html("&#10227;");
     }
 
-    document.getElementById("back").onclick = function () {
+    back.on("click", (): void => {
         active.goBack();
-    };
+    });
 
-    document.getElementById("forward").onclick = function () {
+    forward.on("click", (): void => {
         active.goForward();
-    };
+    });
 
-    (<HTMLInputElement>document.getElementById("location")).value = active.getURL();
+    $("#location").val(active.getURL());
 }
