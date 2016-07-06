@@ -67,6 +67,12 @@ describe("application launch", function() {
         await app.client.getValue("#location").should.eventually.contain("google");
     });
 
+    it("dragged tab is active", async function() {
+        let tabID: string | string[] = await app.client.getAttribute("#tabs > div:nth-child(3)", "id");
+        await app.client.getAttribute(`[tabID='${<string>tabID}']`, "style")
+            .should.eventually.contain("flex");
+    });
+
     it("tabs get smaller above 6 tabs", async function() {
         let originalTabWidth: number | number[]
             = await app.client.getElementSize("#tabs > div:nth-child(1)", "width");
