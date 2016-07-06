@@ -495,14 +495,14 @@ export class UserTabBar {
      *  Description:
      *      returns the active Tab object from the active user's TabBar
      */
-    public getActiveTab(): Tab { // rename activateTabBar
+    public getActiveTab(): Tab {
         return this.activeBar().getActiveTab();
     }
     /**
      *  Description:
      *      returns the active TabBar object 
      */
-    public activeBar(): TabBar { // getActiveTabBar
+    public activeBar(): TabBar {
         return this.bars[this.activeUser];
     }
     /**
