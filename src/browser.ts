@@ -46,7 +46,7 @@ class BrowserDOM implements IDOM {
     public allTabsClosed(): void {
         require("electron").ipcRenderer.send("tabs-all-closed");
     }
-    
+
     /**
      * Creates a new tab element and places it in the Tabs div in the document.
      * 
