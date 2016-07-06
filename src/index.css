@@ -32,7 +32,6 @@ button.tab {
 #controls {
   padding: 3px;
   padding-left: 75px;
-  border-bottom: solid 1px #ccc;
   background-color: #eee;
 }
 
@@ -96,12 +95,14 @@ compared to the back/forward buttons */
 #controls {
   display: -webkit-flex;
   -webit-flex-direction: column;
+  height: 31px;
 }
 
 #controls #location-form {
   -webkit-flex: 1;
   display: -webkit-flex;
   -webit-flex-direction: column;
+  padding-top: 3px;
 }
 
 #controls #center-column {
