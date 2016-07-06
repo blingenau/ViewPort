@@ -8,7 +8,7 @@ import {Mock, MockMethods} from "./_mock";
 
 let should = chai.should();
 
-describe("Tab creation", function() {
+describe("Tab", function() {
     it("can create a tab", function() {
         let [dom, mock] = Mock<IDOM>({
             createWebview: e => e.once(),
@@ -21,14 +21,24 @@ describe("Tab creation", function() {
         mock.verify();
     });
 
-    it("can hide a tab", function() {
-        let [dom, mock] = Mock<IDOM>({
+    function setupMocks(methods: MockMethods): [Tab, sinon.SinonMock] {
+        // include the method stubs that are required for all TabBarSet tests
+        let allMethods = Object.assign({
             createWebview: null,
-            createTabElement: null,
+            createTabElement: null
+        }, methods);
+
+        let [dom, mock] = Mock<IDOM>(allMethods);
+        let tab = new Tab(dom, {});
+
+        return [tab, mock];
+    }
+
+    it("can hide a tab", function() {
+        let [tab, mock] = setupMocks({
             hideWebview: e => e.once()
         });
 
-        let tab: Tab = new Tab(dom, {});
         tab.getActiveStatus().should.equal(true);
         tab.hide();
         tab.getActiveStatus().should.equal(false);
@@ -37,25 +47,18 @@ describe("Tab creation", function() {
     });
 
     it("can get tab url", function() {
-        let [dom, mock] = Mock<IDOM>({
-            createWebview: null,
-            createTabElement: null
-        });
+        let [tab, mock] = setupMocks({});
 
-        let tab: Tab = new Tab(dom, {});
         tab.getUrl().should.equal("");
 
         mock.verify();
     });
 
     it("can set tab url", function() {
-        let [dom, mock] = Mock<IDOM>({
-            createWebview: null,
-            createTabElement: null,
+        let [tab, mock] = setupMocks({
             setTabFavicon: e => e.once()
         });
 
-        let tab: Tab = new Tab(dom, {});
         tab.setUrl("test");
         tab.getUrl().should.equal("test");
 
@@ -63,25 +66,18 @@ describe("Tab creation", function() {
     });
 
     it("can get tab title", function() {
-        let [dom, mock] = Mock<IDOM>({
-            createWebview: null,
-            createTabElement: null
-        });
+        let [tab, mock] = setupMocks({});
 
-        let tab: Tab = new Tab(dom, {});
         tab.getTitle().should.equal("");
 
         mock.verify();
     });
 
     it("can set tab title", function() {
-        let [dom, mock] = Mock<IDOM>({
-            createWebview: null,
-            createTabElement: null,
+        let [tab, mock] = setupMocks({
             setTitle: e => e.once()
         });
 
-        let tab: Tab = new Tab(dom, {});
         tab.setTitle("test title");
         tab.getTitle().should.equal("test title");
 
@@ -89,7 +85,7 @@ describe("Tab creation", function() {
     });
 });
 
-describe("TabBarSet functionality tests", function() {
+describe("TabBarSet", function() {
     function setupMocks(methods: MockMethods): [sinon.SinonMock, UserTabBar, Tab, Tab] {
         // include the method stubs that are required for all TabBarSet tests
         let allMethods = Object.assign({
