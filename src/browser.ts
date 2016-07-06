@@ -53,11 +53,13 @@ class BrowserDOM implements IDOM {
      * @param tab   The Tab object associated with this new element.
      */
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
-        $("#tabs")
-            .append($("<div>")
+        $("#add-tab")
+            .before($("<div>")
+            // .prepend($("<div>")
                 .addClass("ui-state-default")
-                .attr("id", id)
-                .append($("<div>")
+                .attr("id", id));
+        $(".ui-state-default")
+                .append(($("<div>")
                     .addClass("chrome-tab-title")
                     .attr("title", title)
                     .html(title))
@@ -151,7 +153,7 @@ class BrowserDOM implements IDOM {
         let tabElt: HTMLElement = document.getElementById(tab.getId());
         // update favicon
         let tabFavicon: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-favicon");
-        let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getUrl();
+        let tabFav = "http://www.google.com/s2/favicons?domain=" + tab.getUrl().split("?")[0];
         tabFavicon[0].innerHTML = "<img src = " + tabFav + ">";
         // update tab title
         let tabTitle: NodeListOf<Element> = tabElt.getElementsByClassName("chrome-tab-title");
@@ -256,7 +258,7 @@ onload = () => {
 
     document.getElementById("add-tab").onclick = function () {
         let tab: Tab = new Tab(Doc, {
-            url: "about:blank"
+            url: "https://athenanet.athenahealth.com"
         });
         Tabs.addTab(tab);
         Tabs.activeBar().hideTabs();
@@ -287,11 +289,16 @@ onload = () => {
             axis: "x",
             scroll: false,
             forcePlaceholderSize: true,
+            items : ".ui-state-default",
         });
         $( "#tabs" ).on( "sortactivate", function( event: Event, ui: any) {
             ui.placeholder[0].style.width = ui.item[0].style.width;
             ui.item[0].top = ui.originalPosition.top;
             console.log(ui);
+            $(".non-sortable").hide();
+        });
+        $("#tabs").on("sortstop", function(){
+            $(".non-sortable").show();
         });
     });
 };
@@ -332,7 +339,7 @@ function doLayout(): void {
     let windowHeight: number = document.documentElement.clientHeight;
     let webviewWidth: number = windowWidth;
     let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
-    let tabWidth: string = tabs.length <= 6 ? "15%" : (100/tabs.length).toString() + "%";
+    let tabWidth: string = tabs.length <= 6 ? "15%" : (95/tabs.length).toString() + "%";
 
     webview.style.width = webviewWidth + "px";
     webview.style.height = webviewHeight + "px";
