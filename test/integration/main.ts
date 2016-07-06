@@ -66,4 +66,14 @@ describe("application launch", function() {
         await app.client.click("#tabs > div:nth-child(3)");
         await app.client.getValue("#location").should.eventually.contain("google");
     });
+
+    it("tabs get smaller above 6 tabs", async function() {
+        let originalTabWidth: number | number[]
+            = await app.client.getElementSize("#tabs > div:nth-child(1)", "width");
+        for (let i: number = 0; i < 4; ++i) {
+            await app.client.click("#add-tab");
+        }
+        await app.client.getElementSize("#tabs > div:nth-child(1)", "width")
+            .should.eventually.be.below(<number>originalTabWidth);
+    });
 });
