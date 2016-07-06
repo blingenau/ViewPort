@@ -53,9 +53,9 @@ class BrowserDOM implements IDOM {
      * @param tab   The Tab object associated with this new element.
      */
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
-        $("#tabs")
-            .prepend($("<div>")
-                .addClass("ui-state-default")
+        $("#add-tab")
+            .before($("<div>")
+                .addClass("ui-state-default chrome-tab")
                 .attr("id", id)
                 .append($("<div>")
                     .addClass("chrome-tab-title")
@@ -73,14 +73,16 @@ class BrowserDOM implements IDOM {
                         tabSwitch();
                         doLayout();
                         ipc.send("update-num-tabs", Tabs.activeBar().size());
+                        return false;
                     }))
-                .mousedown((event: JQueryMouseEventObject) => {
+                .click((event: JQueryMouseEventObject) => {
                     if (event.which === 1) {
                         // event.stopPropagation();
                         Tabs.activeBar().hideTabs();
                         Tabs.getUserTabBar().activateTab(tab);
                         tabSwitch();
                         doLayout();
+                        return false;
                     }
                 })
             );
@@ -184,12 +186,13 @@ class BrowserDOM implements IDOM {
      *  @param id   tab id that is active, use to fight neighboring tab to return.
      */
     public getNextActiveTabId(id: string): string {
-        let tab: HTMLElement = document.getElementById(id);
-        let next: Element = tab.nextElementSibling || tab.previousElementSibling;
-        if (next === null) {
+        let tab = $(`#${id}`);
+        let next: string = tab.next(".ui-state-default").attr("id")
+                         || tab.prev(".ui-state-default").attr("id");
+        if (!next) {
             return "";
         }
-        return next.id;
+        return next;
     }
 
     /**
@@ -340,7 +343,7 @@ function doLayout(): void {
     let windowHeight: number = document.documentElement.clientHeight;
     let webviewWidth: number = windowWidth;
     let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
-    let tabWidth: string = tabs.length <= 6 ? "15%" : (100/tabs.length).toString() + "%";
+    let tabWidth: string =  (95/tabs.length).toString() + "%";
     webview.style.width = webviewWidth + "px";
     webview.style.height = webviewHeight + "px";
 
