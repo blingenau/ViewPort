@@ -53,11 +53,13 @@ class BrowserDOM implements IDOM {
      * @param tab   The Tab object associated with this new element.
      */
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
-        $("#tabs")
-            .prepend($("<div>")
+        $("#add-tab")
+            .before($("<div>")
+            // .prepend($("<div>")
                 .addClass("ui-state-default")
-                .attr("id", id)
-                .append($("<div>")
+                .attr("id", id));
+        $(".ui-state-default")
+                .append(($("<div>")
                     .addClass("chrome-tab-title")
                     .attr("title", title)
                     .html(title))
