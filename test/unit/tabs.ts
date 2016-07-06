@@ -10,6 +10,8 @@ let should = chai.should();
 
 describe("Tab", function() {
     it("can create a tab", function() {
+        // For the tab creation test, ensure that the underlying functions are
+        // called the expected number of times.
         let [dom, mock] = Mock<IDOM>({
             createWebview: e => e.once(),
             createTabElement: e => e.once()
@@ -22,7 +24,9 @@ describe("Tab", function() {
     });
 
     function setupMocks(methods: MockMethods): [Tab, sinon.SinonMock] {
-        // include the method stubs that are required for all TabBarSet tests
+        // Include the method stubs that are required for all Tab tests.
+        // These have already passed or failed expectations, so should not be
+        // re-tested.
         let allMethods = Object.assign({
             createWebview: null,
             createTabElement: null
@@ -135,7 +139,7 @@ describe("TabBarSet", function() {
         let [mock, tabs, tab1, tab2] = setupMocks({
             removeWebview: e => e.twice(),
             removeTabElement: e => e.twice(),
-            getNextActiveTabId: e => e.returns(""),
+            getNextActiveTabId: e => e.returns("") && e.once(),
             allTabsClosed: e => e.once()
         });
 
