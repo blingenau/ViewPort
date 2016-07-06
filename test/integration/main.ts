@@ -57,4 +57,13 @@ describe("application launch", function() {
         await app.client.click("#add-tab");
         await tabCountEquals(3).should.eventually.be.true;
     });
+
+    it("can drag a tab", async function() {
+        await app.client.setValue("#location", "www.google.com");
+        await app.client.submitForm("#location-form");
+        await app.client.dragAndDrop("#tabs > div:nth-child(2)", "#add-tab");
+        await app.client.waitForVisible("#tabs > div:nth-child(3)");
+        await app.client.click("#tabs > div:nth-child(3)");
+        await app.client.getValue("#location").should.eventually.contain("google");
+    });
 });
