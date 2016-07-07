@@ -5,6 +5,7 @@
 
 import {Tab, UserTabBar, IDOM} from "./tabs";
 const $: JQueryStatic = require("jquery");
+const ipc = require("electron").ipcRenderer;
 require("jquery-ui");
 
 /**
@@ -28,12 +29,9 @@ class BrowserDOM implements IDOM {
         let webview: Electron.WebViewElement = document.createElement("webview");
         webview.addEventListener("did-start-loading", handleLoadStart);
         webview.addEventListener("did-stop-loading", handleLoadStop);
-        webview.addEventListener("did-fail-load", handleFailLoad);
+        webview.addEventListener("did-fail-load", handleLoadFail);
         webview.addEventListener("load-commit", handleLoadCommit);
         webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
-        webview.style.display = "flex";
-        webview.style.width = "640px";
-        webview.style.height = "480px";
         webview.src = url;
         webview.setAttribute("tabID", id);
         document.getElementById("webviews").appendChild(webview);
@@ -180,7 +178,7 @@ class BrowserDOM implements IDOM {
      *  Description:
      *      Given an input active tab id, return id of tab corresponding to the next active tab. 
      * 
-     *  @param id   tab id that is active, use to fight neighboring tab to return.
+     *  @param id   tab id that is active, use to find neighboring tab to return.
      */
     public getNextActiveTabId(id: string): string {
         let tab = $(`#${id}`);
@@ -213,14 +211,12 @@ class BrowserDOM implements IDOM {
     }
 }
 
-let Doc: BrowserDOM = new BrowserDOM();
-let Tabs: UserTabBar = new UserTabBar(Doc);
-window.onresize = doLayout;
-let isLoading: boolean = false;
-const ipc = require("electron").ipcRenderer;
-const homepage = "https://athenanet.athenahealth.com";
+const Doc: BrowserDOM = new BrowserDOM();
+const Tabs: UserTabBar = new UserTabBar(Doc);
+let homepage = "https://athenanet.athenahealth.com";
 
-onload = () => {
+window.onresize = doLayout;
+window.onload = () => {
     Tabs.addUser("test");
     Tabs.addTab(new Tab(Doc, {
         url: homepage
@@ -255,7 +251,7 @@ onload = () => {
 
     $("#add-tab").on("click", (): void => {
         let tab: Tab = new Tab(Doc, {
-            url: "https://athenanet.athenahealth.com"
+            url: homepage
         });
         Tabs.addTab(tab);
         Tabs.activeBar().hideTabs();
@@ -272,8 +268,16 @@ onload = () => {
         }));
     });
 
+    ipc.on("enter-full-screen", function() {
+        $("#controls").addClass("fullscreen");
+    });
+
+    ipc.on("leave-full-screen", function() {
+        $("#controls").removeClass("fullscreen");
+    });
+
     $("#reload").on("click", (): void => {
-        if (isLoading) {
+        if (Doc.getWebview().isLoading()) {
             Doc.getWebview().stop();
         } else {
             Doc.getWebview().reload();
@@ -282,18 +286,18 @@ onload = () => {
 
     $(function() {
         $("#tabs").sortable({
-            revert:true,
+            revert: true,
             axis: "x",
             scroll: false,
             forcePlaceholderSize: true,
-            items : ".ui-state-default",
+            items: ".ui-state-default",
             tolerance: "pointer"
         })
-        .on( "sortactivate", function( event: Event, ui: any) {
+        .on("sortactivate", function(event: Event, ui: any) {
             ui.placeholder.css("width", ui.item.css("width"));
             $(".non-sortable").hide();
         })
-        .on("sortstop", function(){
+        .on("sortstop", function() {
             $(".non-sortable").show();
         });
     });
@@ -304,14 +308,14 @@ onload = () => {
  *
  * @param webview   The webview to load the new URL into.
  * @param url   The URL to navigate to.
- * @param html   Whether the URL is local HTML to load.
+ * @param isLocalContent   Whether the URL is local isLocalContent to load.
  */
-function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolean): void {
+function navigateTo(webview: Electron.WebViewElement, url: string, isLocalContent?: boolean): void {
     if (!url) {
         url = homepage;
     }
 
-    if (url.indexOf("http") === -1 && !html) {
+    if (url.indexOf("http") === -1 && !isLocalContent) {
         url = `http://${url}`;
     }
     $("#location").blur();
@@ -323,11 +327,8 @@ function navigateTo(webview: Electron.WebViewElement, url: string, html?: boolea
  */
 function doLayout(): void {
     let webview: Electron.WebViewElement = Doc.getWebview();
-    // let tabs: NodeListOf<Element> = document.querySelectorAll(".ui-state-default");
     let tabs: JQuery = $(".ui-state-default").not(".ui-sortable-placeholder");
-    // let tabFav: NodeListOf<Element> = document.querySelectorAll(".tab-favicon");
     let tabFav: JQuery = $(".tab-favicon");
-    // let tabTitle: NodeListOf<Element> = document.querySelectorAll(".tab-title");
     let tabTitle: JQuery = $(".tab-title");
     let controlsHeight: number = $("#controls").outerHeight();
     let tabBarHeight: number = $("#tabs").outerHeight();
@@ -336,8 +337,10 @@ function doLayout(): void {
     let webviewWidth: number = windowWidth;
     let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
     let tabWidth: string =  (95/tabs.length).toString() + "%";
-    webview.style.width = webviewWidth + "px";
-    webview.style.height = webviewHeight + "px";
+    $(webview).css({
+        width: webviewWidth + "px",
+        height: webviewHeight + "px"
+    });
 
     // Resize the tabs if there are many or the window is too small
     tabs.css("width", tabWidth);
@@ -361,7 +364,6 @@ function handleLoadStart(event: Event): void {
     if (Tabs.getActiveTab().getId() === webview.getAttribute("tabID")) {
         document.body.classList.add("loading");
         document.getElementById("reload").innerHTML = "&#10005;";
-        isLoading = true;
     }
 }
 
@@ -376,7 +378,6 @@ function handleLoadStop(event: Event): void {
     tab.setUrl(webview.getAttribute("src"));
     tab.setTitle(webview.getTitle());
     if (Tabs.getActiveTab().getId() === tab.getId()) {
-        isLoading = false;
         $("#location").val(tab.getUrl());
     }
     $("#reload").html("&#10227;");
@@ -414,7 +415,7 @@ function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequest
  *
  * @param event   The event triggered.
  */
-function handleFailLoad(event: Electron.WebViewElement.DidFailLoadEvent): void {
+function handleLoadFail(event: Electron.WebViewElement.DidFailLoadEvent): void {
     if (event.errorCode !== -3) {
         navigateTo(<Electron.WebViewElement>event.target, "file://" + __dirname + "/error.html", true);
     }
@@ -432,22 +433,12 @@ function tabSwitch(): void {
     // Re-evaluate the back/forward navigation buttons based on new active Tab
     (<HTMLButtonElement>back.get(0)).disabled = !active.canGoBack();
     (<HTMLButtonElement>forward.get(0)).disabled = !active.canGoForward();
-    isLoading = active.isLoading();
-    if (isLoading) {
+    if (active.isLoading()) {
+        // change icon to X 
         reload.html("&#10005;");
     } else {
+        // change icon to 
         reload.html("&#10227;");
     }
-
-    back.off("click");
-    back.on("click", (): void => {
-        active.goBack();
-    });
-
-    forward.off("click");
-    forward.on("click", (): void => {
-        active.goForward();
-    });
-
     $("#location").val(active.getURL());
 }

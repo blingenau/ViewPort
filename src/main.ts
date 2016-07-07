@@ -46,6 +46,14 @@ function createWindow(): void {
         mainWindow = null;
     });
 
+    mainWindow.on("enter-full-screen", function () {
+        mainWindow.webContents.send("enter-full-screen");
+    });
+
+    mainWindow.on("leave-full-screen", function () {
+        mainWindow.webContents.send("leave-full-screen");
+    });
+
     mainWindow.on("close", (event: Electron.Event) => {
         if (process.env.athenahealth_viewport_test) {
             // we don't want to present the close dialog during testing
