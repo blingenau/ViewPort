@@ -364,6 +364,7 @@ function handleLoadStart(event: Event): void {
     if (Tabs.getActiveTab().getId() === webview.getAttribute("tabID")) {
         document.body.classList.add("loading");
         document.getElementById("reload").innerHTML = "&#10005;";
+        $("#location").removeClass("location-loaded");
     }
 }
 
@@ -428,17 +429,21 @@ function tabSwitch(): void {
     let active: Electron.WebViewElement = Doc.getWebview();
     let back: JQuery = $("#back");
     let forward: JQuery = $("#forward");
+    let location: JQuery = $("#location");
     let reload: JQuery = $("#reload");
 
     // Re-evaluate the back/forward navigation buttons based on new active Tab
     (<HTMLButtonElement>back.get(0)).disabled = !active.canGoBack();
     (<HTMLButtonElement>forward.get(0)).disabled = !active.canGoForward();
+
     if (active.isLoading()) {
         // change icon to X 
         reload.html("&#10005;");
+        location.removeClass("location-loaded");
     } else {
         // change icon to 
         reload.html("&#10227;");
+        location.addClass("location-loaded");
     }
-    $("#location").val(active.getURL());
+    location.val(active.getURL());
 }
