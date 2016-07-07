@@ -55,18 +55,18 @@ class BrowserDOM implements IDOM {
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
         $("#add-tab")
             .before($("<div>")
-                .addClass("ui-state-default chrome-tab")
+                .addClass("ui-state-default tab")
                 .attr("id", id)
                 .append($("<div>")
-                    .addClass("chrome-tab-title")
+                    .addClass("tab-title")
                     .attr("title", title)
                     .html(title))
                 .append($("<div>")
-                    .addClass("chrome-tab-favicon")
+                    .addClass("tab-favicon")
                     .append($("<img>")
                         .attr("src", "https://www.google.com/s2/favicons?domain=" + url)))
                 .append($("<div>")
-                    .addClass("chrome-tab-close")
+                    .addClass("tab-close")
                     .click((event: JQueryMouseEventObject) => {
                         event.stopPropagation();
                         Tabs.removeTab(id);
@@ -148,10 +148,12 @@ class BrowserDOM implements IDOM {
     public hideWebview(id: string): void {
         id = id || Tabs.getActiveTab().getId();
         $(`[tabID='${id}']`).hide();
+        $(`#${id}`).removeClass("tab-current");
     }
     public showWebview(id: string): void {
         id = id || Tabs.getActiveTab().getId();
         $(`[tabID='${id}']`).show();
+        $(`#${id}`).addClass("tab-current");
     }
 
     /**
@@ -189,7 +191,7 @@ class BrowserDOM implements IDOM {
      * @param title   The new title to be set. 
      */
     public setTitle(id: string, title: string): void {
-        $(`#${id}`).find(".chrome-tab-title")
+        $(`#${id}`).find(".tab-title")
             .attr("title", title)
             .html(title);
     }
@@ -201,7 +203,7 @@ class BrowserDOM implements IDOM {
      * @param url   The domain where the favicon is found.
      */
     public setTabFavicon(id: string, url: string): void {
-        $(`#${id}`).find(".chrome-tab-favicon").find("img")
+        $(`#${id}`).find(".tab-favicon").find("img")
             .attr("src", "https://www.google.com/s2/favicons?domain=" + url);
     }
 }
@@ -280,12 +282,13 @@ onload = () => {
             scroll: false,
             forcePlaceholderSize: true,
             items : ".ui-state-default",
-        });
-        $( "#tabs" ).on( "sortactivate", function( event: Event, ui: any) {
-            ui.placeholder[0].style.width = ui.item[0].style.width;
+            tolerance: "pointer"
+        })
+        .on( "sortactivate", function( event: Event, ui: any) {
+            ui.placeholder.css("width", ui.item.css("width"));
             $(".non-sortable").hide();
-        });
-        $("#tabs").on("sortstop", function(){
+        })
+        .on("sortstop", function(){
             $(".non-sortable").show();
         });
     });
@@ -317,10 +320,10 @@ function doLayout(): void {
     let webview: Electron.WebViewElement = Doc.getWebview();
     // let tabs: NodeListOf<Element> = document.querySelectorAll(".ui-state-default");
     let tabs: JQuery = $(".ui-state-default").not(".ui-sortable-placeholder");
-    // let tabFav: NodeListOf<Element> = document.querySelectorAll(".chrome-tab-favicon");
-    let tabFav: JQuery = $(".chrome-tab-favicon");
-    // let tabTitle: NodeListOf<Element> = document.querySelectorAll(".chrome-tab-title");
-    let tabTitle: JQuery = $(".chrome-tab-title");
+    // let tabFav: NodeListOf<Element> = document.querySelectorAll(".tab-favicon");
+    let tabFav: JQuery = $(".tab-favicon");
+    // let tabTitle: NodeListOf<Element> = document.querySelectorAll(".tab-title");
+    let tabTitle: JQuery = $(".tab-title");
     let controlsHeight: number = $("#controls").outerHeight();
     let tabBarHeight: number = $("#tabs").outerHeight();
     let windowWidth: number = document.documentElement.clientWidth;
