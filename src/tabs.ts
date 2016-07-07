@@ -11,7 +11,13 @@ export interface IDOM {
      *  @param id   ID to link webview to tab with attribute tabID
      */
     createWebview(url: string, id: string): void;
+
+    /**
+     * Triggered when all tabs have been closed. Requests that the
+     * main process handle it. 
+     */
     allTabsClosed(): void;
+
     /**
      * Creates a new tab element and places it in the Tabs div in the document.
      * 

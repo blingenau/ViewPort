@@ -28,7 +28,8 @@ function createWindow(): void {
         width: 800,
         height: 600,
         minHeight: 300,
-        minWidth: 400
+        minWidth: 400,
+        titleBarStyle: "hidden-inset"
     });
 
     // Load the index.html of the app
