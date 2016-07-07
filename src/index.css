@@ -47,6 +47,11 @@ button.tab {
   padding: 3px;
   padding-left: 75px;
   background-color: #eee;
+  -webkit-app-region: drag;
+}
+
+#controls * {
+  -webkit-app-region: no-drag;
 }
 
 #controls button,
@@ -76,11 +81,11 @@ input[type="submit"]:active {
   background: -webkit-linear-gradient(bottom, #e2e2e2 0%, #bbbbbb 99%);
 }
 
-.draggable {
+/*.draggable {
   width: 15%;
   height: 26px;
   -webkit-app-region: drag;
-}
+}*/
 
 /* These glyphs are on the small side, make them look more natural when
 compared to the back/forward buttons */
