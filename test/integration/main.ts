@@ -49,7 +49,7 @@ describe("application launch", function() {
     });
 
     it("can remove the second tab", async function() {
-        await app.client.click("#tabs > div:nth-child(2) div.chrome-tab-close");
+        await app.client.click("#tabs > div:nth-child(2) div.tab-close");
         await tabCountEquals(2).should.eventually.be.true;
     });
 
