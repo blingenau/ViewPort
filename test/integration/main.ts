@@ -59,6 +59,7 @@ describe("application launch", function() {
     });
 
     it("can drag a tab", async function() {
+        await app.client.waitForExist(".location-loaded");
         await app.client.setValue("#location", "www.google.com");
         await app.client.submitForm("#location-form");
         await app.client.dragAndDrop("#tabs > div:nth-child(2)", "#add-tab");
@@ -71,5 +72,45 @@ describe("application launch", function() {
         let tabID: string | string[] = await app.client.getAttribute("#tabs > div:nth-child(3)", "id");
         await app.client.getAttribute(`[tabID='${<string>tabID}']`, "style")
             .should.eventually.contain("flex");
+    });
+
+    let originalLocation: string | string[] = null;
+
+    it("can open websites", async function() {
+        await app.client.click("#add-tab");
+        await app.client.waitForExist(".location-loaded");
+        originalLocation = await app.client.getValue("#location");
+
+        await app.client.setValue("#location", "www.google.com");
+        await app.client.submitForm("#location-form");
+        await app.client.waitForExist(".location-loaded");
+        await app.client.getValue("#location").should.eventually.contain("google");
+
+        await app.client.setValue("#location", "www.example.com");
+        await app.client.submitForm("#location-form");
+        await app.client.waitForExist(".location-loaded");
+        await app.client.getValue("#location").should.eventually.contain("example");
+    });
+
+    // requires: "can open websites" immediately prior
+    it("can navigate backwards", async function() {
+        await app.client.click("#back");
+        await app.client.waitForExist(".location-loaded");
+        await app.client.getValue("#location").should.eventually.contain("google");
+
+        await app.client.click("#back");
+        await app.client.waitForExist(".location-loaded");
+        await app.client.getValue("#location").should.eventually.equal(originalLocation);
+    });
+
+    // requires: "can navigate backwards" immediately prior
+    it("can navigate forwards", async function() {
+        await app.client.click("#forward");
+        await app.client.waitForExist(".location-loaded");
+        await app.client.getValue("#location").should.eventually.contain("google");
+
+        await app.client.click("#forward");
+        await app.client.waitForExist(".location-loaded");
+        await app.client.getValue("#location").should.eventually.contain("example");
     });
 });
