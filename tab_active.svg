@@ -1,0 +1,25 @@
+<svg id="Layer_1" preserveAspectRatio="none" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 376.37 24.07">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #d9d8d9;
+      }
+
+      .cls-2 {
+        fill: #b2b3b3;
+      }
+
+      .cls-3 {
+        fill: #a09f9f;
+      }
+    </style>
+  </defs>
+  <title>Open Tab - Active</title>
+  <g id="Tab_Bar_-_Active" data-name="Tab Bar - Active">
+    <g id="Open_Tab_-_Active" data-name="Open Tab - Active">
+      <rect class="cls-1" width="376.37" height="24.07"/>
+    </g>
+    <rect class="cls-2" width="376.37" height="0.5"/>
+    <rect class="cls-3" y="23.57" width="376.37" height="0.5"/>
+  </g>
+</svg>
