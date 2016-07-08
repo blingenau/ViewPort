@@ -100,6 +100,7 @@ gulp.task("copy", ["clean-dist"], () => {
     return gulp.src([
             "src/**/*.html",
             "src/**/*.css",
+            "src/**/*.svg",
             "src/pdfjs/**"
         ], {
             base: "src"

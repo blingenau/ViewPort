@@ -79,8 +79,7 @@ class BrowserDOM implements IDOM {
                         return false;
                     }))
                 .click((event: JQueryMouseEventObject) => {
-                    if (event.which === 1) {
-                        // event.stopPropagation();
+                    if (!tab.getActiveStatus()) {
                         Tabs.activeBar().hideTabs();
                         Tabs.getUserTabBar().activateTab(tab);
                         tabSwitch();
@@ -326,7 +325,6 @@ function navigateTo(webview: Electron.WebViewElement, url: string, isLocalConten
  * Resizes the elements in the window.
  */
 function doLayout(): void {
-    let webview: Electron.WebViewElement = Doc.getWebview();
     let tabs: JQuery = $(".ui-state-default").not(".ui-sortable-placeholder");
     let tabFav: JQuery = $(".tab-favicon");
     let tabTitle: JQuery = $(".tab-title");
@@ -337,7 +335,8 @@ function doLayout(): void {
     let webviewWidth: number = windowWidth;
     let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
     let tabWidth: string =  (95/tabs.length).toString() + "%";
-    $(webview).css({
+
+    $("webview").css({
         width: webviewWidth + "px",
         height: webviewHeight + "px"
     });

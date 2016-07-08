@@ -19,7 +19,7 @@
   border: 0px;
   margin: 0px;
   z-index: 1;
-  background : url("../tab.svg");
+  background : url("../svg/tab.svg");
 	border-style : Solid;
 	border-color : #7F7F7F;
 	border-color : rgba(127, 127, 127, 1);
@@ -31,7 +31,7 @@
 }
 
 .tabs .tab.tab-current {
-  background : url("../tab_active.svg");
+  background : url("../svg/tab_active.svg");
 }
 
 .tabs .ui-state-default .tab-favicon {

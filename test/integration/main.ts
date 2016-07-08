@@ -71,7 +71,7 @@ describe("application launch", function() {
     it("dragged tab is active", async function() {
         let tabID: string | string[] = await app.client.getAttribute("#tabs > div:nth-child(3)", "id");
         await app.client.getAttribute(`[tabID='${<string>tabID}']`, "style")
-            .should.eventually.contain("flex");
+            .should.eventually.not.contain("display: none");
     });
 
     let originalLocation: string | string[] = null;
