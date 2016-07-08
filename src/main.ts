@@ -12,6 +12,7 @@ const {dialog} = require("electron");
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
 let mainWindow: Electron.BrowserWindow = null;
+let backgroundWindow: Electron.BrowserWindow = null;
 
 // The main process's IPC.
 const ipcMain: Electron.IpcMain = electron.ipcMain;
@@ -44,6 +45,7 @@ function createWindow(): void {
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
         mainWindow = null;
+        backgroundWindow.close();
     });
 
     mainWindow.on("enter-full-screen", function () {
@@ -94,11 +96,21 @@ function createWindow(): void {
   });
 }
 
+/**
+ * Function to create a hidden, window. Runs background
+ * processes.
+ */
+function createBackgroundWindow(): void {
+    backgroundWindow = new BrowserWindow({show: false});
+    backgroundWindow.loadURL(`file://${__dirname}/Utilities/timeout.html`);
+}
+
 // This method will be called when ELectron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
     createWindow();
+    createBackgroundWindow();
 });
 
 // Quit when all windows are closed.

@@ -6,6 +6,7 @@
 import {Tab, UserTabBar, IDOM} from "./tabs";
 const $: JQueryStatic = require("jquery");
 const ipc = require("electron").ipcRenderer;
+const {remote} = require("electron");
 require("jquery-ui");
 
 /**
@@ -396,6 +397,31 @@ window.onload = () => {
 
     ipc.on("leave-full-screen", function() {
         $("#controls").removeClass("fullscreen");
+    });
+
+    remote.ipcMain.on("get-current-timeout", (): void => {
+        (<Electron.WebViewElement>($("#webviews").find("[src*='athena']")[0]))
+            .getWebContents().session.cookies.get({
+                domain: "prodmirror.athenahealth.com",
+                name: "TIMEOUT_UNENCRYPTED"}, (error: Error, cookies: Electron.Cookie[]): void => {
+                    if (cookies.length < 2) {
+                        return;
+                    }
+
+                    if (parseInt(cookies[1].value, 10) <= 0) {
+                        if (!tabs.getActiveTabBar().getLockedStatus()) {
+                            browserDom.lockActiveUser();
+                        }
+                    } else {
+                        if (tabs.getActiveTabBar().getLockedStatus()) {
+                            browserDom.unlockActiveUser();
+                        }
+                    }
+                });
+    });
+
+    remote.ipcMain.on("user-timed-out", (): void => {
+        console.log("User timed out");
     });
 
     $("#reload").on("click", (): void => {
