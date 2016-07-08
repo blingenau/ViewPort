@@ -1,114 +1,15 @@
 export interface IDOM {
-
-    /**
-     *  Description:
-     *      creates webview element and writes it into document
-     * 
-     *  Return Value:
-     *      none
-     *  
-     *  @param url   string for webview src
-     *  @param id   ID to link webview to tab with attribute tabID
-     */
     createWebview(url: string, id: string): void;
-
-    /**
-     * Triggered when all tabs have been closed. Requests that the
-     * main process handle it. 
-     */
     allTabsClosed(): void;
-
-    /**
-     * Creates a new tab element and places it in the Tabs div in the document.
-     * 
-     * @param title   Title of the associated webview's URL to be displayed
-     *                on the tab.
-     * @param id   ID to be assigned to the new tab element. Corresponds with
-     *             the ID stored with the tab object associated with this element.
-     * @param url   The URL of the webview this tab element corresponds to.
-     * @param tab   The Tab object associated with this new element.
-     */
     createTabElement(title: string, id: string, url: string, tab: Tab): void;
-
-    /**
-     *  Description:
-     *      queries document for webview element matching input id. 
-     *      If no id provided then get active webview. 
-     *  
-     *  Return Value:
-     *      Electron.WebViewElement
-     * 
-     *  @param id   string ID corresponding to the webview's tabID to return, if empty return active webview
-     */
     getWebview(id: string): Electron.WebViewElement;
-
-    /**
-     * Queries document for the tab element matching the specified id.
-     * If no id provided then get the active tab element.
-     */
     getTabElement(id: string): HTMLDivElement;
-
-    /**
-     *  Description:
-     *      removes webview element from document that matches id = tabID 
-     *      If no id provided then remove active webview. 
-     *  
-     *  Return Value:
-     *      none
-     * 
-     *  @param id   string ID corresponding to the webview's tabID to remove, if empty remove active webview
-     */
     removeWebview(id: string): void;
-
-    /**
-     * Removes tab element from the document.
-     * 
-     * @param id   ID of the tab element to be removed.
-     */
     removeTabElement(id: string): void;
-
-    /**
-     *  Description:
-     *      hides webview element from document that matches id = tabID 
-     *      If no id provided then hide active webview. 
-     *  
-     *  Return Value:
-     *      none
-     * 
-     *  @param id   string ID corresponding to the webview's tabID to hide, if empty hide active webview
-     */
-    hideWebview(id: string): void;
-    showWebview(id: string): void;
-    /**
-     *  Description:
-     *      Queries document for the ordered list of current tabs 
-     * 
-     *  Return Value:
-     *      List of Tab objects in the order that they are displayed on screen
-     */
-    getAllTabs(): Tab[];
-    /**
-     *  Description:
-     *      Given an input active tab id, return id of tab corresponding to the next active tab. 
-     * 
-     *  @param id   tab id that is active, use to fight neighboring tab to return.
-     */
+    hideTab(id: string): void;
+    showTab(id: string): void;
     getNextActiveTabId(id: string): string;
-
-    /**
-     * Updates the title and innerHTML of the tab element when a new page is loaded.
-     * 
-     * @param id   The ID of the tab element.
-     * @param title   The new title to be set. 
-     */
     setTitle(id: string, title: string): void;
-
-    /**
-     * Updates the favicon of the tab element when a new URL is set.
-     * 
-     * @param id   The ID of the tab element that contains the favicon to change.
-     * @param url   The domain where the favicon is found.
-     */
     setTabFavicon(id: string, url: string): void;
 }
 /**
@@ -126,7 +27,7 @@ export interface IDOM {
 export class Tab {
     private url: string;
     private id: string;
-    private title: string; // get rid of this 
+    private title: string;
     private active: boolean;
     private dom: IDOM;
 
@@ -163,10 +64,10 @@ export class Tab {
      */
     public hide(): void {
         this.active = false;
-        this.dom.hideWebview(this.id);
+        this.dom.hideTab(this.id);
     }
     public show(): void {
-        this.dom.showWebview(this.id);
+        this.dom.showTab(this.id);
     }
     /**
      *  Description:
@@ -242,10 +143,12 @@ export class TabBar {
     private tabs: {[id: string]: Tab};
     private activeTabId: string;
     private dom: IDOM;
+    private locked: boolean;
     constructor(d: IDOM) {
         this.tabs = {};
         this.activeTabId = "";
         this.dom = d;
+        this.locked = false;
     }
     /**
      *  Description:
@@ -256,6 +159,13 @@ export class TabBar {
      */
     public getTabs(): {[id: string]: Tab} {
         return this.tabs;
+    }
+
+    public getLockedStatus(): boolean {
+        return this.locked;
+    }
+    public setLockedStatus(lock: boolean): void {
+        this.locked = lock;
     }
 
     /**   
@@ -374,7 +284,6 @@ export class TabBar {
      */
     public getAllTabs(): Tab[] {
         return Object.keys(this.tabs).map((key: string) => this.tabs[key]);
-        // look at a better way to do this maybe? jQuery?
     }
 }
 /**
@@ -502,13 +411,13 @@ export class UserTabBar {
      *      returns the active Tab object from the active user's TabBar
      */
     public getActiveTab(): Tab {
-        return this.activeBar().getActiveTab();
+        return this.getActiveTabBar().getActiveTab();
     }
     /**
      *  Description:
      *      returns the active TabBar object 
      */
-    public activeBar(): TabBar {
+    public getActiveTabBar(): TabBar {
         return this.bars[this.activeUser];
     }
     /**
