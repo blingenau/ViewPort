@@ -8,6 +8,7 @@ const os = require("os");
 const package = require("./package.json");
 const packager = require("electron-packager");
 const replace = require("gulp-replace");
+const sourcemaps = require("gulp-sourcemaps");
 const ts = require("gulp-typescript");
 const tslint = require("gulp-tslint");
 
@@ -26,25 +27,29 @@ gulp.task("tslint", () => {
 });
 
 gulp.task("tsc", ["tslint", "clean-dist"], () => {
-    const tsProject = ts.createProject("tsconfig.json");
+    const tsProject = ts.createProject("src/tsconfig.json");
 
-    return tsProject
+    let tsResult = tsProject
         .src()
-        .pipe(ts(tsProject))
-        .js.pipe(gulp.dest("dist"));
+        .pipe(sourcemaps.init())
+        .pipe(ts(tsProject));
+    
+    return tsResult
+        .pipe(sourcemaps.write({
+            includeContent: false,
+            sourceRoot: "../src"
+        }))
+        .pipe(gulp.dest("dist"));
 });
 
 gulp.task("tsc-test", ["tslint", "clean-test"], () => {
-    return gulp.src([
-            "test/**/*.ts",
-            "!**/*.d.ts",
-            "!**/node_modules"
-        ])
-        .pipe(ts({
-            noImplicitAny: true,
-            "target": "es2015",
-            "module": "commonjs"
-        }))
+    const tsProject = ts.createProject("test/tsconfig.json");
+
+    let tsResult = tsProject
+        .src()
+        .pipe(ts(tsProject));
+    
+    return tsResult
         .pipe(replace("../../src/", "../../../dist/"))
         .pipe(gulp.dest("test/generated-files"));
 });
@@ -115,16 +120,6 @@ gulp.task("dist", [
         "copy-npm-dependencies",
         "copy"
     ], () => {
-    const tsProject = ts.createProject(
-        "tsconfig.json",
-        {
-            removeComments: true
-        });
-    
-    return tsProject
-        .src()
-        .pipe(ts(tsProject))
-        .js.pipe(gulp.dest("dist"));
 });
 
 gulp.task("package", ["dist"], (done) => {
