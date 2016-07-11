@@ -1,7 +1,4 @@
-/// <reference path="Definitions/github-electron.d.ts" />
-/// <reference path="Definitions/node.d.ts" />
-/// <reference path="Definitions/jquery/index.d.ts" />
-/// <reference path="Definitions/jqueryui/jqueryui.d.ts" />
+/// <reference path="../typings/index.d.ts" />
 
 import {Tab, UserTabBar, IDOM} from "./tabs";
 const $: JQueryStatic = require("jquery");

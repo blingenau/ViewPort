@@ -1,3 +1,5 @@
+/// <reference path="../typings/index.d.ts" />
+
 export interface IDOM {
     createWebview(url: string, id: string): void;
     allTabsClosed(): void;

@@ -1,3 +1,5 @@
+/// <reference path="../../typings/index.d.ts" />
+
 const {ipcRenderer} = require("electron");
 
 window.onload = function () {

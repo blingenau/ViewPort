@@ -1,5 +1,4 @@
-/// <reference path="Definitions/github-electron.d.ts" />
-/// <reference path="Definitions/node.d.ts" />
+/// <reference path="../typings/index.d.ts" />
 
 const electron: Electron.ElectronMainAndRenderer = require("electron");
 // Module to control application life.
