@@ -3,7 +3,8 @@
         "src/main.ts",
         "src/browser.ts",
         "src/tabs.ts",
-        "src/sys.ts"
+        "src/sys.ts",
+        "src/settings.ts"
     ],
     "compilerOptions": {
         "noImplicitAny": true,

@@ -541,6 +541,10 @@ export class UserTabBar {
     public getUsers(): string[] {
         return Object.keys(this.bars);
     }
+
+    public getActiveUser(): string {
+        return this.activeUser;
+    }
 }
 
 // create a tab factory and tabBar factory class

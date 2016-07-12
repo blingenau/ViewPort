@@ -6,6 +6,10 @@
 import {Tab, UserTabBar, IDOM} from "./tabs";
 const $: JQueryStatic = require("jquery");
 const ipc = require("electron").ipcRenderer;
+const {remote} = require("electron");
+// const {session, BrowserWindow} = require('electron')
+// const session = require("electron").session;
+
 require("jquery-ui");
 
 /**
@@ -35,6 +39,12 @@ class BrowserDOM implements IDOM {
         webview.src = url;
         webview.setAttribute("tabID", id);
         document.getElementById("webviews").appendChild(webview);
+
+        // Add comment
+        if(url === "file://" + __dirname + "/settings.html") {
+            webview.preload = "file://" + __dirname + "/settings.js";
+            webview.nodeintegration = "on";
+        }
     }
 
     /**
@@ -200,6 +210,22 @@ class BrowserDOM implements IDOM {
     }
 
     /**
+     * Adds a tab
+     * 
+     * @param url   The url of the new tab
+     */
+    public addTab(url: string): void {
+        let tab: Tab = new Tab(Doc, {
+            url: url
+        });
+        Tabs.addTab(tab);
+        Tabs.activeBar().hideTabs();
+        Tabs.getUserTabBar().activateTab(tab);
+        doLayout();
+        ipc.send("update-num-tabs", Tabs.activeBar().size());
+    }
+
+    /**
      * Updates the favicon of the tab element when a new URL is set.
      * 
      * @param id   The ID of the tab element that contains the favicon to change.
@@ -213,7 +239,7 @@ class BrowserDOM implements IDOM {
 
 const Doc: BrowserDOM = new BrowserDOM();
 const Tabs: UserTabBar = new UserTabBar(Doc);
-let homepage = "https://athenanet.athenahealth.com";
+let homepage = "https://prodmirror.athenahealth.com/";
 
 window.onresize = doLayout;
 window.onload = () => {
@@ -258,6 +284,56 @@ window.onload = () => {
         Tabs.getUserTabBar().activateTab(tab);
         doLayout();
         ipc.send("update-num-tabs", Tabs.activeBar().size());
+    });
+
+    $("#settings").on("click", (): void => {
+
+        Doc.addTab("file://" + __dirname + "/settings.html");
+        let jsonfile = require("jsonfile");
+        let file = "json/settings.json";
+        let currentUser: string = Tabs.getActiveUser();
+        let currentUserHomepage: string = "";
+
+        // Read in users from json file
+        let users: any[] = [];
+        jsonfile.readFile(file, function(err: any, obj: any[]) {
+            if ( err ) {
+                console.log("error");
+            }
+            users = JSON.parse(obj);
+            // Look for specific user
+            for( let index = 0; index < users.length; ++ index) {
+                if (users[index].username === currentUser) {
+                    currentUserHomepage = users[index].homepage;
+                    remote.ipcMain.on("get-user", (event, arg) => {
+                    event.returnValue = users[index];
+                });
+
+                }
+            }
+            // If user homepage cannot be found
+            if (currentUserHomepage === "") {
+                // Default
+                currentUserHomepage = "prodmirror.athenahealth.com";
+                users.push({"username" : currentUser, "homepage" : currentUserHomepage});
+                remote.ipcMain.on("get-user", (event, arg) => {
+                    event.returnValue = {"username" : currentUser, "homepage" : currentUserHomepage};
+                });
+            }
+        });
+
+        remote.ipcMain.on("update-homepage", function(event, newHomepage){
+            for( let index = 0; index < users.length; ++ index) {
+                if (users[index].username === currentUser) {
+                    users[index].homepage = newHomepage;
+                    let json = JSON.stringify(users);
+                    jsonfile.writeFile(file, json, {spaces: 2}, function(err: any) {
+                    console.error(err);
+                    });
+                }
+            }
+        });
+
     });
 
     ipc.on("openPDF", function (event, filedata) {
@@ -393,8 +469,6 @@ function handleLoadStop(event: Event): void {
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
     if (Tabs.getTab(webview.getAttribute("tabID")).getActiveStatus()) {
-        // let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
-        // address.value = event.url;
         (<HTMLButtonElement>$("#back").get(0)).disabled = !webview.canGoBack();
         (<HTMLButtonElement>$("#forward").get(0)).disabled = !webview.canGoForward();
     }
