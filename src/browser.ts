@@ -143,7 +143,10 @@ class BrowserDOM implements IDOM {
      */
     public hideTab(id: string): void {
         id = id || tabs.getActiveTab().getId();
-        $(`[tabID='${id}']`).hide();
+        $(`[tabID='${id}']`).css({
+            width:"0px",
+            height:"0px"
+        });
         $(`#${id}`).removeClass("tab-current");
     }
 
@@ -160,7 +163,16 @@ class BrowserDOM implements IDOM {
      */
     public showTab(id: string): void {
         id = id || tabs.getActiveTab().getId();
-        $(`[tabID='${id}']`).show();
+        let controlsHeight: number = $("#controls").outerHeight();
+        let tabBarHeight: number = $("#tabs").outerHeight();
+        let windowWidth: number = document.documentElement.clientWidth;
+        let windowHeight: number = document.documentElement.clientHeight;
+        let webviewWidth: number = windowWidth;
+        let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
+        $(`[tabID='${id}']`).css({
+            width: webviewWidth + "px",
+            height: webviewHeight + "px"
+        });
         $(`#${id}`).addClass("tab-current");
     }
 
@@ -214,8 +226,8 @@ class BrowserDOM implements IDOM {
         let webviewWidth: number = windowWidth;
         let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
         let tabWidth: string =  (95/tabs.length).toString() + "%";
-
-        $("webview").css({
+        let webview = this.getWebview();
+        $(webview).css({
             width: webviewWidth + "px",
             height: webviewHeight + "px"
         });
@@ -258,19 +270,14 @@ class BrowserDOM implements IDOM {
         let back: JQuery = $("#back");
         let forward: JQuery = $("#forward");
         let location: JQuery = $("#location");
-        let reload: JQuery = $("#reload");
 
         // Re-evaluate the back/forward navigation buttons based on new active Tab
         (<HTMLButtonElement>back.get(0)).disabled = !active.canGoBack();
         (<HTMLButtonElement>forward.get(0)).disabled = !active.canGoForward();
 
         if (active.isLoading()) {
-            // change icon to X 
-            reload.html("&#10005;");
             location.removeClass("location-loaded");
         } else {
-            // change icon to 
-            reload.html("&#10227;");
             location.addClass("location-loaded");
         }
         location.val(active.getURL());
@@ -301,11 +308,15 @@ class BrowserDOM implements IDOM {
     public lockActiveUser(): void {
         tabs.getActiveTabBar().setLockedStatus(true);
         $("#add-tab").hide();
+        $(".tab-close").hide();
+        $("#location").prop("disabled",true);
     }
 
     public unlockActiveUser(): void {
         tabs.getActiveTabBar().setLockedStatus(false);
         $("#add-tab").show();
+        $(".tab-close").show();
+        $("#location").prop("disabled",false);
     }
 
     private isAthenaUrl(url: string): boolean {
@@ -337,7 +348,7 @@ const browserDom: BrowserDOM = new BrowserDOM();
 const tabs: UserTabBar = new UserTabBar(browserDom);
 let homepage = "https://athenanet.athenahealth.com";
 
-window.onresize = browserDom.doLayout;
+window.onresize = () => browserDom.doLayout();
 window.onload = () => {
     tabs.addUser("test");
     tabs.addTab(new Tab(browserDom, {
@@ -436,7 +447,6 @@ function handleLoadStart(event: Event): void {
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
     if (tabs.getActiveTab().getId() === webview.getAttribute("tabID")) {
         document.body.classList.add("loading");
-        document.getElementById("reload").innerHTML = "&#10005;";
         $("#location").removeClass("location-loaded");
     }
 }
@@ -454,7 +464,6 @@ function handleLoadStop(event: Event): void {
     if (tabs.getActiveTab().getId() === tab.getId()) {
         $("#location").val(tab.getUrl());
     }
-    $("#reload").html("&#10227;");
     browserDom.tabSwitch();
 }
 

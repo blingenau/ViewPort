@@ -1,0 +1,20 @@
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+      }
+
+      .cls-2 {
+        fill: #464656;
+      }
+    </style>
+  </defs>
+  <title>hamburger</title>
+  <rect class="cls-1" width="24" height="24"/>
+  <rect class="cls-1" x="4.11" y="4.11" width="15.78" height="15.78"/>
+  <rect class="cls-1" x="1.48" y="1.48" width="21.04" height="21.04" transform="translate(24 24) rotate(-180)"/>
+  <path class="cls-2" d="M19.28,11.34H4.72a0.66,0.66,0,0,0,0,1.31H19.28A0.66,0.66,0,0,0,19.28,11.34Z" transform="translate(0 0)"/>
+  <path class="cls-2" d="M19.28,15.3H4.72a0.66,0.66,0,0,0,0,1.31H19.28A0.66,0.66,0,0,0,19.28,15.3Z" transform="translate(0 0)"/>
+  <path class="cls-2" d="M19.28,7.38H4.72a0.66,0.66,0,0,0,0,1.31H19.28A0.66,0.66,0,0,0,19.28,7.38Z" transform="translate(0 0)"/>
+</svg>

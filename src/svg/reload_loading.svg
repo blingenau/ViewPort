@@ -1,0 +1,26 @@
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: none;
+      }
+
+      .cls-2 {
+        stroke: #ccccce;
+        stroke-linecap: round;
+        stroke-miterlimit: 10;
+        stroke-width: 0.25px;
+      }
+
+      .cls-3 {
+        fill: #a3a3a3;
+      }
+    </style>
+  </defs>
+  <title>refresh_close</title>
+  <rect class="cls-1" width="24" height="24"/>
+  <rect class="cls-1" x="4.11" y="4.11" width="15.78" height="15.78"/>
+  <rect class="cls-1" x="1.48" y="1.48" width="21.04" height="21.04" transform="translate(24 24) rotate(-180)"/>
+  <line class="cls-2" x1="5.72" y1="4.15" x2="5.72" y2="19.89"/>
+  <path id="x" class="cls-3" d="M19.24,14.4h0L16.88,12l2.37-2.37h0a0.82,0.82,0,1,0-1.16-1.16L15.7,10.85,13.34,8.48h0a0.82,0.82,0,1,0-1.16,1.16h0L14.53,12l-2.37,2.37h0a0.82,0.82,0,1,0,1.16,1.16h0L15.7,13.2l2.37,2.37h0A0.82,0.82,0,0,0,19.24,14.4Z" transform="translate(0 0)"/>
+</svg>
