@@ -22,7 +22,6 @@
     "gulp-clean": "^0.3.2",
     "gulp-istanbul": "^1.0.0",
     "gulp-mocha": "^2.2.0",
-    "gulp-npm-files": "^0.1.3",
     "gulp-replace": "^0.5.4",
     "gulp-sourcemaps": "1.6.0",
     "gulp-tslint": "^5.0.0",
