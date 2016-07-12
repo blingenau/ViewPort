@@ -1,5 +1,4 @@
-/// <reference path="Definitions/github-electron.d.ts" />
-/// <reference path="Definitions/node.d.ts" />
+/// <reference path="../typings/index.d.ts" />
 
 const electron: Electron.ElectronMainAndRenderer = require("electron");
 // Module to control application life.
@@ -44,6 +43,11 @@ function createWindow(): void {
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
         mainWindow = null;
+        BrowserWindow.getAllWindows().forEach((value: Electron.BrowserWindow): void => {
+            if (value.isClosable()) {
+                value.close();
+            }
+        });
     });
 
     mainWindow.on("enter-full-screen", function () {

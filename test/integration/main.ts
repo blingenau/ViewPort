@@ -14,7 +14,7 @@ describe("application launch", function() {
     });
 
     after(function() {
-        return app.stop();
+        // return app.stop();
     });
 
     async function tabCountEquals(n: number): Promise<boolean> {

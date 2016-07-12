@@ -1,11 +1,10 @@
-/// <reference path="Definitions/github-electron.d.ts" />
-/// <reference path="Definitions/node.d.ts" />
-/// <reference path="Definitions/jquery/index.d.ts" />
-/// <reference path="Definitions/jqueryui/jqueryui.d.ts" />
+/// <reference path="../typings/index.d.ts" />
 
 import {Tab, UserTabBar, IDOM} from "./tabs";
+import * as rp from "request-promise";
 const $: JQueryStatic = require("jquery");
 const ipc = require("electron").ipcRenderer;
+const {remote} = require("electron");
 require("jquery-ui");
 
 /**
@@ -57,6 +56,8 @@ class BrowserDOM implements IDOM {
      */
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
         let self: BrowserDOM = this;
+        // url = checkUrlDoesntExist("https://www.google.com/s2/favicons?domain=" + url) ?
+        //     "a" : url;
         $("#add-tab")
             .before($("<div>")
                 .addClass("ui-state-default tab")
@@ -208,8 +209,12 @@ class BrowserDOM implements IDOM {
      * @param url   The domain where the favicon is found.
      */
     public setTabFavicon(id: string, url: string): void {
+        // url = checkUrlDoesntExist("https://www.google.com/s2/favicons?domain=" + url) ?
+        //     "a" : url;
+        let favicon: string = getFaviconImage(url);
+
         $(`#${id}`).find(".tab-favicon").find("img")
-            .attr("src", "https://www.google.com/s2/favicons?domain=" + url);
+            .attr("src", favicon);
     }
 
     /**
@@ -347,6 +352,7 @@ class BrowserDOM implements IDOM {
 const browserDom: BrowserDOM = new BrowserDOM();
 const tabs: UserTabBar = new UserTabBar(browserDom);
 let homepage = "https://athenanet.athenahealth.com";
+let backgroundWindow: Electron.BrowserWindow = null;
 
 window.onresize = () => browserDom.doLayout();
 window.onload = () => {
@@ -409,6 +415,32 @@ window.onload = () => {
         $("#controls").removeClass("fullscreen");
     });
 
+    // use getAthenaTabs
+    // use the URL as domain
+    // node's url module to get host domain
+    remote.ipcMain.on("check-current-timeout", (): void => {
+        (<Electron.WebViewElement>($("#webviews").find("[src*='athena']")[0]))
+            .getWebContents().session.cookies.get({
+                    domain: "prodmirror.athenahealth.com",
+                    name: "TIMEOUT_UNENCRYPTED"
+                }, (error: Error, cookies: Electron.Cookie[]): void => {
+                    if (!cookies || cookies.length < 2) {
+                        return;
+                    }
+
+                    // Athenanet times out when the cookie's value is <= 0 so we lock the user
+                    if (parseInt(cookies[1].value, 10) <= 0) {
+                        if (!tabs.getActiveTabBar().getLockedStatus()) {
+                            browserDom.lockActiveUser();
+                        }
+                    } else { // If the user has logged back in the cookie resets, unlock user
+                        if (tabs.getActiveTabBar().getLockedStatus()) {
+                            browserDom.unlockActiveUser();
+                        }
+                    }
+                });
+    });
+
     $("#reload").on("click", (): void => {
         if (browserDom.getWebview().isLoading()) {
             browserDom.getWebview().stop();
@@ -436,6 +468,8 @@ window.onload = () => {
             }
         });
     });
+
+    createBackgroundWindow();
 };
 
 /**
@@ -499,7 +533,71 @@ function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequest
  * @param event   The event triggered.
  */
 function handleLoadFail(event: Electron.WebViewElement.DidFailLoadEvent): void {
-    if (event.errorCode !== -3) {
+    if (event.errorCode !== -3 && event.errorCode !== -300) {
         browserDom.navigateTo(<Electron.WebViewElement>event.target, "file://" + __dirname + "/error.html", true);
     }
+}
+
+/**
+ * Function to create a hidden, window. Runs background
+ * processes.
+ */
+function createBackgroundWindow(): void {
+    backgroundWindow = new remote.BrowserWindow({show: false});
+    backgroundWindow.loadURL(`file://${__dirname}/athenanet-timeout/timeout.html`);
+}
+
+/**
+ * Checks if the given url exists (returns an error or not)
+ * 
+ * @param url   The url to check.
+ * @returns Whether the url returns a 400 error code.
+ */
+// function checkUrlDoesntExist(url: string): boolean {
+//     let requestResponse: number = 0;
+
+//     if (url.includes("file://")) {
+//         return true;
+//     }
+
+//     rp({
+//         method: "GET",
+//         uri: url,
+//         resolveWithFullResponse: true
+//     })
+//         .catch(function(error: any) {
+//             requestResponse = error.statusCode;
+//             while (requestResponse === 0) {
+//                 ;
+//             }
+//         });
+//     console.log(requestResponse);
+
+//     return requestResponse === 400;
+// }
+
+/**
+ * Gets the favicon from Google's API.
+ * @param domain   The domain the favicon belongs to.
+ * @returns The base64 encoding of the image.
+ */
+function getFaviconImage(domain: string): string {
+    let encodedImage: string;
+    const options: rp.OptionsWithUri = {
+        method: "GET",
+        uri: "http://www.google.com/s2/favicons?domain=" + domain,
+        resolveWithFullResponse: true
+    };
+
+    rp(options)
+        .then((response: any) => {
+            let imageBase64: string = new Buffer(response.body).toString("base64");
+            let type: string = response.headers["content-type"];
+            let prefix: string = "data:" + type + ";base64";
+            encodedImage = prefix + imageBase64;
+        })
+        .catch((error: any) => {
+            encodedImage = "#";
+        });
+    return encodedImage;
 }

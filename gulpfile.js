@@ -3,7 +3,7 @@ const gulp = require("gulp");
 const istanbul = require("gulp-istanbul");
 const merge = require("merge2");
 const mocha = require("gulp-mocha");
-const npmFiles = require("gulp-npm-files");
+const npmFiles = require("./npm-files");
 const os = require("os");
 const package = require("./package.json");
 const packager = require("electron-packager");
@@ -47,14 +47,21 @@ gulp.task("tsc-test", ["tslint", "clean-test"], () => {
 
     let tsResult = tsProject
         .src()
+        .pipe(sourcemaps.init())
         .pipe(ts(tsProject));
     
     return tsResult
         .pipe(replace("../../src/", "../../../dist/"))
+        .pipe(sourcemaps.write({
+            includeContent: false,
+            sourceRoot: "../.."
+        }))
         .pipe(gulp.dest("test/generated-files"));
 });
 
-gulp.task("unit-test-cover", ["tsc", "tsc-test"], () => {
+gulp.task("tsc-src-and-test", ["tsc", "tsc-test"]);
+
+gulp.task("unit-test-cover", ["tsc-src-and-test"], () => {
     return gulp.src(["dist/**/*.js"])
         .pipe(istanbul())
         .pipe(istanbul.hookRequire());
@@ -114,13 +121,12 @@ gulp.task("copy", ["clean-dist"], () => {
 });
 
 gulp.task("dist", [
-        "unit-tests",
-        "tsc",
-        "copy-package-json",
-        "copy-npm-dependencies",
-        "copy"
-    ], () => {
-});
+    "unit-tests",
+    "tsc",
+    "copy-package-json",
+    "copy-npm-dependencies",
+    "copy"
+]);
 
 gulp.task("package", ["dist"], (done) => {
     var options = {
