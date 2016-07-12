@@ -4,7 +4,7 @@ const {ipcRenderer} = require("electron");
 
 window.onload = function () {
     function checkTimeout() {
-        ipcRenderer.send("get-current-timeout");
+        ipcRenderer.send("check-current-timeout");
     }
 
     setInterval(checkTimeout, 5000);
