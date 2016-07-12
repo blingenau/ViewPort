@@ -40,7 +40,7 @@ describe("Tab", function() {
 
     it("can hide a tab", function() {
         let [tab, mock] = setupMocks({
-            hideWebview: e => e.once()
+            hideTab: e => e.once()
         });
 
         tab.getActiveStatus().should.equal(true);
@@ -95,8 +95,8 @@ describe("TabBarSet", function() {
         let allMethods = Object.assign({
             createWebview: null,
             createTabElement: null,
-            hideWebview: null,
-            showWebview: null
+            hideTab: null,
+            showTab: null
         }, methods);
 
         let [dom, mock] = Mock<IDOM>(allMethods);
@@ -126,9 +126,9 @@ describe("TabBarSet", function() {
         tabs.size().should.equal(1);
         tabs.getActiveTab().should.equal(tab2);
         tabs.getUsers()[0].should.equal("test");
-        tabs.activeBar().getTab(tab1.getId()).should.equal(tab1);
-        tabs.activeBar().getTab(tab2.getId()).should.equal(tab2);
-        tabs.activeBar().getTab(tab2.getId()).should.not.equal(tab1);
+        tabs.getActiveTabBar().getTab(tab1.getId()).should.equal(tab1);
+        tabs.getActiveTabBar().getTab(tab2.getId()).should.equal(tab2);
+        tabs.getActiveTabBar().getTab(tab2.getId()).should.not.equal(tab1);
         tabs.getTab(tab1.getId()).should.equal(tab1);
         tabs.getTab(tab2.getId()).should.equal(tab2);
         tabs.getTab(tab1.getId()).should.not.equal(tab2);
@@ -153,9 +153,9 @@ describe("TabBarSet", function() {
 
         tabs.removeTab(tab1.getId());
 
-        tabs.activeBar().getTab(tab2.getId()).getActiveStatus().should.equal(true);
+        tabs.getActiveTabBar().getTab(tab2.getId()).getActiveStatus().should.equal(true);
         tabs.getActiveTab().should.equal(tab2);
-        should.not.exist(tabs.activeBar().getTab(tab1.getId()));
+        should.not.exist(tabs.getActiveTabBar().getTab(tab1.getId()));
         should.not.exist(tabs.getTab(tab1.getId()));
 
         tabs.removeTab(tab2.getId());

@@ -1,5 +1,4 @@
-/// <reference path="Definitions/github-electron.d.ts" />
-/// <reference path="Definitions/node.d.ts" />
+/// <reference path="../typings/index.d.ts" />
 
 const electron: Electron.ElectronMainAndRenderer = require("electron");
 // Module to control application life.
@@ -44,6 +43,11 @@ function createWindow(): void {
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
         mainWindow = null;
+        BrowserWindow.getAllWindows().forEach((value: Electron.BrowserWindow): void => {
+            if (value.isClosable()) {
+                value.close();
+            }
+        });
     });
 
     mainWindow.on("enter-full-screen", function () {
@@ -61,13 +65,15 @@ function createWindow(): void {
         }
         // potentially add some ipc here to request if it is OK to close without dialog (one tab, etc.)
         if (numTabs > 1) {
+            const appName = app.getName();
             const options: Object = {
                 type: "question",
-                title: "Close all tabs",
-                message: "Are you sure you want to close all your tabs?",
-                buttons: ["Yes", "No"]
+                title: `Close ${appName}`,
+                message: `Closing ${appName} will also close all of your open tabs.`,
+                detail: `If you choose Close ${appName}, ${appName} along with all of your tabs will be closed.`,
+                buttons: [`Close ${appName}`, "Cancel"]
             };
-            let response: Number = dialog.showMessageBox(options);
+            let response: Number = dialog.showMessageBox(mainWindow, options);
 
             if (response === 1) {
                 event.preventDefault();
