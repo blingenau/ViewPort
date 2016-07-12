@@ -34,6 +34,12 @@ class BrowserDOM implements IDOM {
         webview.src = url;
         webview.setAttribute("tabID", id);
         document.getElementById("webviews").appendChild(webview);
+
+        // Add comment
+        if(url === "file://" + __dirname + "/settings.html") {
+            webview.preload = "file://" + __dirname + "/settings.js";
+            webview.nodeintegration = "on";
+        }
     }
 
     /**
@@ -188,6 +194,22 @@ class BrowserDOM implements IDOM {
         $(`#${id}`).find(".tab-title")
             .attr("title", title)
             .html(title);
+    }
+
+    /**
+     * Adds a tab
+     * 
+     * @param url   The url of the new tab
+     */
+    public addTab(url: string): void {
+        let tab: Tab = new Tab(browserDom, {
+            url: url
+        });
+        tabs.addTab(tab);
+        tabs.getActiveTabBar().hideTabs();
+        tabs.getUserTabBar().activateTab(tab);
+        browserDom.doLayout();
+        ipc.send("update-num-tabs", tabs.getActiveTabBar().size());
     }
 
     /**
@@ -386,6 +408,56 @@ window.onload = () => {
         tabs.getUserTabBar().activateTab(tab);
         browserDom.doLayout();
         ipc.send("update-num-tabs", tabs.getActiveTabBar().size());
+    });
+
+    $("#settings").on("click", (): void => {
+
+        browserDom.addTab("file://" + __dirname + "/settings.html");
+        let jsonfile = require("jsonfile");
+        let file = "json/settings.json";
+        let currentUser: string = tabs.getActiveUser();
+        let currentUserHomepage: string = "";
+
+        // Read in users from json file
+        let users: any[] = [];
+        jsonfile.readFile(file, function(err: any, obj: any[]) {
+            if ( err ) {
+                console.log("error");
+            }
+            users = JSON.parse(obj);
+            // Look for specific user
+            for( let index = 0; index < users.length; ++ index) {
+                if (users[index].username === currentUser) {
+                    currentUserHomepage = users[index].homepage;
+                    remote.ipcMain.on("get-user", (event, arg) => {
+                    event.returnValue = users[index];
+                });
+
+                }
+            }
+            // If user homepage cannot be found
+            if (currentUserHomepage === "") {
+                // Default
+                currentUserHomepage = "prodmirror.athenahealth.com";
+                users.push({"username" : currentUser, "homepage" : currentUserHomepage});
+                remote.ipcMain.on("get-user", (event, arg) => {
+                    event.returnValue = {"username" : currentUser, "homepage" : currentUserHomepage};
+                });
+            }
+        });
+
+        remote.ipcMain.on("update-homepage", function(event, newHomepage){
+            for( let index = 0; index < users.length; ++ index) {
+                if (users[index].username === currentUser) {
+                    users[index].homepage = newHomepage;
+                    let json = JSON.stringify(users);
+                    jsonfile.writeFile(file, json, {spaces: 2}, function(err: any) {
+                    console.error(err);
+                    });
+                }
+            }
+        });
+
     });
 
     ipc.on("openPDF", function (event, filedata) {
