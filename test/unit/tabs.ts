@@ -144,7 +144,7 @@ describe("TabBarSet", function() {
             allTabsClosed: e => e.once()
         });
 
-        tabs.addUser("test");
+        // tabs.addUser("test");
         tabs.addTab(tab1,"test");
         tabs.activateUser("test");
         tabs.addTab(tab2,"test");
@@ -185,7 +185,7 @@ describe("TabBarSet", function() {
         tabs.size().should.equal(1);
         tabs.getUsers()[0].should.equal("test2");
         tabs.getUserTabBar("test2").getAllTabs()[0].should.equal(tab2);
-
+        tabs.getActiveUser().should.equal("test2");
         mock.verify();
     });
 
@@ -202,4 +202,18 @@ describe("TabBarSet", function() {
 
         mock.verify();
     });
+
+    it("can lock user", function() {
+        let [mock, tabs, tab1, tab2] = setupMocks({});
+
+        tabs.addUser("test");
+        tabs.addTab(tab1, "test");
+        tabs.activateUser("test");
+        tabs.addTab(tab2, "test");
+
+        tabs.getActiveTabBar().setLockedStatus(true);
+        tabs.getActiveTabBar().getLockedStatus().should.equal(true);
+        mock.verify();
+    });
+
 });

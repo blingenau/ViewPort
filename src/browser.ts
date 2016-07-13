@@ -73,8 +73,8 @@ class BrowserDOM implements IDOM {
      */
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
         let self: BrowserDOM = this;
-        $("#add-tab")
-            .before($("<div>")
+        $("#tabs")
+            .append($("<div>")
                 .addClass("ui-state-default tab")
                 .attr("id", id)
                 .append($("<div>")
@@ -218,6 +218,19 @@ class BrowserDOM implements IDOM {
     }
 
     /**
+     * Sets the address bar form value.
+     * 
+     * @param url   The new url being set as the address bar's value.
+     */
+    public setAddress(url: string): void {
+        if (url.includes("file://")) {
+            url = url.split("/").slice(-1)[0];
+        }
+
+        $("#location").val(url);
+    }
+
+    /**
      * Adds a tab
      * 
      * @param url   The url of the new tab
@@ -259,7 +272,7 @@ class BrowserDOM implements IDOM {
         let windowHeight: number = document.documentElement.clientHeight;
         let webviewWidth: number = windowWidth;
         let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
-        let tabWidth: string =  (95/tabs.length).toString() + "%";
+        let tabWidth: string =  (100/tabs.length).toString() + "%";
         let webview = this.getWebview();
         $(webview).css({
             width: webviewWidth + "px",
@@ -314,7 +327,7 @@ class BrowserDOM implements IDOM {
         } else {
             location.addClass("location-loaded");
         }
-        location.val(active.getURL());
+        this.setAddress(active.getURL());
     }
 
     /**
@@ -540,16 +553,11 @@ window.onload = () => {
             scroll: false,
             forcePlaceholderSize: true,
             items: ".ui-state-default",
-            tolerance: "pointer"
+            tolerance: "pointer",
+            containment: "parent"
         })
         .on("sortactivate", function(event: Event, ui: any) {
             ui.placeholder.css("width", ui.item.css("width"));
-            $("#add-tab").hide();
-        })
-        .on("sortstop", function() {
-            if (!tabs.getActiveTabBar().getLockedStatus()) {
-                $("#add-tab").show();
-            }
         });
     });
 
@@ -580,7 +588,7 @@ function handleLoadStop(event: Event): void {
     tab.setUrl(webview.getAttribute("src"));
     tab.setTitle(webview.getTitle());
     if (tabs.getActiveTab().getId() === tab.getId()) {
-        $("#location").val(tab.getUrl());
+        browserDom.setAddress(tab.getUrl());
     }
     browserDom.tabSwitch();
 }
@@ -593,8 +601,6 @@ function handleLoadStop(event: Event): void {
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
     if (tabs.getTab(webview.getAttribute("tabID")).getActiveStatus()) {
-        // let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
-        // address.value = event.url;
         (<HTMLButtonElement>$("#back").get(0)).disabled = !webview.canGoBack();
         (<HTMLButtonElement>$("#forward").get(0)).disabled = !webview.canGoForward();
     }
@@ -607,7 +613,7 @@ function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void 
  */
 function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequestEvent): void {
     if (tabs.getActiveTab().getId() === (<Electron.WebViewElement>event.target).getAttribute("tabID")) {
-        (<HTMLInputElement>document.getElementById("location")).value = event.newURL;
+        browserDom.setAddress(event.newURL);
     }
 }
 

@@ -349,7 +349,7 @@ export class UserTabBar {
         if (bar === null) {
             bar = new TabBar(this.dom);
             bar.addTab(tab);
-            this.bars[this.activeUser] = bar;
+            this.bars[user || this.activeUser] = bar;
         } else {
             bar.addTab(tab);
         }
