@@ -382,8 +382,8 @@ class BrowserDOM implements IDOM {
     }
 }
 
-const browserDom: BrowserDOM = new BrowserDOM();
-const tabs: UserTabBar = new UserTabBar(browserDom);
+export const browserDom: BrowserDOM = new BrowserDOM();
+export const tabs: UserTabBar = new UserTabBar(browserDom);
 let homepage = "https://athenanet.athenahealth.com";
 let backgroundWindow: Electron.BrowserWindow = null;
 
