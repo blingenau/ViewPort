@@ -12,11 +12,10 @@ input {
 #tabs {
   margin: 0;
   padding: 0 0 0 0;
-  height: 25px;
+  height: 28px;
   width: 100%;
   float: left;
-  background : #BFBDBF;
-	background : rgba(191, 189, 191, 1);
+  background : #cccccc;
 }
 
 /*button.tab {
@@ -34,11 +33,12 @@ input {
 #controls {
   padding: 0px;
   padding-left: 75px;
-  background-color: #eee;
+  background-color: #e4e3e5;
   -webkit-app-region: drag;
   display: -webkit-flex;
   -webit-flex-direction: column;
   height: 41px;
+  background-image: url("../svg/controls.svg");
 }
 
 #controls.fullscreen {
