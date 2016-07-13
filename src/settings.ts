@@ -1,7 +1,5 @@
 /// <reference path="../typings/index.d.ts" />
 
-// const ipcRenderer = require("electron").ipcRenderer;
-
 let currentUserHomepage: string = "broke.com";
 let currentUser: string = "broke-guy";
 

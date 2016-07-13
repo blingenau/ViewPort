@@ -419,8 +419,8 @@ window.onload = () => {
         let currentUserHomepage: string = "";
 
         // Read in users from json file
-        let users: any[] = [];
-        jsonfile.readFile(file, function(err: any, obj: any[]) {
+        let users: any = [];
+        jsonfile.readFile(file, function(err: any, obj: string) {
             if ( err ) {
                 console.log("error");
             }
