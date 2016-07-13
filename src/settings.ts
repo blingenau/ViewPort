@@ -1,9 +1,6 @@
-/// <reference path="Definitions/github-electron.d.ts" />
-/// <reference path="Definitions/node.d.ts" />
-/// <reference path="Definitions/jquery/index.d.ts" />
-/// <reference path="Definitions/jqueryui/jqueryui.d.ts" />
+/// <reference path="../typings/index.d.ts" />
 
-const ipcRenderer = require("electron").ipcRenderer;
+// const ipcRenderer = require("electron").ipcRenderer;
 
 let currentUserHomepage: string = "broke.com";
 let currentUser: string = "broke-guy";
