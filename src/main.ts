@@ -8,6 +8,8 @@ const BrowserWindow: typeof Electron.BrowserWindow = electron.BrowserWindow;
 // Electron's dialog API
 const {dialog} = require("electron");
 
+import {PreferenceFileManager} from "./preference-file";
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
 let mainWindow: Electron.BrowserWindow = null;
@@ -17,6 +19,10 @@ const ipcMain: Electron.IpcMain = electron.ipcMain;
 
 // A global variable to keep track of the number of tabs
 let numTabs: number = 1;
+
+// The preference file manager
+const preferenceFileManager = new PreferenceFileManager();
+preferenceFileManager.start();
 
 /**
  * Function to create a browser window
