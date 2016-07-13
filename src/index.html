@@ -5,23 +5,22 @@
         <title>ViewPort</title>
         <link rel="stylesheet" href="css/index.css">
         <link rel="stylesheet" href="css/tabs.css">
-
-    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"> 
-       <script src="browser.js"></script>
-       <script> window.$ = window.jQuery = require("jquery"); </script>
+        <link rel="stylesheet" href="node_modules/jquery-ui/themes/smoothness/jquery-ui.css"> 
+        <script>
+            window.$ = window.jQuery = require("jquery");
+            require("./browser.js");
+        </script>
     </head>
     <body>
         <div id="controls">
             <button id="back" class="navigation" title="Go Back" disabled="true"></button>
             <button id="forward" class="navigation" title="Go Forward" disabled="true"></button>
-            <!--<div class="draggable"></div>-->
             <form id="location-form">
                 <div id="center-column">
                     <input id="location" type="text" name="url" value="https://athenanet.athenahealth.com" placeholder="Enter a URL">
                     <button id="reload" class="reload" title="Reload"></button>
                 </div>
             </form>
-            <!--<div class="draggable"></div>--> 
         </div>
         <div id="dock">
             <button id="users" class="dock" title="View Users"></button>
@@ -33,7 +32,4 @@
         <div id="webviews">
         </div>
     </body>
-
-    <script>
-    </script>
 </html>
