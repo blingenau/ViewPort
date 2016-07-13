@@ -45,7 +45,8 @@ class BrowserDOM implements IDOM {
         webview.setAttribute("tabID", id);
         document.getElementById("webviews").appendChild(webview);
 
-        // Add comment
+        // If going to the settings page must use preload to set up IPC 
+        // in order to interact with the webview
         if(url === "file://" + __dirname + "/settings.html") {
             webview.preload = "file://" + __dirname + "/settings.js";
             webview.nodeintegration = "on";
@@ -217,6 +218,19 @@ class BrowserDOM implements IDOM {
     }
 
     /**
+     * Sets the address bar form value.
+     * 
+     * @param url   The new url being set as the address bar's value.
+     */
+    public setAddress(url: string): void {
+        if (url.includes("file://")) {
+            url = url.split("/").slice(-1)[0];
+        }
+
+        $("#location").val(url);
+    }
+
+    /**
      * Adds a tab
      * 
      * @param url   The url of the new tab
@@ -313,7 +327,7 @@ class BrowserDOM implements IDOM {
         } else {
             location.addClass("location-loaded");
         }
-        location.val(active.getURL());
+        this.setAddress(active.getURL());
     }
 
     /**
@@ -382,8 +396,8 @@ class BrowserDOM implements IDOM {
     }
 }
 
-const browserDom: BrowserDOM = new BrowserDOM();
-const tabs: UserTabBar = new UserTabBar(browserDom);
+export const browserDom: BrowserDOM = new BrowserDOM();
+export const tabs: UserTabBar = new UserTabBar(browserDom);
 let homepage = "https://athenanet.athenahealth.com";
 let backgroundWindow: Electron.BrowserWindow = null;
 
@@ -574,7 +588,7 @@ function handleLoadStop(event: Event): void {
     tab.setUrl(webview.getAttribute("src"));
     tab.setTitle(webview.getTitle());
     if (tabs.getActiveTab().getId() === tab.getId()) {
-        $("#location").val(tab.getUrl());
+        browserDom.setAddress(tab.getUrl());
     }
     browserDom.tabSwitch();
 }
@@ -587,8 +601,6 @@ function handleLoadStop(event: Event): void {
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
     if (tabs.getTab(webview.getAttribute("tabID")).getActiveStatus()) {
-        // let address: HTMLInputElement = <HTMLInputElement>document.querySelector("#location");
-        // address.value = event.url;
         (<HTMLButtonElement>$("#back").get(0)).disabled = !webview.canGoBack();
         (<HTMLButtonElement>$("#forward").get(0)).disabled = !webview.canGoForward();
     }
@@ -601,7 +613,7 @@ function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void 
  */
 function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequestEvent): void {
     if (tabs.getActiveTab().getId() === (<Electron.WebViewElement>event.target).getAttribute("tabID")) {
-        (<HTMLInputElement>document.getElementById("location")).value = event.newURL;
+        browserDom.setAddress(event.newURL);
     }
 }
 

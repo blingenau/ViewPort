@@ -32,7 +32,8 @@ function createWindow(): void {
     });
 
     // Load the index.html of the app
-    mainWindow.loadURL(`file://${__dirname}/index.html`);
+    let startPage = process.env.athenahealth_viewport_startpage || "index.html";
+    mainWindow.loadURL(`file://${__dirname}/${startPage}`);
 
     // Open the DevTOols.
     // mainWindow.webContents.openDevTools();
