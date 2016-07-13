@@ -60,7 +60,8 @@ input {
   font-size: 14px;
   line-height: 24px;
   border-radius: 10px;
-  padding: 0 6px;
+  padding-left: 6px;
+  padding-right: 30px;
 }
 #back:enabled {background-image: url("../svg/back.svg");}
 #back:disabled {background-image: url("../svg/back_disabled.svg");}
