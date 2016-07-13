@@ -16,6 +16,6 @@
   <title>tab_active</title>
   <g>
     <rect class="cls-1" x="0.08" y="0.08" width="138.71" height="16.15"/>
-    <path class="cls-2" d="M171.91,197.95h-128a1,1,0,0,0,0,2h128A1,1,0,1,0,171.91,197.95Z" transform="translate(-37.32 -185.19)"/>
+    <path class="cls-2" d="M171.9,197.95H42.76a1,1,0,1,0,0,2H171.9A1,1,0,1,0,171.9,197.95Z" transform="translate(-37.32 -185.19)"/>
   </g>
 </svg>

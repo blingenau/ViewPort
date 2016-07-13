@@ -72,8 +72,8 @@ class BrowserDOM implements IDOM {
      */
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
         let self: BrowserDOM = this;
-        $("#add-tab")
-            .before($("<div>")
+        $("#tabs")
+            .append($("<div>")
                 .addClass("ui-state-default tab")
                 .attr("id", id)
                 .append($("<div>")
@@ -258,7 +258,7 @@ class BrowserDOM implements IDOM {
         let windowHeight: number = document.documentElement.clientHeight;
         let webviewWidth: number = windowWidth;
         let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
-        let tabWidth: string =  (95/tabs.length).toString() + "%";
+        let tabWidth: string =  (100/tabs.length).toString() + "%";
         let webview = this.getWebview();
         $(webview).css({
             width: webviewWidth + "px",
@@ -539,16 +539,11 @@ window.onload = () => {
             scroll: false,
             forcePlaceholderSize: true,
             items: ".ui-state-default",
-            tolerance: "pointer"
+            tolerance: "pointer",
+            containment: "parent"
         })
         .on("sortactivate", function(event: Event, ui: any) {
             ui.placeholder.css("width", ui.item.css("width"));
-            $("#add-tab").hide();
-        })
-        .on("sortstop", function() {
-            if (!tabs.getActiveTabBar().getLockedStatus()) {
-                $("#add-tab").show();
-            }
         });
     });
 

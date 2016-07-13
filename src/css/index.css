@@ -8,15 +8,31 @@ button,
 input {
   outline: none;
 }
+#tab-bar {
+  position: relative;
+  height: 28px;
+  width: 100%;
+}
 
 #tabs {
   margin: 0;
   padding: 0 0 0 0;
-  height: 28px;
-  width: 100%;
+  width: calc(100% - 28px);
+  height: 100%;
   float: left;
   background : #cccccc;
+  display: table-cell;
 }
+
+#add-tab {
+  height: 100%;
+  width: 28px;
+  float: right;
+  background-image: url("../svg/add_tab.svg");
+  border: 0;
+}
+#add-tab:hover {background-image: url("../svg/add_tab.svg");}
+#add-tab:hover:active {background-image: url("../svg/add_tab.svg");}
 
 /*button.tab {
   height: 20px;
