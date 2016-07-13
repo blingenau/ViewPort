@@ -35,7 +35,8 @@ class BrowserDOM implements IDOM {
         webview.setAttribute("tabID", id);
         document.getElementById("webviews").appendChild(webview);
 
-        // Add comment
+        // If going to the settings page must use preload to set up IPC 
+        // in order to interact with the webview
         if(url === "file://" + __dirname + "/settings.html") {
             webview.preload = "file://" + __dirname + "/settings.js";
             webview.nodeintegration = "on";
