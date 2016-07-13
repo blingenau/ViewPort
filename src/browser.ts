@@ -1,11 +1,21 @@
 /// <reference path="../typings/index.d.ts" />
 
 import {Tab, UserTabBar, IDOM} from "./tabs";
-import * as rp from "request-promise";
+import * as requestPromise from "request-promise";
 const $: JQueryStatic = require("jquery");
 const ipc = require("electron").ipcRenderer;
 const {remote} = require("electron");
 require("jquery-ui");
+require("jquery-ui/ui/data");
+require("jquery-ui/ui/scroll-parent");
+require("jquery-ui/ui/version");
+require("jquery-ui/ui/widgets/mouse");
+require("jquery-ui/ui/widgets/sortable");
+
+const blankFaviconUri: string =
+    "data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAA" +
+    "ABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBS" +
+    "MglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII=";
 
 /**
  * class DOM 
@@ -62,8 +72,6 @@ class BrowserDOM implements IDOM {
      */
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
         let self: BrowserDOM = this;
-        // url = checkUrlDoesntExist("https://www.google.com/s2/favicons?domain=" + url) ?
-        //     "a" : url;
         $("#add-tab")
             .before($("<div>")
                 .addClass("ui-state-default tab")
@@ -75,7 +83,7 @@ class BrowserDOM implements IDOM {
                 .append($("<div>")
                     .addClass("tab-favicon")
                     .append($("<img>")
-                        .attr("src", "https://www.google.com/s2/favicons?domain=" + url)))
+                        .attr("src", blankFaviconUri)))
                 .append($("<div>")
                     .addClass("tab-close")
                     .click((event: JQueryMouseEventObject) => {
@@ -219,12 +227,10 @@ class BrowserDOM implements IDOM {
      * @param url   The domain where the favicon is found.
      */
     public setTabFavicon(id: string, url: string): void {
-        // url = checkUrlDoesntExist("https://www.google.com/s2/favicons?domain=" + url) ?
-        //     "a" : url;
-        let favicon: string = getFaviconImage(url);
-
-        $(`#${id}`).find(".tab-favicon").find("img")
+        getFaviconImage(url).then(favicon => {
+            $(`#${id}`).find(".tab-favicon").find("img")
             .attr("src", favicon);
+        });
     }
 
     /**
@@ -303,6 +309,11 @@ class BrowserDOM implements IDOM {
         location.val(active.getURL());
     }
 
+    /**
+     * Returns all Tabs that match the athena regex.
+     * 
+     * @returns An array of athena Tabs.
+     */
     public getAthenaTabs(): Tab[] {
         let self: BrowserDOM = this;
         return tabs.getActiveTabBar().getAllTabs()
@@ -642,25 +653,25 @@ function createBackgroundWindow(): void {
 /**
  * Gets the favicon from Google's API.
  * @param domain   The domain the favicon belongs to.
- * @returns The base64 encoding of the image.
+ * @returns A promise of the base64 string of the favicon.
  */
-function getFaviconImage(domain: string): string {
-    let encodedImage: string;
-    const options: rp.OptionsWithUri = {
+function getFaviconImage(domain: string): Promise<string> {
+    const options: requestPromise.OptionsWithUri = {
         method: "GET",
-        uri: "http://www.google.com/s2/favicons?domain=" + domain,
-        resolveWithFullResponse: true
+        uri: "http://www.google.com/s2/favicons?domain=" + encodeURIComponent(domain),
+        resolveWithFullResponse: true,
+        encoding: null
     };
 
-    rp(options)
+    return requestPromise(options)
         .then((response: any) => {
-            let imageBase64: string = new Buffer(response.body).toString("base64");
+            let imageBase64: string = response.body.toString("base64");
             let type: string = response.headers["content-type"];
-            let prefix: string = "data:" + type + ";base64";
-            encodedImage = prefix + imageBase64;
+            let prefix: string = "data:" + type + ";base64,";
+            let encodedImage: string = prefix + imageBase64;
+            return encodedImage;
         })
         .catch((error: any) => {
-            encodedImage = "#";
+            return blankFaviconUri;
         });
-    return encodedImage;
 }
