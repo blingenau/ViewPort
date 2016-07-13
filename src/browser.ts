@@ -553,7 +553,7 @@ function handleLoadStart(event: Event): void {
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
     if (tabs.getActiveTab().getId() === webview.getAttribute("tabID")) {
         document.body.classList.add("loading");
-        document.getElementById("reload").innerHTML = "&#10005;";
+        $("#reload").html("&#10005;");
         $("#location").removeClass("location-loaded");
     }
 }
@@ -620,35 +620,6 @@ function createBackgroundWindow(): void {
     backgroundWindow = new remote.BrowserWindow({show: false});
     backgroundWindow.loadURL(`file://${__dirname}/athenanet-timeout/timeout.html`);
 }
-
-/**
- * Checks if the given url exists (returns an error or not)
- * 
- * @param url   The url to check.
- * @returns Whether the url returns a 400 error code.
- */
-// function checkUrlDoesntExist(url: string): boolean {
-//     let requestResponse: number = 0;
-
-//     if (url.includes("file://")) {
-//         return true;
-//     }
-
-//     rp({
-//         method: "GET",
-//         uri: url,
-//         resolveWithFullResponse: true
-//     })
-//         .catch(function(error: any) {
-//             requestResponse = error.statusCode;
-//             while (requestResponse === 0) {
-//                 ;
-//             }
-//         });
-//     console.log(requestResponse);
-
-//     return requestResponse === 400;
-// }
 
 /**
  * Gets the favicon from Google's API.
