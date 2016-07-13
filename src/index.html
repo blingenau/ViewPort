@@ -5,24 +5,26 @@
         <title>ViewPort</title>
         <link rel="stylesheet" href="css/index.css">
         <link rel="stylesheet" href="css/tabs.css">
-        <link rel="stylesheet" href="node_modules/jquery-ui/themes/smoothness/jquery-ui.css"> 
+        <link rel="stylesheet" href="node_modules/jquery-ui/themes/base/base.css"> 
         <script>
             window.$ = window.jQuery = require("jquery");
-            require("./browser.js");
+            const browser = require("./browser.js");
         </script>
     </head>
     <body>
-        <div class="BrowserBar" id="controls">
-            <button id="back" title="Go Back" disabled="true">&#9664;</button>
-            <button id="forward" title="Go Forward" disabled="true">&#9654;</button>
-            <button id="home" title="Go Home">&#8962;</button>
-            <button id="reload" title="Reload">&#10227;</button>
+        <div id="controls">
+            <button id="back" class="navigation" title="Go Back" disabled="true"></button>
+            <button id="forward" class="navigation" title="Go Forward" disabled="true"></button>
             <form id="location-form">
                 <div id="center-column">
                     <input id="location" type="text" name="url" value="https://athenanet.athenahealth.com" placeholder="Enter a URL">
+                    <button id="reload" class="reload" title="Reload"></button>
                 </div>
             </form>
-            <button id= "settings" title= "Settings" ></button>
+        </div>
+        <div id="dock">
+            <button id="users" class="dock" title="View Users"></button>
+            <button id="settings" class="dock" title="View Settings"></button>
         </div>
         <div id="tabs" class="tabs">
             <button class="non-sortable" id="add-tab" title="New Tab">&#43;</button>

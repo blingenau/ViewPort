@@ -1,11 +1,21 @@
 /// <reference path="../typings/index.d.ts" />
 
 import {Tab, UserTabBar, IDOM} from "./tabs";
-import * as rp from "request-promise";
+import * as requestPromise from "request-promise";
 const $: JQueryStatic = require("jquery");
 const ipc = require("electron").ipcRenderer;
 const {remote} = require("electron");
 require("jquery-ui");
+require("jquery-ui/ui/data");
+require("jquery-ui/ui/scroll-parent");
+require("jquery-ui/ui/version");
+require("jquery-ui/ui/widgets/mouse");
+require("jquery-ui/ui/widgets/sortable");
+
+const blankFaviconUri: string =
+    "data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAA" +
+    "ABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBS" +
+    "MglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII=";
 
 /**
  * class DOM 
@@ -63,8 +73,6 @@ class BrowserDOM implements IDOM {
      */
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
         let self: BrowserDOM = this;
-        // url = checkUrlDoesntExist("https://www.google.com/s2/favicons?domain=" + url) ?
-        //     "a" : url;
         $("#add-tab")
             .before($("<div>")
                 .addClass("ui-state-default tab")
@@ -76,7 +84,7 @@ class BrowserDOM implements IDOM {
                 .append($("<div>")
                     .addClass("tab-favicon")
                     .append($("<img>")
-                        .attr("src", "https://www.google.com/s2/favicons?domain=" + url)))
+                        .attr("src", blankFaviconUri)))
                 .append($("<div>")
                     .addClass("tab-close")
                     .click((event: JQueryMouseEventObject) => {
@@ -151,7 +159,10 @@ class BrowserDOM implements IDOM {
      */
     public hideTab(id: string): void {
         id = id || tabs.getActiveTab().getId();
-        $(`[tabID='${id}']`).hide();
+        $(`[tabID='${id}']`).css({
+            width:"0px",
+            height:"0px"
+        });
         $(`#${id}`).removeClass("tab-current");
     }
 
@@ -168,7 +179,16 @@ class BrowserDOM implements IDOM {
      */
     public showTab(id: string): void {
         id = id || tabs.getActiveTab().getId();
-        $(`[tabID='${id}']`).show();
+        let controlsHeight: number = $("#controls").outerHeight();
+        let tabBarHeight: number = $("#tabs").outerHeight();
+        let windowWidth: number = document.documentElement.clientWidth;
+        let windowHeight: number = document.documentElement.clientHeight;
+        let webviewWidth: number = windowWidth;
+        let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
+        $(`[tabID='${id}']`).css({
+            width: webviewWidth + "px",
+            height: webviewHeight + "px"
+        });
         $(`#${id}`).addClass("tab-current");
     }
 
@@ -220,12 +240,10 @@ class BrowserDOM implements IDOM {
      * @param url   The domain where the favicon is found.
      */
     public setTabFavicon(id: string, url: string): void {
-        // url = checkUrlDoesntExist("https://www.google.com/s2/favicons?domain=" + url) ?
-        //     "a" : url;
-        let favicon: string = getFaviconImage(url);
-
-        $(`#${id}`).find(".tab-favicon").find("img")
+        getFaviconImage(url).then(favicon => {
+            $(`#${id}`).find(".tab-favicon").find("img")
             .attr("src", favicon);
+        });
     }
 
     /**
@@ -242,8 +260,8 @@ class BrowserDOM implements IDOM {
         let webviewWidth: number = windowWidth;
         let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
         let tabWidth: string =  (95/tabs.length).toString() + "%";
-
-        $("webview").css({
+        let webview = this.getWebview();
+        $(webview).css({
             width: webviewWidth + "px",
             height: webviewHeight + "px"
         });
@@ -286,24 +304,24 @@ class BrowserDOM implements IDOM {
         let back: JQuery = $("#back");
         let forward: JQuery = $("#forward");
         let location: JQuery = $("#location");
-        let reload: JQuery = $("#reload");
 
         // Re-evaluate the back/forward navigation buttons based on new active Tab
         (<HTMLButtonElement>back.get(0)).disabled = !active.canGoBack();
         (<HTMLButtonElement>forward.get(0)).disabled = !active.canGoForward();
 
         if (active.isLoading()) {
-            // change icon to X 
-            reload.html("&#10005;");
             location.removeClass("location-loaded");
         } else {
-            // change icon to 
-            reload.html("&#10227;");
             location.addClass("location-loaded");
         }
         location.val(active.getURL());
     }
 
+    /**
+     * Returns all Tabs that match the athena regex.
+     * 
+     * @returns An array of athena Tabs.
+     */
     public getAthenaTabs(): Tab[] {
         let self: BrowserDOM = this;
         return tabs.getActiveTabBar().getAllTabs()
@@ -329,11 +347,15 @@ class BrowserDOM implements IDOM {
     public lockActiveUser(): void {
         tabs.getActiveTabBar().setLockedStatus(true);
         $("#add-tab").hide();
+        $(".tab-close").hide();
+        $("#location").prop("disabled",true);
     }
 
     public unlockActiveUser(): void {
         tabs.getActiveTabBar().setLockedStatus(false);
         $("#add-tab").show();
+        $(".tab-close").show();
+        $("#location").prop("disabled",false);
     }
 
     private isAthenaUrl(url: string): boolean {
@@ -361,12 +383,12 @@ class BrowserDOM implements IDOM {
     }
 }
 
-const browserDom: BrowserDOM = new BrowserDOM();
-const tabs: UserTabBar = new UserTabBar(browserDom);
+export const browserDom: BrowserDOM = new BrowserDOM();
+export const tabs: UserTabBar = new UserTabBar(browserDom);
 let homepage = "https://athenanet.athenahealth.com";
 let backgroundWindow: Electron.BrowserWindow = null;
 
-window.onresize = browserDom.doLayout;
+window.onresize = () => browserDom.doLayout();
 window.onload = () => {
     tabs.addUser("test");
     tabs.addTab(new Tab(browserDom, {
@@ -543,7 +565,6 @@ function handleLoadStart(event: Event): void {
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
     if (tabs.getActiveTab().getId() === webview.getAttribute("tabID")) {
         document.body.classList.add("loading");
-        document.getElementById("reload").innerHTML = "&#10005;";
         $("#location").removeClass("location-loaded");
     }
 }
@@ -561,7 +582,6 @@ function handleLoadStop(event: Event): void {
     if (tabs.getActiveTab().getId() === tab.getId()) {
         $("#location").val(tab.getUrl());
     }
-    $("#reload").html("&#10227;");
     browserDom.tabSwitch();
 }
 
@@ -612,56 +632,27 @@ function createBackgroundWindow(): void {
 }
 
 /**
- * Checks if the given url exists (returns an error or not)
- * 
- * @param url   The url to check.
- * @returns Whether the url returns a 400 error code.
- */
-// function checkUrlDoesntExist(url: string): boolean {
-//     let requestResponse: number = 0;
-
-//     if (url.includes("file://")) {
-//         return true;
-//     }
-
-//     rp({
-//         method: "GET",
-//         uri: url,
-//         resolveWithFullResponse: true
-//     })
-//         .catch(function(error: any) {
-//             requestResponse = error.statusCode;
-//             while (requestResponse === 0) {
-//                 ;
-//             }
-//         });
-//     console.log(requestResponse);
-
-//     return requestResponse === 400;
-// }
-
-/**
  * Gets the favicon from Google's API.
  * @param domain   The domain the favicon belongs to.
- * @returns The base64 encoding of the image.
+ * @returns A promise of the base64 string of the favicon.
  */
-function getFaviconImage(domain: string): string {
-    let encodedImage: string;
-    const options: rp.OptionsWithUri = {
+function getFaviconImage(domain: string): Promise<string> {
+    const options: requestPromise.OptionsWithUri = {
         method: "GET",
-        uri: "http://www.google.com/s2/favicons?domain=" + domain,
-        resolveWithFullResponse: true
+        uri: "http://www.google.com/s2/favicons?domain=" + encodeURIComponent(domain),
+        resolveWithFullResponse: true,
+        encoding: null
     };
 
-    rp(options)
+    return requestPromise(options)
         .then((response: any) => {
-            let imageBase64: string = new Buffer(response.body).toString("base64");
+            let imageBase64: string = response.body.toString("base64");
             let type: string = response.headers["content-type"];
-            let prefix: string = "data:" + type + ";base64";
-            encodedImage = prefix + imageBase64;
+            let prefix: string = "data:" + type + ";base64,";
+            let encodedImage: string = prefix + imageBase64;
+            return encodedImage;
         })
         .catch((error: any) => {
-            encodedImage = "#";
+            return blankFaviconUri;
         });
-    return encodedImage;
 }

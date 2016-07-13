@@ -1,0 +1,21 @@
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: none;
+      }
+
+      .cls-1 {
+        stroke: #464656;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+  </defs>
+  <title>back_button</title>
+  <g>
+    <line class="cls-1" x1="13.27" y1="16.54" x2="8.73" y2="12"/>
+    <line class="cls-1" x1="13.27" y1="7.46" x2="8.73" y2="12"/>
+  </g>
+  <rect class="cls-2" width="24" height="24"/>
+</svg>

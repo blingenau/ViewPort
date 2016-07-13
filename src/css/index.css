@@ -12,14 +12,13 @@ input {
 #tabs {
   margin: 0;
   padding: 0 0 0 0;
-  height: 25px;
+  height: 28px;
   width: 100%;
   float: left;
-  background : #BFBDBF;
-	background : rgba(191, 189, 191, 1);
+  background : #cccccc;
 }
 
-button.tab {
+/*button.tab {
   height: 20px;
   margin-top: 5px;
   margin-right: 4px;
@@ -29,13 +28,17 @@ button.tab {
   background: -webkit-linear-gradient(bottom, #cccccc 0%, #f2f2f2 99%);
   overflow: hidden;
   text-overflow: ellipsis;
-}
+}*/
 
 #controls {
-  padding: 3px;
+  padding: 0px;
   padding-left: 75px;
-  background-color: #eee;
+  background-color: #e4e3e5;
   -webkit-app-region: drag;
+  display: -webkit-flex;
+  -webit-flex-direction: column;
+  height: 41px;
+  background-image: url("../svg/controls.svg");
 }
 
 #controls.fullscreen {
@@ -45,29 +48,88 @@ button.tab {
 #controls * {
   -webkit-app-region: no-drag;
 }
+#controls .navigation {
+  width: 24px;
+  height: 24px;
+  padding: 0px;
+  transform: translateY(7px);
+  background-color: transparent;
+}
 
-#controls button,
 #controls input {
   font-size: 14px;
   line-height: 24px;
   border-radius: 2px;
   padding: 0 6px;
 }
+#back:enabled {background-image: url("../svg/back.svg");}
+#back:disabled {background-image: url("../svg/back_disabled.svg");}
+#back:hover:enabled{background-image: url("../svg/back_hover.svg")}
+#back:active:hover:enabled {background-image: url("../svg/back_active.svg")}
 
-button,
-input[type="submit"],
-button[disabled]:hover {
-  border: solid 1px transparent;
-  background: transparent;
+#forward:enabled {background-image: url("../svg/forward.svg");}
+#forward:disabled {background-image: url("../svg/forward_disabled.svg");}
+#forward:hover:enabled {background-image: url("../svg/forward_hover.svg");}
+#forward:active:hover:enabled {background-image: url("../svg/forward_active.svg");}
+
+
+#home {background-image: url("../svg/home.svg");}
+#home:hover:enabled {background-image: url("../svg/home_hover.svg");}
+#home:active {background-image: url("../svg/home_active.svg");}
+
+.reload {
+  width: 24px;
+  height: 24px;
+  padding: 0px;
+  position: absolute;
+  right: 0;
+  top: 1px;
+  background-image: url("../svg/reload_loading.svg");
+  background-color: white;
+}
+#location.location-loaded + .reload {
+  background-image: url("../svg/reload.svg");
 }
 
-button:hover,
+#dock {
+  position: absolute;
+  height: 41px;
+  right: 0;
+  top: 0;
+  width: 55px;
+  background-image: url("../svg/vertical_bar.svg");
+  background-repeat: no-repeat;
+}
+
+#dock .dock {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: transparent;
+  border: 0;
+}
+#users {
+  top: 4px;
+  left: 10px;
+  background-image: url("../svg/hamburger.svg");
+}
+#settings {
+  top: 21px;
+  left: 10px;
+  background-image: url("../svg/gear.svg");
+}
+
+
+#controls button,
+input[type="submit"] {
+  border: solid 0px transparent;
+}
+
 input[type="submit"]:hover {
   border-color: #ccc;
   background: -webkit-linear-gradient(bottom, #cccccc 0%, #f2f2f2 99%);
 }
 
-button:active,
 input[type="submit"]:active {
   border-color: #bbb;
   background: -webkit-linear-gradient(bottom, #e2e2e2 0%, #bbbbbb 99%);
@@ -86,10 +148,10 @@ compared to the back/forward buttons */
   font-size: 24px;
 }
 
-#controls #reload {
+/*#controls #reload {
   font-size: 20px;
   width: 35px;
-}
+}*/
 
 #controls #zoom,
 #controls #find {
@@ -103,23 +165,19 @@ compared to the back/forward buttons */
   -webkit-box-sizing: border-box;
 }
 
-#controls {
-  display: -webkit-flex;
-  -webit-flex-direction: column;
-  height: 31px;
-}
-
 #controls #location-form {
   /*-webkit-flex: 1;
   display: -webkit-flex;*/
   -webit-flex-direction: column;
-  padding-top: 3px;
+  padding-top: 7px;
+  padding-bottom: 7px;
   width: 55%;
   margin: 0 auto;
 }
 
 #controls #center-column {
   -webkit-flex: 1;
+  position: relative;
 }
 
 #zoom-box,
@@ -220,6 +278,8 @@ compared to the back/forward buttons */
 webview {
   bottom: 0;
   left: 0;
+  height: 100%;
+  width: 100%;
 }
 
 .BrowserBar {

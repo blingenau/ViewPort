@@ -1,0 +1,21 @@
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: none;
+      }
+
+      .cls-2 {
+        stroke: #aaaab2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+  </defs>
+  <title>forward_inactive</title>
+  <rect class="cls-1" width="24" height="24"/>
+  <g>
+    <line class="cls-2" x1="10.73" y1="7.46" x2="15.27" y2="12"/>
+    <line class="cls-2" x1="10.73" y1="16.54" x2="15.27" y2="12"/>
+  </g>
+</svg>

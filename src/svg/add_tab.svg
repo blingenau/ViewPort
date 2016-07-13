@@ -1,0 +1,18 @@
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+      }
+
+      .cls-2 {
+        fill: #464656;
+      }
+    </style>
+  </defs>
+  <title>plus_tab</title>
+  <rect class="cls-1" width="24" height="24"/>
+  <rect class="cls-1" x="4.11" y="4.11" width="15.78" height="15.78"/>
+  <rect class="cls-1" x="1.48" y="1.48" width="21.04" height="21.04" transform="translate(24 24) rotate(-180)"/>
+  <path class="cls-2" d="M15.14,11.38H12.61V8.83h0a0.62,0.62,0,1,0-1.25,0v2.54H8.81a0.62,0.62,0,1,0,0,1.25h2.54v2.54h0a0.62,0.62,0,1,0,1.25,0h0V12.63h2.54A0.62,0.62,0,0,0,15.14,11.38Z" transform="translate(0 0)"/>
+</svg>

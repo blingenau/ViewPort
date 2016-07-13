@@ -1,0 +1,24 @@
+<svg id="Home_Active" data-name="Home Active" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+      }
+
+      .cls-2 {
+        fill: #353535;
+      }
+    </style>
+  </defs>
+  <title>Home</title>
+  <rect class="cls-1" x="4" y="4" width="24" height="24"/>
+  <rect class="cls-1" x="52" width="32" height="32" transform="translate(84 32) rotate(180)"/>
+  <g>
+    <rect class="cls-1" x="4" y="4" width="24" height="24"/>
+    <rect class="cls-1" x="52" width="32" height="32" transform="translate(84 32) rotate(180)"/>
+    <g>
+      <path class="cls-2" d="M57.87,11.79V28h7.36V18.73h5.53V28h7.36V11.79L68.54,5.62a1,1,0,0,0-1.08,0Z" transform="translate(-52 0)"/>
+      <path class="cls-2" d="M79.52,12.29a0.48,0.48,0,0,1-.26-0.08L68.26,5a0.48,0.48,0,0,0-.52,0l-11,7.17a0.48,0.48,0,0,1-.66-0.14,0.48,0.48,0,0,1,.14-0.67l11-7.17a1.44,1.44,0,0,1,1.57,0l11,7.17A0.48,0.48,0,0,1,79.52,12.29Z" transform="translate(-52 0)"/>
+    </g>
+  </g>
+</svg>

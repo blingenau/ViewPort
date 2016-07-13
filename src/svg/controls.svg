@@ -1,0 +1,18 @@
+<svg id="Layer_1" preserveAspectRatio="none" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 571.59 41">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #f9f9fa;
+      }
+
+      .cls-2 {
+        fill: #464656;
+      }
+    </style>
+  </defs>
+  <title>chrome_bg</title>
+  <g>
+    <rect class="cls-1" x="0.08" y="0.08" width="571.44" height="40.85"/>
+    <path class="cls-2" d="M591.64,114.84v40.7H20.36v-40.7H591.64m0.15-.15H20.21v41H591.79v-41h0Z" transform="translate(-20.21 -114.69)"/>
+  </g>
+</svg>
