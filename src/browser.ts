@@ -413,7 +413,7 @@ window.onload = () => {
     preferenceFile.readJson()
     .then(settings => {
         homepage = settings.homepage;
-    }) 
+    });
     tabs.addUser("test");
     let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
     if (fs.existsSync(path + "/settings.json")) {
