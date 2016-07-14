@@ -407,151 +407,136 @@ let backgroundWindow: Electron.BrowserWindow = null;
 
 window.onresize = () => browserDom.doLayout();
 window.onload = () => {
-    let fs = require("fs");
     let user = "test";
     let preferenceFile = new PreferenceFile(user, "settings.json");
+    let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
     preferenceFile.readJson()
     .then(settings => {
         homepage = settings.homepage;
-    });
-    tabs.addUser("test");
-    let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
-    if (fs.existsSync(path + "/settings.json")) {
-        console.log("Found file");
-        // read user settings from file
-        fs.readFile((path + "/settings.json"), "utf8", (err: any, data: any ) => {
-            console.log(data);
-            let obj = JSON.parse(data);
-            console.log(obj);
-            homepage = obj.homepage;
+    })
+    .catch(err => {
+        createNewUserSettings(preferenceFile, user);
+    })
+    .then(() => {
+        tabs.addUser("test");
+        tabs.addTab(new Tab(browserDom, {
+            url: homepage
+        }), "test");
+        tabs.activateUser("test");
+
+        $("#location-form").on("submit", (): boolean => {
+            let address: string = $("#location").val();
+            tabs.getActiveTab().setUrl(address);
+            browserDom.navigateTo(browserDom.getWebview(), address);
+            return false;
         });
-    } else {
-        // create user
-        console.log("can't find file");
-        createNewUserSettings(user);
-    }
 
-    tabs.addTab(new Tab(browserDom, {
-        url: homepage
-    }), "test");
-    tabs.activateUser("test");
+        browserDom.doLayout();
 
-    $("#location-form").on("submit", (): boolean => {
-        let address: string = $("#location").val();
-        tabs.getActiveTab().setUrl(address);
-        browserDom.navigateTo(browserDom.getWebview(), address);
-        return false;
-    });
-
-    browserDom.doLayout();
-
-    $("#location").on("focus", (event: JQueryMouseEventObject): void => {
-        $(event.target).select();
-    });
-
-    // Navigation button controls
-    $("#back").on("click", (): void => {
-        browserDom.getWebview().goBack();
-    });
-
-    $("#forward").on("click", (): void => {
-        browserDom.getWebview().goForward();
-    });
-
-    $("#home").on("click", (): void => {
-        browserDom.navigateTo(browserDom.getWebview(), homepage);
-    });
-
-    $("#add-tab").on("click", (): void => {
-        browserDom.addTab(homepage);
-    });
-
-    $("#settings").on("click", (): void => {
-        console.log(path);
-        browserDom.addTab("file://" + __dirname + "/settings.html");
-        remote.ipcMain.on("get-user", (event, arg) => {
-                    event.returnValue = {"username": user, "homepage": homepage};
+        $("#location").on("focus", (event: JQueryMouseEventObject): void => {
+            $(event.target).select();
         });
-        remote.ipcMain.on("update-homepage", function(event: any, newHomepage: string){
-            if (newHomepage.indexOf("http") === -1) {
-                newHomepage = `http://${newHomepage}`;
-            }
-            homepage = newHomepage;
-            let userWrite = {"username" : user, "homepage" : newHomepage};
-            fs.writeFile((path + "/settings.json"), JSON.stringify(userWrite), "utf8", (err: any) => {
-                if (err) {
-                    console.log("error in writing back new homepage");
+
+        // Navigation button controls
+        $("#back").on("click", (): void => {
+            browserDom.getWebview().goBack();
+        });
+
+        $("#forward").on("click", (): void => {
+            browserDom.getWebview().goForward();
+        });
+
+        $("#home").on("click", (): void => {
+            browserDom.navigateTo(browserDom.getWebview(), homepage);
+        });
+
+        $("#add-tab").on("click", (): void => {
+            browserDom.addTab(homepage);
+        });
+
+        $("#settings").on("click", (): void => {
+            console.log(path);
+            browserDom.addTab("file://" + __dirname + "/settings.html");
+            remote.ipcMain.on("get-user", (event, arg) => {
+                        event.returnValue = {"username": user, "homepage": homepage};
+            });
+            remote.ipcMain.on("update-homepage", function(event: any, newHomepage: string){
+                if (newHomepage.indexOf("http") === -1) {
+                    newHomepage = `http://${newHomepage}`;
                 }
+                homepage = newHomepage;
+                let newSettings = {"username" : user, "homepage" : newHomepage};
+                preferenceFile.write(newSettings);
             });
         });
-    });
 
-    ipc.on("openPDF", function (event, filedata) {
-        let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
-        let PDFurl: string = PDFViewerURL + filedata.url;
-        tabs.addTab(new Tab(browserDom, {
-                url: PDFurl
-        }));
-    });
-
-    ipc.on("enter-full-screen", function() {
-        $("#controls").addClass("fullscreen");
-    });
-
-    ipc.on("leave-full-screen", function() {
-        $("#controls").removeClass("fullscreen");
-    });
-
-    // use getAthenaTabs
-    // use the URL as domain
-    // node's url module to get host domain
-    remote.ipcMain.on("check-current-timeout", (): void => {
-        (<Electron.WebViewElement>($("#webviews").find("[src*='athena']")[0]))
-            .getWebContents().session.cookies.get({
-                    domain: "prodmirror.athenahealth.com",
-                    name: "TIMEOUT_UNENCRYPTED"
-                }, (error: Error, cookies: Electron.Cookie[]): void => {
-                    if (!cookies || cookies.length < 2) {
-                        return;
-                    }
-
-                    // Athenanet times out when the cookie's value is <= 0 so we lock the user
-                    if (parseInt(cookies[1].value, 10) <= 0) {
-                        if (!tabs.getActiveTabBar().getLockedStatus()) {
-                            browserDom.lockActiveUser();
-                        }
-                    } else { // If the user has logged back in the cookie resets, unlock user
-                        if (tabs.getActiveTabBar().getLockedStatus()) {
-                            browserDom.unlockActiveUser();
-                        }
-                    }
-                });
-    });
-
-    $("#reload").on("click", (): void => {
-        if (browserDom.getWebview().isLoading()) {
-            browserDom.getWebview().stop();
-        } else {
-            browserDom.getWebview().reload();
-        }
-    });
-
-    $(function() {
-        $("#tabs").sortable({
-            revert: true,
-            axis: "x",
-            scroll: false,
-            forcePlaceholderSize: true,
-            items: ".ui-state-default",
-            tolerance: "pointer",
-            containment: "parent"
-        })
-        .on("sortactivate", function(event: Event, ui: any) {
-            ui.placeholder.css("width", ui.item.css("width"));
+        ipc.on("openPDF", function (event, filedata) {
+            let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
+            let PDFurl: string = PDFViewerURL + filedata.url;
+            tabs.addTab(new Tab(browserDom, {
+                    url: PDFurl
+            }));
         });
-    });
 
-    createBackgroundWindow();
+        ipc.on("enter-full-screen", function() {
+            $("#controls").addClass("fullscreen");
+        });
+
+        ipc.on("leave-full-screen", function() {
+            $("#controls").removeClass("fullscreen");
+        });
+
+        // use getAthenaTabs
+        // use the URL as domain
+        // node's url module to get host domain
+        remote.ipcMain.on("check-current-timeout", (): void => {
+            (<Electron.WebViewElement>($("#webviews").find("[src*='athena']")[0]))
+                .getWebContents().session.cookies.get({
+                        domain: "prodmirror.athenahealth.com",
+                        name: "TIMEOUT_UNENCRYPTED"
+                    }, (error: Error, cookies: Electron.Cookie[]): void => {
+                        if (!cookies || cookies.length < 2) {
+                            return;
+                        }
+
+                        // Athenanet times out when the cookie's value is <= 0 so we lock the user
+                        if (parseInt(cookies[1].value, 10) <= 0) {
+                            if (!tabs.getActiveTabBar().getLockedStatus()) {
+                                browserDom.lockActiveUser();
+                            }
+                        } else { // If the user has logged back in the cookie resets, unlock user
+                            if (tabs.getActiveTabBar().getLockedStatus()) {
+                                browserDom.unlockActiveUser();
+                            }
+                        }
+                    });
+        });
+
+        $("#reload").on("click", (): void => {
+            if (browserDom.getWebview().isLoading()) {
+                browserDom.getWebview().stop();
+            } else {
+                browserDom.getWebview().reload();
+            }
+        });
+
+        $(function() {
+            $("#tabs").sortable({
+                revert: true,
+                axis: "x",
+                scroll: false,
+                forcePlaceholderSize: true,
+                items: ".ui-state-default",
+                tolerance: "pointer",
+                containment: "parent"
+            })
+            .on("sortactivate", function(event: Event, ui: any) {
+                ui.placeholder.css("width", ui.item.css("width"));
+            });
+        });
+
+        createBackgroundWindow();
+    });
 };
 
 /**
@@ -653,24 +638,7 @@ function getFaviconImage(domain: string): Promise<string> {
         });
 }
 
-/**
- * Create user settings for a new user
- * @param user   The username of the new user
- */
-function createNewUserSettings(user: string): void {
-    let mkdirp = require("mkdirp");
-    let createFile = require("create-file");
-    let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
-    mkdirp(path, function(err: any){
-        if(err) {
-            console.log("error in mkdir");
-        } else {
-            let userWrite = {"username" : user, "homepage" : "https://athenanet.athenahealth.com"};
-            createFile((path + "/settings.json"), JSON.stringify(userWrite), function (err2: any) {
-                if(err2) {
-                    console.log("error in createFile");
-                }
-            });
-        }
-    });
+function createNewUserSettings(preferenceFile: PreferenceFile, user: string): void {
+    let defaultSettings = {"username" : user, "homepage" : "https://athenanet.athenahealth.com"};
+    preferenceFile.write(defaultSettings);
 }
