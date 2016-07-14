@@ -74,8 +74,8 @@ input {
 
 #controls input {
   font-size: 14px;
-  line-height: 24px;
-  border-radius: 10px;
+  line-height: 20px;
+  border-radius: 6px;
   padding-left: 6px;
   padding-right: 30px;
 }
@@ -96,7 +96,7 @@ input {
 
 .reload {
   width: 24px;
-  height: 24px;
+  height: 23px;
   padding: 0px;
   position: absolute;
   right: 5px;
@@ -178,6 +178,8 @@ compared to the back/forward buttons */
 
 #location {
   border: solid 1px #ccc;
+  border-bottom-width: 2px;
+  border-bottom-color: #ccc;
   padding: 2px;
   width: 100%;
   -webkit-box-sizing: border-box;
