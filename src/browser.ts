@@ -661,7 +661,12 @@ function getFaviconImage(domain: string): Promise<string> {
             return blankFaviconUri;
         });
 }
-
+/**
+ * Creates a file for a user if one does not exist already
+ * 
+ * @param preferenceFile    file for a given user
+ * @param user  new user
+ */
 function createNewUserSettings(preferenceFile: PreferenceFile, user: string): void {
     let defaultSettings = {"username" : user, "homepage" : "https://athenanet.athenahealth.com"};
     preferenceFile.write(defaultSettings);
