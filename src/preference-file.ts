@@ -61,7 +61,7 @@ class PreferenceFileLocalStorage implements IPreferenceFileStorage {
         })
         .then(stats => {
             if (stats && !stats.isDirectory()) {
-                throw new Error(`Not a directory: ${dir}`);
+                return Promise.reject(`Not a directory: ${dir}`);
             }
         });
     }
