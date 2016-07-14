@@ -7,6 +7,7 @@
     "jquery": "registry:dt/jquery#1.10.0+20160620094458",
     "jqueryui": "registry:dt/jqueryui#1.9.0+20160627030821",
     "mocha": "registry:dt/mocha#2.2.5+20160619032855",
+    "mz": "registry:dt/mz#0.0.0+20160217153523",
     "node": "registry:dt/node#6.0.0+20160621231320",
     "promises-a-plus": "registry:dt/promises-a-plus#0.0.0+20160317120654",
     "q": "registry:dt/q#0.0.0+20160613154756",
