@@ -1,5 +1,6 @@
 /// <reference path="../typings/index.d.ts" />
 
+import * as constants from "constants";
 import * as electron from "electron";
 import * as fs from "mz/fs";
 import * as path from "path";
@@ -55,13 +56,20 @@ class PreferenceFileLocalStorage implements IPreferenceFileStorage {
 
     private makePreferenceDirectory(dir: string): Promise<void> {
         return fs.stat(dir)
-        .catch(() => {
+        .catch(err => {
+            if (err.code !== "ENOENT") {
+                return Promise.reject(err);
+            }
             return this.makePreferenceDirectory(dir.slice(0, dir.lastIndexOf(path.sep)))
             .then(() => fs.mkdir(dir, userReadWriteExec));
         })
         .then(stats => {
             if (stats && !stats.isDirectory()) {
-                return Promise.reject(`Not a directory: ${dir}`);
+                return Promise.reject({
+                    errno: constants.ENOTDIR,
+                    code: "ENOTDIR",
+                    path: dir
+                });
             }
         });
     }
@@ -154,7 +162,7 @@ class PreferenceFileRemoteStorage implements IPreferenceFileStorage {
             resolver.resolve();
             break;
         case "error":
-            resolver.reject(content);
+            resolver.reject(JSON.parse(content));
             break;
         default:
             resolver.reject(`Invalid response: ${operation}`);
@@ -293,6 +301,6 @@ export class PreferenceFileManager {
     }
 
     private sendError(event: Electron.IpcMainEvent, id: string, reason: any): void {
-        this.sendResponse(event, id, "error", reason.toString());
+        this.sendResponse(event, id, "error", JSON.stringify(reason));
     }
 }
