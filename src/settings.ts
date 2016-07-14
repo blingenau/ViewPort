@@ -19,6 +19,7 @@ window.onload = () => {
       .html("Homepage: " + currentUserHomepage)));
   $("#user-settings")
     .append($("<form>")
+      .attr("onsubmit", "event.preventDefault()")
       .attr("id", "homepage-form")
         .append($("<input>").attr("id", "new-homepage").attr("type", "text")));
   $("#user-settings")
