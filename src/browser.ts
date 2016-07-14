@@ -404,6 +404,24 @@ let backgroundWindow: Electron.BrowserWindow = null;
 window.onresize = () => browserDom.doLayout();
 window.onload = () => {
     tabs.addUser("test");
+    let fs = require("fs");
+    let user = "test";
+    let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
+    if (fs.existsSync(path + "/settings.json")) {
+        console.log("Found file");
+        // read user settings from file
+        fs.readFile((path + "/settings.json"), "utf8", (err: any, data: any ) => {
+            console.log(data);
+            let obj = JSON.parse(data);
+            console.log(obj);
+            homepage = obj.homepage;
+        });
+    } else {
+        // create user
+        console.log("can't find file");
+        createNewUserSettings(user);
+    }
+
     tabs.addTab(new Tab(browserDom, {
         url: homepage
     }), "test");
@@ -444,56 +462,28 @@ window.onload = () => {
         tabs.getUserTabBar().activateTab(tab);
         browserDom.doLayout();
         ipc.send("update-num-tabs", tabs.getActiveTabBar().size());
+        console.log("Homepage: " + homepage);
     });
 
     $("#settings").on("click", (): void => {
-
+        // let path = ([remote.app.getPath("appData"), remote.app.getName(), "user", user]).join("/");
+        console.log(path);
         browserDom.addTab("file://" + __dirname + "/settings.html");
-        let jsonfile = require("jsonfile");
-        let file = "json/settings.json";
-        let currentUser: string = tabs.getActiveUser();
-        let currentUserHomepage: string = "";
-
-        // Read in users from json file
-        let users: any = [];
-        jsonfile.readFile(file, function(err: any, obj: string) {
-            if ( err ) {
-                console.log("error");
-            }
-            users = JSON.parse(obj);
-            // Look for specific user
-            for( let index = 0; index < users.length; ++ index) {
-                if (users[index].username === currentUser) {
-                    currentUserHomepage = users[index].homepage;
-                    remote.ipcMain.on("get-user", (event, arg) => {
-                    event.returnValue = users[index];
-                });
-
-                }
-            }
-            // If user homepage cannot be found
-            if (currentUserHomepage === "") {
-                // Default
-                currentUserHomepage = "prodmirror.athenahealth.com";
-                users.push({"username" : currentUser, "homepage" : currentUserHomepage});
-                remote.ipcMain.on("get-user", (event, arg) => {
-                    event.returnValue = {"username" : currentUser, "homepage" : currentUserHomepage};
-                });
-            }
+        remote.ipcMain.on("get-user", (event, arg) => {
+                    event.returnValue = {"username": user, "homepage": homepage};
         });
-
-        remote.ipcMain.on("update-homepage", function(event, newHomepage){
-            for( let index = 0; index < users.length; ++ index) {
-                if (users[index].username === currentUser) {
-                    users[index].homepage = newHomepage;
-                    let json = JSON.stringify(users);
-                    jsonfile.writeFile(file, json, {spaces: 2}, function(err: any) {
-                    console.error(err);
-                    });
-                }
+        remote.ipcMain.on("update-homepage", function(event: any, newHomepage: string){
+            if (newHomepage.indexOf("http") === -1) {
+                newHomepage = `http://${newHomepage}`;
             }
+            homepage = newHomepage;
+            let userWrite = {"username" : user, "homepage" : newHomepage};
+            fs.writeFile((path + "/settings.json"), JSON.stringify(userWrite), "utf8", (err: any) => {
+                if (err) {
+                    console.log("error in writing back new homepage");
+                }
+            });
         });
-
     });
 
     ipc.on("openPDF", function (event, filedata) {
@@ -661,4 +651,26 @@ function getFaviconImage(domain: string): Promise<string> {
         .catch((error: any) => {
             return blankFaviconUri;
         });
+}
+
+/** 
+ * Create user settings 
+ */
+function createNewUserSettings(user: string): void {
+    let mkdirp = require("mkdirp");
+    let createFile = require("create-file");
+    // let filepath = "./users/" + user + "/settings.json";
+    let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
+    mkdirp(path, function(err: any){
+        if(err) {
+            console.log("error in mkdir");
+        } else {
+            let userWrite = {"username" : user, "homepage" : "https://athenanet.athenahealth.com"};
+            createFile((path + "/settings.json"), JSON.stringify(userWrite), function (err2: any) {
+                if(err2) {
+                    console.log("error in createFile");
+                }
+            });
+        }
+    });
 }
