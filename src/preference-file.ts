@@ -7,52 +7,27 @@ import * as path from "path";
 const userReadWrite = 0o600;
 const userReadWriteExec = 0o700;
 
-export class PreferenceFileManager {
-    private ipc = electron.ipcMain;
+interface IPreferenceFileStorage {
+    read(filename: string): Promise<string>;
+    write(filename: string, content: string): Promise<void>;
+}
 
-    public start() {
-        const self = this;
-        this.ipc.on("file-manager", (event, id, operation, filename, content) =>
-            self.onRequest(event, id, operation, filename, content));
-    }
-
-    private onRequest(event: Electron.IpcMainEvent,
-                      id: number,
-                      operation: string,
-                      filename: string,
-                      content?: string): void {
-        switch (operation) {
-        case "read":
-            this.readRequest(event, id, filename);
-            break;
-        case "write":
-            this.writeRequest(event, id, filename, content);
-            break;
-        default:
-            this.sendError(event, id, `Invalid request: ${operation}`);
-            break;
-        }
-    }
-
-    private readRequest(event: Electron.IpcMainEvent, id: number, filename: string): void {
+class PreferenceFileLocalStorage implements IPreferenceFileStorage {
+    public read(filename: string): Promise<string> {
         let filepath = this.getPreferenceFilePath(filename);
-        fs.readFile(filepath, "utf8")
-        .then(content => this.sendResponse(event, id, "read", content))
-        .catch(err => this.sendError(event, id, err));
+        return fs.readFile(filepath, "utf8");
     }
 
-    private writeRequest(event: Electron.IpcMainEvent, id: number, filename: string, content: string): void {
+    public write(filename: string, content: string): Promise<void> {
         let filepath = this.getPreferenceFilePath(filename);
-        this.makePreferenceDirectory(path.dirname(filepath))
+        return this.makePreferenceDirectory(path.dirname(filepath))
         .then(() => {
             const options = {
                 encoding: "utf8",
                 mode: userReadWrite
             };
             return fs.writeFile(filepath, content, options);
-        })
-        .then(() => this.sendResponse(event, id, "write"))
-        .catch(err => this.sendError(event, id, err));
+        });
     }
 
     private getPreferenceFilePath(filename: string): string {
@@ -74,12 +49,53 @@ export class PreferenceFileManager {
             }
         });
     }
+}
 
-    private sendResponse(event: Electron.IpcMainEvent, id: number, operation: string, content?: string): void {
+export class PreferenceFileManager {
+    private ipc: Electron.IpcMain = electron.ipcMain;
+    private storage: IPreferenceFileStorage = new PreferenceFileLocalStorage();
+
+    public start() {
+        const self = this;
+        this.ipc.on("file-manager", (event, id, operation, filename, content) =>
+            self.onRequest(event, id, operation, filename, content));
+    }
+
+    private onRequest(event: Electron.IpcMainEvent,
+                      id: string,
+                      operation: string,
+                      filename: string,
+                      content?: string): void {
+        switch (operation) {
+        case "read":
+            this.readRequest(event, id, filename);
+            break;
+        case "write":
+            this.writeRequest(event, id, filename, content);
+            break;
+        default:
+            this.sendError(event, id, `Invalid request: ${operation}`);
+            break;
+        }
+    }
+
+    private readRequest(event: Electron.IpcMainEvent, id: string, filename: string): void {
+        this.storage.read(filename)
+        .then(content => this.sendResponse(event, id, "read", content))
+        .catch(err => this.sendError(event, id, err));
+    }
+
+    private writeRequest(event: Electron.IpcMainEvent, id: string, filename: string, content: string): void {
+        this.storage.write(filename, content)
+        .then(() => this.sendResponse(event, id, "write"))
+        .catch(err => this.sendError(event, id, err));
+    }
+
+    private sendResponse(event: Electron.IpcMainEvent, id: string, operation: string, content?: string): void {
         event.sender.send("file-manager-response", id, operation, content);
     }
 
-    private sendError(event: Electron.IpcMainEvent, id: number, reason: any): void {
+    private sendError(event: Electron.IpcMainEvent, id: string, reason: any): void {
         this.sendResponse(event, id, "error", reason.toString());
     }
 }
@@ -89,10 +105,10 @@ class PreferenceFilePromiseResolver {
     public reject: (reason: any) => void;
 };
 
-class PreferenceFileManagerRenderer {
+class PreferenceFileRemoteStorage implements IPreferenceFileStorage {
     private ipc = electron.ipcRenderer;
-    private outstandingRequestsCounter = 0;
-    private outstandingRequests: {[id: number]: PreferenceFilePromiseResolver} = {};
+    private counter = 0;
+    private outstandingRequests: {[id: string]: PreferenceFilePromiseResolver} = {};
 
     constructor() {
         const self = this;
@@ -112,14 +128,15 @@ class PreferenceFileManagerRenderer {
         return promise;
     }
 
-    private queueRequest<Type>(): [number, Promise<Type>] {
+    private queueRequest<Type>(): [string, Promise<Type>] {
         let resolver: PreferenceFilePromiseResolver = {
             resolve: null,
             reject: null
         };
 
-        let id = this.outstandingRequestsCounter++;
+        let id = `${process.pid}/${this.counter}`;
         this.outstandingRequests[id] = resolver;
+        this.counter++;
 
         let promise = new Promise<Type>((resolve: (content?: any) => void, reject: (reason: any) => void): void => {
             resolver.resolve = resolve;
@@ -129,7 +146,7 @@ class PreferenceFileManagerRenderer {
         return [id, promise];
     }
 
-    private dequeueRequest(id: number): PreferenceFilePromiseResolver {
+    private dequeueRequest(id: string): PreferenceFilePromiseResolver {
         let resolver = this.outstandingRequests[id];
         if (resolver) {
             delete this.outstandingRequests[id];
@@ -138,7 +155,7 @@ class PreferenceFileManagerRenderer {
     }
 
     private onResponse(event: Electron.IpcRendererEvent,
-                       id: number,
+                       id: string,
                        operation: string,
                        content?: any): void {
         let resolver = this.dequeueRequest(id);
@@ -163,22 +180,25 @@ class PreferenceFileManagerRenderer {
     }
 }
 
-const preferenceFileManagerRenderer = (process.type === "browser")
-    ? null
-    : new PreferenceFileManagerRenderer();
+const preferenceFileStorage: IPreferenceFileStorage = (process.type === "browser")
+    ? new PreferenceFileLocalStorage()
+    : new PreferenceFileRemoteStorage();
 
 export class PreferenceFile {
     private filename: string;
 
-    constructor(filename: string) {
-        this.filename = filename;
+    constructor(subPath: string, ...subPaths: string[]) {
+        this.filename = path.join(subPath, ...subPaths);
     }
 
     public read(): Promise<string> {
-        return preferenceFileManagerRenderer.read(this.filename);
+        return preferenceFileStorage.read(this.filename);
     }
 
-    public write(content: string): Promise<void> {
-        return preferenceFileManagerRenderer.write(this.filename, content);
+    public write(content: string | Array<any> | Object): Promise<void> {
+        let stringContent: string = (typeof content === "string" || content instanceof String)
+            ? content
+            : JSON.stringify(content);
+        return preferenceFileStorage.write(this.filename, stringContent);
     }
 }
