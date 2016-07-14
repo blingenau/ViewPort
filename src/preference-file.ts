@@ -217,6 +217,27 @@ export class PreferenceFile {
 
     /**
      * Description:
+     *      Read JSON from a preference file.
+     * 
+     * Returns:
+     *      An any promise for the preference file JSON.
+     * 
+     * Example:
+     *      preferenceFile.readJson()
+     *      .then(json => {
+     *          // do something with the JSON
+     *      })
+     *      .catch(err => {
+     *          // handle an error
+     *      });
+     */
+    public readJson(): Promise<any> {
+        return preferenceFileStorage.read(this.filename)
+        .then(content => JSON.parse(content));
+    }
+
+    /**
+     * Description:
      *      Write a preference file.
      * 
      * Parameters:
