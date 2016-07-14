@@ -7,11 +7,27 @@ import * as path from "path";
 const userReadWrite = 0o600;
 const userReadWriteExec = 0o700;
 
+/**
+ * Interface IPreferenceFileStorage
+ * 
+ * Description:
+ *      Read or write a named preference file. Preference files are utf-8
+ *      encoded text files, typically JSON content, stored under the user's data
+ *      directory.
+ */
 interface IPreferenceFileStorage {
     read(filename: string): Promise<string>;
     write(filename: string, content: string): Promise<void>;
 }
 
+/**
+ * Class PreferenceFileLocalStorage
+ * 
+ * Implements: IPreferenceFileStorage
+ * 
+ * Description:
+ *      Implements a process-local IPreferenceFileStorage.
+ */
 class PreferenceFileLocalStorage implements IPreferenceFileStorage {
     public read(filename: string): Promise<string> {
         let filepath = this.getPreferenceFilePath(filename);
@@ -51,60 +67,27 @@ class PreferenceFileLocalStorage implements IPreferenceFileStorage {
     }
 }
 
-export class PreferenceFileManager {
-    private ipc: Electron.IpcMain = electron.ipcMain;
-    private storage: IPreferenceFileStorage = new PreferenceFileLocalStorage();
-
-    public start() {
-        const self = this;
-        this.ipc.on("file-manager", (event, id, operation, filename, content) =>
-            self.onRequest(event, id, operation, filename, content));
-    }
-
-    private onRequest(event: Electron.IpcMainEvent,
-                      id: string,
-                      operation: string,
-                      filename: string,
-                      content?: string): void {
-        switch (operation) {
-        case "read":
-            this.readRequest(event, id, filename);
-            break;
-        case "write":
-            this.writeRequest(event, id, filename, content);
-            break;
-        default:
-            this.sendError(event, id, `Invalid request: ${operation}`);
-            break;
-        }
-    }
-
-    private readRequest(event: Electron.IpcMainEvent, id: string, filename: string): void {
-        this.storage.read(filename)
-        .then(content => this.sendResponse(event, id, "read", content))
-        .catch(err => this.sendError(event, id, err));
-    }
-
-    private writeRequest(event: Electron.IpcMainEvent, id: string, filename: string, content: string): void {
-        this.storage.write(filename, content)
-        .then(() => this.sendResponse(event, id, "write"))
-        .catch(err => this.sendError(event, id, err));
-    }
-
-    private sendResponse(event: Electron.IpcMainEvent, id: string, operation: string, content?: string): void {
-        event.sender.send("file-manager-response", id, operation, content);
-    }
-
-    private sendError(event: Electron.IpcMainEvent, id: string, reason: any): void {
-        this.sendResponse(event, id, "error", reason.toString());
-    }
-}
-
+/**
+ * Class PreferenceFilePromiseResolver
+ * 
+ * Description:
+ *      Stores a promise resolver and a rejector. Implementation detail for
+ *      PreferenceFileRemoteStorage.
+ */
 class PreferenceFilePromiseResolver {
     public resolve: (content?: string) => void;
     public reject: (reason: any) => void;
 };
 
+/**
+ * Class PreferenceFileRemoteStorage
+ * 
+ * Implements: IPreferenceFileStorage
+ * 
+ * Description:
+ *      Implements an IPreferenceFileStorage that delegates to a
+ *      PreferenceFileManager running in another process.
+ */
 class PreferenceFileRemoteStorage implements IPreferenceFileStorage {
     private ipc = electron.ipcRenderer;
     private counter = 0;
@@ -184,21 +167,132 @@ const preferenceFileStorage: IPreferenceFileStorage = (process.type === "browser
     ? new PreferenceFileLocalStorage()
     : new PreferenceFileRemoteStorage();
 
+/**
+ * Class PreferenceFile
+ * 
+ * Description:
+ *      Represents a named preference file. Preference files are utf-8
+ *      encoded text files, typically JSON content, stored under the user's data
+ *      directory.
+ */
 export class PreferenceFile {
     private filename: string;
 
+    /**
+     * Description:
+     *      Create a PreferenceFile that represents a file in
+     *      {appData}/{appName}/subPath[/...subPaths]
+     */
     constructor(subPath: string, ...subPaths: string[]) {
         this.filename = path.join(subPath, ...subPaths);
     }
 
+    /**
+     * Description:
+     *      Read from a preference file.
+     * 
+     * Returns:
+     *      A string promise for the entire preference file content.
+     * 
+     * Example:
+     *      preferenceFile.read()
+     *      .then(content => {
+     *          // do something with the content
+     *      })
+     *      .catch(err => {
+     *          // handle an error
+     *      });
+     */
     public read(): Promise<string> {
         return preferenceFileStorage.read(this.filename);
     }
 
+    /**
+     * Description:
+     *      Write a preference file.
+     * 
+     * Parameters:
+     *      content - The new content of the preference file. Arrays and objects will be JSON-encoded.
+     * 
+     * Returns:
+     *      A void promise for write completion.
+     * 
+     * Example:
+     *      preferenceFile.write({example: "content"})
+     *      .catch(err => {
+     *          // handle an error
+     *      });
+     */
     public write(content: string | Array<any> | Object): Promise<void> {
         let stringContent: string = (typeof content === "string" || content instanceof String)
             ? content
             : JSON.stringify(content);
         return preferenceFileStorage.write(this.filename, stringContent);
+    }
+}
+
+/**
+ * Class PreferenceFileManager
+ * 
+ * Description:
+ *      Handles IPC requests from remote processes to store or retrieve
+ *      preference files. A single instance of this class should be created
+ *      and started in the main process.
+ * 
+ * Example:
+ *      import {PreferenceFileManager} from "./preference-file";
+ *      const preferenceFileManager = new PreferenceFileManager();
+ *      preferenceFileManager.start();
+ */
+export class PreferenceFileManager {
+    private ipc = electron.ipcMain;
+    private storage = new PreferenceFileLocalStorage();
+
+    /**
+     * Description:
+     *      Start handling IPC requests.
+     */
+    public start() {
+        const self = this;
+        this.ipc.on("file-manager", (event, id, operation, filename, content) =>
+            self.onRequest(event, id, operation, filename, content));
+    }
+
+    private onRequest(event: Electron.IpcMainEvent,
+                      id: string,
+                      operation: string,
+                      filename: string,
+                      content?: string): void {
+        switch (operation) {
+        case "read":
+            this.readRequest(event, id, filename);
+            break;
+        case "write":
+            this.writeRequest(event, id, filename, content);
+            break;
+        default:
+            this.sendError(event, id, `Invalid request: ${operation}`);
+            break;
+        }
+    }
+
+    private readRequest(event: Electron.IpcMainEvent, id: string, filename: string): void {
+        this.storage.read(filename)
+        .then(content => this.sendResponse(event, id, "read", content))
+        .catch(err => this.sendError(event, id, err));
+    }
+
+    private writeRequest(event: Electron.IpcMainEvent, id: string, filename: string, content: string): void {
+        this.storage.write(filename, content)
+        .then(() => this.sendResponse(event, id, "write"))
+        .catch(err => this.sendError(event, id, err));
+    }
+
+    private sendResponse(event: Electron.IpcMainEvent, id: string, operation: string, content?: string): void {
+        event.sender.send("file-manager-response", id, operation, content);
+    }
+
+    private sendError(event: Electron.IpcMainEvent, id: string, reason: any): void {
+        this.sendResponse(event, id, "error", reason.toString());
     }
 }
