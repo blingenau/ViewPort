@@ -19,6 +19,8 @@ const blankFaviconUri: string =
     "MglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII=";
 let previousTimeout: number = -1;
 
+const athenaNetHomepage: string = "https://athenanet.athenahealth.com";
+
 /**
  * class DOM 
  * 
@@ -404,7 +406,7 @@ class BrowserDOM implements IDOM {
 export const browserDom: BrowserDOM = new BrowserDOM();
 export const tabs: UserTabBar = new UserTabBar(browserDom);
 export const stopwatch: any = new Stopwatch(false, {refreshRateMS: 1, almostDoneMS: 30000});
-let homepage = "https://athenanet.athenahealth.com";
+let homepage = athenaNetHomepage;
 let backgroundWindow: Electron.BrowserWindow = null;
 
 window.onresize = () => browserDom.doLayout();
@@ -412,6 +414,57 @@ window.onload = () => {
     let user = "test";
     let preferenceFile = new PreferenceFile(user, "settings.json");
     let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
+    // Event Handlers 
+    $("#location-form").on("submit", (): boolean => {
+            let address: string = $("#location").val();
+            tabs.getActiveTab().setUrl(address);
+            browserDom.navigateTo(browserDom.getWebview(), address);
+            return false;
+    });
+    $("#location").on("focus", (event: JQueryMouseEventObject): void => {
+            $(event.target).select();
+        });
+
+    // Navigation button controls
+    $("#back").on("click", (): void => {
+        browserDom.getWebview().goBack();
+    });
+
+    $("#forward").on("click", (): void => {
+        browserDom.getWebview().goForward();
+    });
+
+    $("#home").on("click", (): void => {
+        browserDom.navigateTo(browserDom.getWebview(), homepage);
+    });
+
+    $("#add-tab").on("click", (): void => {
+        browserDom.addTab(homepage);
+    });
+
+    $("#settings").on("click", (): void => {
+        console.log(path);
+        browserDom.addTab("file://" + __dirname + "/settings.html");
+        remote.ipcMain.on("get-user", (event, arg) => {
+                    event.returnValue = {"username": user, "homepage": homepage};
+        });
+        remote.ipcMain.on("update-homepage", function(event: any, newHomepage: string){
+            if (newHomepage.indexOf("http") === -1) {
+                newHomepage = `http://${newHomepage}`;
+            }
+            homepage = newHomepage;
+            let newSettings = {"username" : user, "homepage" : newHomepage};
+            preferenceFile.write(newSettings);
+        });
+    });
+    $("#reload").on("click", (): void => {
+            if (browserDom.getWebview().isLoading()) {
+                browserDom.getWebview().stop();
+            } else {
+                browserDom.getWebview().reload();
+            }
+    });
+    // Read user preference file or create a new file then create first tab
     preferenceFile.readJson()
     .then(settings => {
         homepage = settings.homepage;
@@ -426,51 +479,8 @@ window.onload = () => {
         }), "test");
         tabs.activateUser("test");
 
-        $("#location-form").on("submit", (): boolean => {
-            let address: string = $("#location").val();
-            tabs.getActiveTab().setUrl(address);
-            browserDom.navigateTo(browserDom.getWebview(), address);
-            return false;
-        });
-
         browserDom.doLayout();
 
-        $("#location").on("focus", (event: JQueryMouseEventObject): void => {
-            $(event.target).select();
-        });
-
-        // Navigation button controls
-        $("#back").on("click", (): void => {
-            browserDom.getWebview().goBack();
-        });
-
-        $("#forward").on("click", (): void => {
-            browserDom.getWebview().goForward();
-        });
-
-        $("#home").on("click", (): void => {
-            browserDom.navigateTo(browserDom.getWebview(), homepage);
-        });
-
-        $("#add-tab").on("click", (): void => {
-            browserDom.addTab(homepage);
-        });
-
-        $("#settings").on("click", (): void => {
-            console.log(path);
-            browserDom.addTab("file://" + __dirname + "/settings.html");
-            remote.ipcMain.on("get-user", (event, arg) => {
-                        event.returnValue = {"username": user, "homepage": homepage};
-            });
-            remote.ipcMain.on("update-homepage", function(event: any, newHomepage: string){
-                if (newHomepage.indexOf("http") === -1) {
-                    newHomepage = `http://${newHomepage}`;
-                }
-                homepage = newHomepage;
-                let newSettings = {"username" : user, "homepage" : newHomepage};
-                preferenceFile.write(newSettings);
-            });
-        });
         ipcRenderer.on("openPDF", function (event, filedata) {
             let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
             let PDFurl: string = PDFViewerURL + filedata.url;
@@ -517,16 +527,8 @@ window.onload = () => {
                                 previousTimeout = currentTimeout;
                             }
                         }
-                        });
+                    });
             });
-
-        $("#reload").on("click", (): void => {
-            if (browserDom.getWebview().isLoading()) {
-                browserDom.getWebview().stop();
-            } else {
-                browserDom.getWebview().reload();
-            }
-        });
         // Events for the athenanet timeout stopwatch
 
         stopwatch.onDone(() => {
@@ -560,7 +562,7 @@ window.onload = () => {
         });
 
         createBackgroundWindow();
-        });
+    });
 };
 
 /**
@@ -663,11 +665,10 @@ function getFaviconImage(domain: string): Promise<string> {
 }
 /**
  * Creates a file for a user if one does not exist already
- * 
  * @param preferenceFile    file for a given user
  * @param user  new user
  */
 function createNewUserSettings(preferenceFile: PreferenceFile, user: string): void {
-    let defaultSettings = {"username" : user, "homepage" : "https://athenanet.athenahealth.com"};
+    let defaultSettings = {"username" : user, "homepage" : athenaNetHomepage};
     preferenceFile.write(defaultSettings);
 }

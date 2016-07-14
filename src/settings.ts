@@ -31,8 +31,7 @@ window.onload = () => {
             console.log($("#new-homepage").val());
             currentUserHomepage = $("#new-homepage").val();
             ipcRenderer.send("update-homepage", currentUserHomepage);
-            $("#homepage").empty();
-            $("#homepage")
+            $("#homepage").empty()
                 .append($("<div>")
                     .addClass("current-homepage")
                     .html("Homepage: " + currentUserHomepage));
