@@ -42,6 +42,9 @@ class BrowserDOM implements IDOM {
         webview.addEventListener("did-fail-load", handleLoadFail);
         webview.addEventListener("load-commit", handleLoadCommit);
         webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
+        webview.addEventListener("new-window", (event) => {
+            browserDom.addTab(event.url);
+        });
         webview.src = url;
         webview.setAttribute("tabID", id);
         document.getElementById("webviews").appendChild(webview);
@@ -460,15 +463,7 @@ window.onload = () => {
     });
 
     $("#add-tab").on("click", (): void => {
-        let tab: Tab = new Tab(browserDom, {
-            url: homepage
-        });
-        tabs.addTab(tab);
-        tabs.getActiveTabBar().hideTabs();
-        tabs.getUserTabBar().activateTab(tab);
-        browserDom.doLayout();
-        ipc.send("update-num-tabs", tabs.getActiveTabBar().size());
-        console.log("Homepage: " + homepage);
+        browserDom.addTab(homepage);
     });
 
     $("#settings").on("click", (): void => {
