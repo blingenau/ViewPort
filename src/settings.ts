@@ -1,8 +1,6 @@
 /// <reference path="../typings/index.d.ts" />
 const ipcRenderer = require("electron").ipcRenderer;
 
-// let ipcRenderer: Electron.IpcRenderer = require("electron").ipcRenderer;
-
 let currentUserHomepage: string = "";
 let currentUser: string = "";
 
