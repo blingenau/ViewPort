@@ -471,48 +471,6 @@ window.onload = () => {
                 preferenceFile.write(newSettings);
             });
         });
-/*
-<<<<<<< HEAD
-        ipc.on("openPDF", function (event, filedata) {
-            let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
-            let PDFurl: string = PDFViewerURL + filedata.url;
-            tabs.addTab(new Tab(browserDom, {
-                    url: PDFurl
-            }));
-        });
-
-        ipc.on("enter-full-screen", function() {
-            $("#controls").addClass("fullscreen");
-        });
-
-        ipc.on("leave-full-screen", function() {
-            $("#controls").removeClass("fullscreen");
-        });
-
-        // use getAthenaTabs
-        // use the URL as domain
-        // node's url module to get host domain
-        remote.ipcMain.on("check-current-timeout", (): void => {
-            (<Electron.WebViewElement>($("#webviews").find("[src*='athena']")[0]))
-                .getWebContents().session.cookies.get({
-                        domain: "prodmirror.athenahealth.com",
-                        name: "TIMEOUT_UNENCRYPTED"
-                    }, (error: Error, cookies: Electron.Cookie[]): void => {
-                        if (!cookies || cookies.length < 2) {
-                            return;
-                        }
-
-                        // Athenanet times out when the cookie's value is <= 0 so we lock the user
-                        if (parseInt(cookies[1].value, 10) <= 0) {
-                            if (!tabs.getActiveTabBar().getLockedStatus()) {
-                                browserDom.lockActiveUser();
-                            }
-                        } else { // If the user has logged back in the cookie resets, unlock user
-                            if (tabs.getActiveTabBar().getLockedStatus()) {
-                                browserDom.unlockActiveUser();
-                            }
-=======
-*/
         ipcRenderer.on("openPDF", function (event, filedata) {
             let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
             let PDFurl: string = PDFViewerURL + filedata.url;
@@ -569,23 +527,6 @@ window.onload = () => {
                 browserDom.getWebview().reload();
             }
         });
-    /*
-    <<<<<<< HEAD
-            $(function() {
-                $("#tabs").sortable({
-                    revert: true,
-                    axis: "x",
-                    scroll: false,
-                    forcePlaceholderSize: true,
-                    items: ".ui-state-default",
-                    tolerance: "pointer",
-                    containment: "parent"
-                })
-                .on("sortactivate", function(event: Event, ui: any) {
-                    ui.placeholder.css("width", ui.item.css("width"));
-                });
-    =======
-    */
         // Events for the athenanet timeout stopwatch
 
         stopwatch.onDone(() => {
