@@ -2,6 +2,7 @@
 
 import {Tab, UserTabBar, IDOM} from "./tabs";
 import * as requestPromise from "request-promise";
+import {PreferenceFile} from "./preference-file";
 const $: JQueryStatic = require("jquery");
 const ipc = require("electron").ipcRenderer;
 const {remote} = require("electron");
@@ -403,9 +404,14 @@ let backgroundWindow: Electron.BrowserWindow = null;
 
 window.onresize = () => browserDom.doLayout();
 window.onload = () => {
-    tabs.addUser("test");
     let fs = require("fs");
     let user = "test";
+    let preferenceFile = new PreferenceFile(user, "settings.json");
+    preferenceFile.readJson()
+    .then(settings => {
+        homepage = settings.homepage;
+    }) 
+    tabs.addUser("test");
     let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
     if (fs.existsSync(path + "/settings.json")) {
         console.log("Found file");
@@ -466,7 +472,6 @@ window.onload = () => {
     });
 
     $("#settings").on("click", (): void => {
-        // let path = ([remote.app.getPath("appData"), remote.app.getName(), "user", user]).join("/");
         console.log(path);
         browserDom.addTab("file://" + __dirname + "/settings.html");
         remote.ipcMain.on("get-user", (event, arg) => {
@@ -653,13 +658,13 @@ function getFaviconImage(domain: string): Promise<string> {
         });
 }
 
-/** 
- * Create user settings 
+/**
+ * Create user settings for a new user
+ * @param user   The username of the new user
  */
 function createNewUserSettings(user: string): void {
     let mkdirp = require("mkdirp");
     let createFile = require("create-file");
-    // let filepath = "./users/" + user + "/settings.json";
     let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
     mkdirp(path, function(err: any){
         if(err) {
