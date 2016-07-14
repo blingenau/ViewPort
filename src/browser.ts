@@ -473,13 +473,11 @@ window.onload = () => {
                     event.returnValue = {"username": user, "homepage": homepage};
         });
         remote.ipcMain.on("update-homepage", function(event: any, newHomepage: string){
+            if (newHomepage.indexOf("http") === -1) {
+                newHomepage = `http://${newHomepage}`;
+            }
             homepage = newHomepage;
             let userWrite = {"username" : user, "homepage" : newHomepage};
-            fs.writeFile(("./users/" + user + "/settings.json"), JSON.stringify(userWrite), "utf8", (err: any) => {
-                if (err) {
-                    console.log("error in writing back new homepage");
-                }
-            });
             fs.writeFile((path + "/settings.json"), JSON.stringify(userWrite), "utf8", (err: any) => {
                 if (err) {
                     console.log("error in writing back new homepage");
