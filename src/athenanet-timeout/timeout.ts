@@ -1,6 +1,5 @@
 /// <reference path="../../typings/index.d.ts" />
-
-// const {ipcRenderer} = require("electron");
+import {ipcRenderer} from "electron";
 
 window.onload = function () {
     function checkTimeout() {

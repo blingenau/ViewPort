@@ -2,9 +2,10 @@
 
 import {Tab, UserTabBar, IDOM} from "./tabs";
 import * as requestPromise from "request-promise";
+import {PreferenceFile} from "./preference-file";
+import {ipcRenderer, remote} from "electron";
 const $: JQueryStatic = require("jquery");
-const ipc = require("electron").ipcRenderer;
-const {remote} = require("electron");
+const Stopwatch = require("timer-stopwatch");
 require("jquery-ui");
 require("jquery-ui/ui/data");
 require("jquery-ui/ui/scroll-parent");
@@ -16,6 +17,9 @@ const blankFaviconUri: string =
     "data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAA" +
     "ABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBS" +
     "MglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII=";
+let previousTimeout: number = -1;
+
+const athenaNetHomepage: string = "https://athenanet.athenahealth.com";
 
 /**
  * class DOM 
@@ -246,7 +250,7 @@ class BrowserDOM implements IDOM {
         tabs.getActiveTabBar().hideTabs();
         tabs.getUserTabBar().activateTab(tab);
         browserDom.doLayout();
-        ipc.send("update-num-tabs", tabs.getActiveTabBar().size());
+        ipcRenderer.send("update-num-tabs", tabs.getActiveTabBar().size());
     }
 
     /**
@@ -392,7 +396,7 @@ class BrowserDOM implements IDOM {
             tabs.removeTab(tab.getId());
             this.tabSwitch();
             this.doLayout();
-            ipc.send("update-num-tabs", tabs.getActiveTabBar().size());
+            ipcRenderer.send("update-num-tabs", tabs.getActiveTabBar().size());
         }
     }
 
@@ -408,47 +412,25 @@ class BrowserDOM implements IDOM {
 
 export const browserDom: BrowserDOM = new BrowserDOM();
 export const tabs: UserTabBar = new UserTabBar(browserDom);
-let homepage = "https://athenanet.athenahealth.com";
+export const stopwatch: any = new Stopwatch(false, {refreshRateMS: 1, almostDoneMS: 30000});
+let homepage = athenaNetHomepage;
 let backgroundWindow: Electron.BrowserWindow = null;
 
 window.onresize = () => browserDom.doLayout();
 window.onload = () => {
-    tabs.addUser("test");
-    let fs = require("fs");
     let user = "test";
+    let preferenceFile = new PreferenceFile(user, "settings.json");
     let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
-    if (fs.existsSync(path + "/settings.json")) {
-        console.log("Found file");
-        // read user settings from file
-        fs.readFile((path + "/settings.json"), "utf8", (err: any, data: any ) => {
-            console.log(data);
-            let obj = JSON.parse(data);
-            console.log(obj);
-            homepage = obj.homepage;
-        });
-    } else {
-        // create user
-        console.log("can't find file");
-        createNewUserSettings(user);
-    }
-
-    tabs.addTab(new Tab(browserDom, {
-        url: homepage
-    }), "test");
-    tabs.activateUser("test");
-
+    // Event Handlers 
     $("#location-form").on("submit", (): boolean => {
-        let address: string = $("#location").val();
-        tabs.getActiveTab().setUrl(address);
-        browserDom.navigateTo(browserDom.getWebview(), address);
-        return false;
+            let address: string = $("#location").val();
+            tabs.getActiveTab().setUrl(address);
+            browserDom.navigateTo(browserDom.getWebview(), address);
+            return false;
     });
-
-    browserDom.doLayout();
-
     $("#location").on("focus", (event: JQueryMouseEventObject): void => {
-        $(event.target).select();
-    });
+            $(event.target).select();
+        });
 
     // Navigation button controls
     $("#back").on("click", (): void => {
@@ -468,7 +450,6 @@ window.onload = () => {
     });
 
     $("#settings").on("click", (): void => {
-        // let path = ([remote.app.getPath("appData"), remote.app.getName(), "user", user]).join("/");
         console.log(path);
         browserDom.addTab("file://" + __dirname + "/settings.html");
         remote.ipcMain.on("get-user", (event, arg) => {
@@ -479,81 +460,116 @@ window.onload = () => {
                 newHomepage = `http://${newHomepage}`;
             }
             homepage = newHomepage;
-            let userWrite = {"username" : user, "homepage" : newHomepage};
-            fs.writeFile((path + "/settings.json"), JSON.stringify(userWrite), "utf8", (err: any) => {
-                if (err) {
-                    console.log("error in writing back new homepage");
-                }
+            let newSettings = {"username" : user, "homepage" : newHomepage};
+            preferenceFile.write(newSettings);
+        });
+    });
+    $("#reload").on("click", (): void => {
+            if (browserDom.getWebview().isLoading()) {
+                browserDom.getWebview().stop();
+            } else {
+                browserDom.getWebview().reload();
+            }
+    });
+    // Read user preference file or create a new file then create first tab
+    preferenceFile.readJson()
+    .then(settings => {
+        homepage = settings.homepage;
+    })
+    .catch(err => {
+        createNewUserSettings(preferenceFile, user);
+    })
+    .then(() => {
+        tabs.addUser("test");
+        tabs.addTab(new Tab(browserDom, {
+            url: homepage
+        }), "test");
+        tabs.activateUser("test");
+
+        browserDom.doLayout();
+
+        ipcRenderer.on("openPDF", function (event, filedata) {
+            let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
+            let PDFurl: string = PDFViewerURL + filedata.url;
+            tabs.addTab(new Tab(browserDom, {
+                    url: PDFurl
+            }));
+        });
+
+        ipcRenderer.on("enter-full-screen", function() {
+            $("#controls").addClass("fullscreen");
+        });
+
+        ipcRenderer.on("leave-full-screen", function() {
+            $("#controls").removeClass("fullscreen");
+        });
+
+        // use getAthenaTabs
+        // use the URL as domain
+        // node's url module to get host domain
+        remote.ipcMain.on("check-current-timeout", (): void => {
+            (<Electron.WebViewElement>($("#webviews").find("[src*='athena']")[0]))
+                .getWebContents().session.cookies.get({
+                        domain: "prodmirror.athenahealth.com",
+                        name: "TIMEOUT_UNENCRYPTED"
+                    }, (error: Error, cookies: Electron.Cookie[]): void => {
+                        if (!cookies || cookies.length < 2) {
+                            stopwatch.stop();
+                            return;
+                        }
+
+                        let currentTimeout: number = parseInt(cookies[1].value, 10);
+
+                        // Athenanet times out when the cookie's value is <= 0 so we lock the user.
+                        if (currentTimeout > 0) {
+                            if (tabs.getActiveTabBar().getLockedStatus()) {
+                                browserDom.unlockActiveUser();
+                                stopwatch.reset(currentTimeout*1000);
+                            }
+
+                            // Reset the timeout stopwatch to the current cookie time.
+                            if (previousTimeout === -1 || previousTimeout !== currentTimeout) {
+                                stopwatch.reset(currentTimeout*1000);
+                                stopwatch.start();
+                                previousTimeout = currentTimeout;
+                            }
+                        }
+                    });
+            });
+        // Events for the athenanet timeout stopwatch
+
+        stopwatch.onDone(() => {
+            console.log("User locked out");
+            browserDom.lockActiveUser();
+        });
+
+        stopwatch.on("almostdone", () => {
+            let options: any = {
+                type: "info",
+                message: "Your athenanet tab will lock itself from inactivity in 30 seconds.",
+                buttons: ["OK"]
+            };
+
+            remote.dialog.showMessageBox(options);
+        });
+
+        $(function() {
+            $("#tabs").sortable({
+                revert: true,
+                axis: "x",
+                scroll: false,
+                forcePlaceholderSize: true,
+                items: ".ui-state-default",
+                tolerance: "pointer",
+                containment: "parent"
+            })
+            .on("sortactivate", function(event: Event, ui: any) {
+                ui.placeholder.css("width", ui.item.css("width"));
             });
         });
+
+        createBackgroundWindow();
     });
-
-    ipc.on("openPDF", function (event, filedata) {
-        let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
-        let PDFurl: string = PDFViewerURL + filedata.url;
-        tabs.addTab(new Tab(browserDom, {
-                url: PDFurl
-        }));
-    });
-
-    ipc.on("enter-full-screen", function() {
-        $("#controls").addClass("fullscreen");
-    });
-
-    ipc.on("leave-full-screen", function() {
-        $("#controls").removeClass("fullscreen");
-    });
-
-    // use getAthenaTabs
-    // use the URL as domain
-    // node's url module to get host domain
-    remote.ipcMain.on("check-current-timeout", (): void => {
-        (<Electron.WebViewElement>($("#webviews").find("[src*='athena']")[0]))
-            .getWebContents().session.cookies.get({
-                    domain: "prodmirror.athenahealth.com",
-                    name: "TIMEOUT_UNENCRYPTED"
-                }, (error: Error, cookies: Electron.Cookie[]): void => {
-                    if (!cookies || cookies.length < 2) {
-                        return;
-                    }
-
-                    // Athenanet times out when the cookie's value is <= 0 so we lock the user
-                    if (parseInt(cookies[1].value, 10) <= 0) {
-                        if (!tabs.getActiveTabBar().getLockedStatus()) {
-                            browserDom.lockActiveUser();
-                        }
-                    } else { // If the user has logged back in the cookie resets, unlock user
-                        if (tabs.getActiveTabBar().getLockedStatus()) {
-                            browserDom.unlockActiveUser();
-                        }
-                    }
-                });
-    });
-
-    $("#reload").on("click", (): void => {
-        if (browserDom.getWebview().isLoading()) {
-            browserDom.getWebview().stop();
-        } else {
-            browserDom.getWebview().reload();
-        }
-    });
-
-    $(function() {
-        $("#tabs").sortable({
-            revert: true,
-            axis: "x",
-            scroll: false,
-            forcePlaceholderSize: true,
-            items: ".ui-state-default",
-            tolerance: "pointer",
-            containment: "parent"
-        })
-        .on("sortactivate", function(event: Event, ui: any) {
-            ui.placeholder.css("width", ui.item.css("width"));
-        });
-    });
-
-    createBackgroundWindow();
 };
 
 /**
@@ -654,25 +670,12 @@ function getFaviconImage(domain: string): Promise<string> {
             return blankFaviconUri;
         });
 }
-
-/** 
- * Create user settings 
+/**
+ * Creates a file for a user if one does not exist already
+ * @param preferenceFile    file for a given user
+ * @param user  new user
  */
-function createNewUserSettings(user: string): void {
-    let mkdirp = require("mkdirp");
-    let createFile = require("create-file");
-    // let filepath = "./users/" + user + "/settings.json";
-    let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
-    mkdirp(path, function(err: any){
-        if(err) {
-            console.log("error in mkdir");
-        } else {
-            let userWrite = {"username" : user, "homepage" : "https://athenanet.athenahealth.com"};
-            createFile((path + "/settings.json"), JSON.stringify(userWrite), function (err2: any) {
-                if(err2) {
-                    console.log("error in createFile");
-                }
-            });
-        }
-    });
+function createNewUserSettings(preferenceFile: PreferenceFile, user: string): void {
+    let defaultSettings = {"username" : user, "homepage" : athenaNetHomepage};
+    preferenceFile.write(defaultSettings);
 }
