@@ -458,9 +458,18 @@ window.onload = () => {
             if (newHomepage.indexOf("http") === -1 && newHomepage !== "about:blank") {
                 newHomepage = `http://${newHomepage}`;
             }
-            homepage = newHomepage;
+            homepage = new (<any>URL)(newHomepage).href;
             let newSettings = {"username" : user, "homepage" : newHomepage};
             preferenceFile.write(newSettings);
+            /*
+            try {
+               
+            } catch(err) {
+                homepage = "athenanet.athenahealth.com";
+                let newSettings = {"username" : user, "homepage" : newHomepage};
+                preferenceFile.write(newSettings);
+            }
+            */
         });
     });
     $("#reload").on("click", (): void => {
