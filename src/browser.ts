@@ -481,7 +481,7 @@ window.onload = () => {
     .then(() => {
         tabs.addUser("test");
         tabs.addTab(new Tab(browserDom, {
-            url: homepage
+            url: athenaNetHomepage
         }), "test");
         tabs.activateUser("test");
 
