@@ -6,5 +6,5 @@ window.onload = function () {
         ipcRenderer.send("check-current-timeout");
     }
 
-    setInterval(checkTimeout, 5000);
+    setInterval(checkTimeout, 1000);
 };
