@@ -449,7 +449,7 @@ window.onload = () => {
                     event.returnValue = {"username": user, "homepage": homepage};
         });
         remote.ipcMain.on("update-homepage", function(event: any, newHomepage: string){
-            if (newHomepage.indexOf("http") === -1) {
+            if (newHomepage.indexOf("http") === -1 && newHomepage !== "about:blank") {
                 newHomepage = `http://${newHomepage}`;
             }
             homepage = newHomepage;
