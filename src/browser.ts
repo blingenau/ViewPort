@@ -473,9 +473,10 @@ window.onload = () => {
     // Read user preference file or create a new file then create first tab
     preferenceFile.readJson()
     .then(settings => {
-        homepage = settings.homepage;
+        homepage = new (<any>URL)(settings.homepage).href;
     })
     .catch(err => {
+        // any errors in the file will result in the default settings being applied to the user
         createNewUserSettings(preferenceFile, user);
     })
     .then(() => {
