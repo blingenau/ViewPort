@@ -166,10 +166,7 @@ class BrowserDOM implements IDOM {
      */
     public hideTab(id: string): void {
         id = id || tabs.getActiveTab().getId();
-        $(`[tabID='${id}']`).css({
-            width:"0px",
-            height:"0px"
-        });
+        $(`[tabID='${id}']`).hide();
         $(`#${id}`).removeClass("tab-current");
     }
 
@@ -186,16 +183,7 @@ class BrowserDOM implements IDOM {
      */
     public showTab(id: string): void {
         id = id || tabs.getActiveTab().getId();
-        let controlsHeight: number = $("#controls").outerHeight();
-        let tabBarHeight: number = $("#tabs").outerHeight();
-        let windowWidth: number = document.documentElement.clientWidth;
-        let windowHeight: number = document.documentElement.clientHeight;
-        let webviewWidth: number = windowWidth;
-        let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
-        $(`[tabID='${id}']`).css({
-            width: webviewWidth + "px",
-            height: webviewHeight + "px"
-        });
+        $(`[tabID='${id}']`).show();
         $(`#${id}`).addClass("tab-current");
     }
 
@@ -280,8 +268,7 @@ class BrowserDOM implements IDOM {
         let webviewWidth: number = windowWidth;
         let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
         let tabWidth: string =  (100/tabs.length).toString() + "%";
-        let webview = this.getWebview();
-        $(webview).css({
+        $("webview").css({
             width: webviewWidth + "px",
             height: webviewHeight + "px"
         });
@@ -308,12 +295,25 @@ class BrowserDOM implements IDOM {
         if (!url) {
             url = homepage;
         }
-
         if (url.indexOf("http") === -1 && !isLocalContent) {
             url = `http://${url}`;
         }
         $("#location").blur();
-        webview.loadURL(url);
+
+        // dont allow navigation away from last athena tab
+        // potentially add warning here describing this fact
+        let athenaTabs: Tab[] = this.getAthenaTabs();
+        if (athenaTabs.length === 1 && tabs.getActiveTab() === athenaTabs[0]) {
+            let options: any = {
+                type: "info",
+                message: "You must always have one tab with athenanet open.",
+                buttons: ["OK"]
+            };
+            remote.dialog.showMessageBox(options);
+        } else {
+            tabs.getActiveTab().setUrl(url);
+            webview.loadURL(url);
+        }
     }
 
     /**
@@ -325,6 +325,13 @@ class BrowserDOM implements IDOM {
         let forward: JQuery = $("#forward");
         let location: JQuery = $("#location");
 
+        // if there is only one athenaTab remaining hide its close button 
+        let athenaTabs = this.getAthenaTabs();
+        if (athenaTabs.length === 1) {
+            $(`#${athenaTabs[0].getId()} .tab-close`).hide();
+        } else if (!tabs.getActiveTabBar().getLockedStatus()) {
+                $(".tab-close").show();
+        }
         // Re-evaluate the back/forward navigation buttons based on new active Tab
         (<HTMLButtonElement>back.get(0)).disabled = !active.canGoBack();
         (<HTMLButtonElement>forward.get(0)).disabled = !active.canGoForward();
@@ -366,14 +373,14 @@ class BrowserDOM implements IDOM {
 
     public lockActiveUser(): void {
         tabs.getActiveTabBar().setLockedStatus(true);
-        $("#add-tab").hide();
+        $("#add-tab").prop("disabled",true);
         $(".tab-close").hide();
         $("#location").prop("disabled",true);
     }
 
     public unlockActiveUser(): void {
         tabs.getActiveTabBar().setLockedStatus(false);
-        $("#add-tab").show();
+        $("#add-tab").prop("disabled",true);
         $(".tab-close").show();
         $("#location").prop("disabled",false);
     }
@@ -417,7 +424,6 @@ window.onload = () => {
     // Event Handlers 
     $("#location-form").on("submit", (): boolean => {
             let address: string = $("#location").val();
-            tabs.getActiveTab().setUrl(address);
             browserDom.navigateTo(browserDom.getWebview(), address);
             return false;
     });

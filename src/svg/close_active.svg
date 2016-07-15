@@ -1,0 +1,18 @@
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #a5a4a4;
+      }
+
+      .cls-2 {
+        fill: #8b8a91;
+      }
+    </style>
+  </defs>
+  <title>close_click</title>
+  <g>
+    <rect class="cls-1" width="8" height="8" rx="1" ry="1"/>
+    <path id="x" class="cls-2" d="M1246.29,49.76h0l-1.41-1.38L1246.3,47h0a0.47,0.47,0,0,0,0-.68,0.5,0.5,0,0,0-.69,0l-1.41,1.38-1.41-1.38h0a0.5,0.5,0,0,0-.69,0,0.47,0.47,0,0,0,0,.68h0l1.41,1.38-1.41,1.38h0a0.47,0.47,0,0,0,0,.68,0.5,0.5,0,0,0,.69,0h0l1.41-1.38,1.41,1.38h0a0.5,0.5,0,0,0,.69,0A0.47,0.47,0,0,0,1246.29,49.76Z" transform="translate(-1240.18 -44.37)"/>
+  </g>
+</svg>
