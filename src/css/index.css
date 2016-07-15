@@ -33,6 +33,10 @@ input {
 }
 #add-tab:hover {background-image: url("../svg/add_tab.svg");}
 #add-tab:hover:active {background-image: url("../svg/add_tab.svg");}
+#add-tab:disabled {
+  background-image: none;
+  background: #cccccc;
+}
 
 /*button.tab {
   height: 20px;

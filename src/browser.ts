@@ -321,6 +321,13 @@ class BrowserDOM implements IDOM {
         let forward: JQuery = $("#forward");
         let location: JQuery = $("#location");
 
+        // if there is only one athenaTab remaining hide its close button 
+        let athenaTabs = this.getAthenaTabs();
+        if (athenaTabs.length === 1) {
+            $(`#${athenaTabs[0].getId()} .tab-close`).hide();
+        } else if (!tabs.getActiveTabBar().getLockedStatus()) {
+                $(".tab-close").show();
+        }
         // Re-evaluate the back/forward navigation buttons based on new active Tab
         (<HTMLButtonElement>back.get(0)).disabled = !active.canGoBack();
         (<HTMLButtonElement>forward.get(0)).disabled = !active.canGoForward();
@@ -362,14 +369,14 @@ class BrowserDOM implements IDOM {
 
     public lockActiveUser(): void {
         tabs.getActiveTabBar().setLockedStatus(true);
-        $("#add-tab").hide();
+        $("#add-tab").prop("disabled",true);
         $(".tab-close").hide();
         $("#location").prop("disabled",true);
     }
 
     public unlockActiveUser(): void {
         tabs.getActiveTabBar().setLockedStatus(false);
-        $("#add-tab").show();
+        $("#add-tab").prop("disabled",true);
         $(".tab-close").show();
         $("#location").prop("disabled",false);
     }
