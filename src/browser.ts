@@ -4,6 +4,7 @@ import {Tab, UserTabBar, IDOM} from "./tabs";
 import * as requestPromise from "request-promise";
 import {PreferenceFile} from "./preference-file";
 import {ipcRenderer, remote} from "electron";
+import * as nodeUrl from "url";
 const $: JQueryStatic = require("jquery");
 const Stopwatch = require("timer-stopwatch");
 require("jquery-ui");
@@ -17,9 +18,9 @@ const blankFaviconUri: string =
     "data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAA" +
     "ABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBS" +
     "MglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII=";
-let previousTimeout: number = -1;
-
 const athenaNetHomepage: string = "https://athenanet.athenahealth.com";
+let almostDoneFired: boolean = false;
+let previousTimeout: number = -1;
 
 /**
  * class DOM 
@@ -292,6 +293,7 @@ class BrowserDOM implements IDOM {
      * @param isLocalContent   Whether the URL is local isLocalContent to load.
      */
     public navigateTo(webview: Electron.WebViewElement, url: string, isLocalContent?: boolean): void {
+        isLocalContent = isLocalContent ? isLocalContent : url.includes("file://");
         if (!url) {
             url = homepage;
         }
@@ -380,12 +382,12 @@ class BrowserDOM implements IDOM {
 
     public unlockActiveUser(): void {
         tabs.getActiveTabBar().setLockedStatus(false);
-        $("#add-tab").prop("disabled",true);
+        $("#add-tab").prop("disabled",false);
         $(".tab-close").show();
         $("#location").prop("disabled",false);
     }
 
-    private isAthenaUrl(url: string): boolean {
+    public isAthenaUrl(url: string): boolean {
         // let re: RegExp = new RegExp("^https://(?:[\w-]+\.)+athenahealth\.com(?::\d+)?");
         // return re.test(url);
         return url.match(/^https:\/\/(?:[\w-]+\.)+athenahealth\.com(?::\d+)?/) !== null;
@@ -482,9 +484,10 @@ window.onload = () => {
     .then(() => {
         tabs.addUser("test");
         tabs.addTab(new Tab(browserDom, {
-            url: athenaNetHomepage
+            url: "http://prodmirror.athenahealth.com"
         }), "test");
         tabs.activateUser("test");
+        browserDom.lockActiveUser();
 
         browserDom.doLayout();
 
@@ -508,9 +511,17 @@ window.onload = () => {
         // use the URL as domain
         // node's url module to get host domain
         remote.ipcMain.on("check-current-timeout", (): void => {
-            (<Electron.WebViewElement>($("#webviews").find("[src*='athena']")[0]))
-                .getWebContents().session.cookies.get({
-                        domain: "prodmirror.athenahealth.com",
+            let athenaWebview: Electron.WebViewElement =
+                $("#webviews").children().get().filter((webview: Electron.WebViewElement) => {
+                    return browserDom.isAthenaUrl(webview.getURL());
+                })[0];
+            if (!athenaWebview) {
+                return;
+            }
+            let athenaDomain: string = nodeUrl.parse(athenaWebview.getURL()).hostname;
+
+            athenaWebview.getWebContents().session.cookies.get({
+                        domain: athenaDomain,
                         name: "TIMEOUT_UNENCRYPTED"
                     }, (error: Error, cookies: Electron.Cookie[]): void => {
                         if (!cookies || cookies.length < 2) {
@@ -519,19 +530,33 @@ window.onload = () => {
                         }
 
                         let currentTimeout: number = parseInt(cookies[1].value, 10);
+                        let totalTimeout: number = parseInt(cookies[0].value, 10);
+                        // let isHidden: boolean = $(athenaWebview).css("display") === "none";
+                        console.log(`${currentTimeout} => ${stopwatch.ms}`);
 
                         // Athenanet times out when the cookie's value is <= 0 so we lock the user.
                         if (currentTimeout > 0) {
-                            if (tabs.getActiveTabBar().getLockedStatus()) {
+                            let userIsLocked: boolean = tabs.getActiveTabBar().getLockedStatus();
+
+                            if (userIsLocked) {
                                 browserDom.unlockActiveUser();
                                 stopwatch.reset(currentTimeout*1000);
+                                stopwatch.start();
+                                return;
                             }
 
                             // Reset the timeout stopwatch to the current cookie time.
-                            if (previousTimeout === -1 || previousTimeout !== currentTimeout) {
+                            if (previousTimeout === -1 || (previousTimeout !== currentTimeout && !userIsLocked)) {
                                 stopwatch.reset(currentTimeout*1000);
                                 stopwatch.start();
+                                if (totalTimeout === currentTimeout) {
+                                    almostDoneFired = false;
+                                }
                                 previousTimeout = currentTimeout;
+                            }
+                        } else {
+                            if (!tabs.getActiveTabBar().getLockedStatus()) {
+                                browserDom.lockActiveUser();
                             }
                         }
                     });
@@ -539,11 +564,17 @@ window.onload = () => {
         // Events for the athenanet timeout stopwatch
 
         stopwatch.onDone(() => {
-            console.log("User locked out");
-            browserDom.lockActiveUser();
+            if (!tabs.getActiveTabBar().getLockedStatus()) {
+                console.log("User locked out");
+                browserDom.lockActiveUser();
+            }
         });
 
         stopwatch.on("almostdone", () => {
+            if (almostDoneFired) {
+                return;
+            }
+
             let options: any = {
                 type: "info",
                 message: "Your athenanet tab will lock itself from inactivity in 30 seconds.",
@@ -551,6 +582,7 @@ window.onload = () => {
             };
 
             remote.dialog.showMessageBox(options);
+            almostDoneFired = true;
         });
 
         $(function() {
