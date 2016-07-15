@@ -1,47 +1,3 @@
-/*
-/// <reference path="../typings/index.d.ts" />
-import {ipcRenderer} from "electron";
-
-let currentUserHomepage: string = "";
-let currentUser: string = "";
-
-window.onload = () => {
-  let userObject = ipcRenderer.sendSync("get-user");
-  currentUser = userObject.username;
-  currentUserHomepage = userObject.homepage;
-  $("#user-settings")
-    .append($("<div>")
-    .html("Welcome " + currentUser));
-  $("#user-settings")
-    .append($("<div>")
-    .attr("id", "homepage")
-      .append($("<div>")
-      .addClass("current-homepage")
-      .html("Homepage: " + currentUserHomepage)));
-  $("#user-settings")
-    .append($("<form>")
-      .attr("onsubmit", "event.preventDefault()")
-      .attr("id", "homepage-form")
-        .append($("<input>").attr("id", "new-homepage").attr("type", "text")));
-  $("#user-settings")
-    .append($("<button>")
-    .attr("id", "submit-user-settings")
-    .html("save"));
-
-  $(document).ready(function () {
-    $("#submit-user-settings").on("click", (): boolean => {
-            console.log($("#new-homepage").val());
-            currentUserHomepage = $("#new-homepage").val();
-            ipcRenderer.send("update-homepage", currentUserHomepage);
-            $("#homepage").empty()
-                .append($("<div>")
-                    .addClass("current-homepage")
-                    .html("Homepage: " + currentUserHomepage));
-            return false;
-    });
-  });
-};
-*/
 /// <reference path="../typings/index.d.ts" />
 import {ipcRenderer} from "electron";
 
@@ -65,7 +21,7 @@ window.onload = () => {
     .append($("<form>").attr("onsubmit", "event.preventDefault()")
       .attr("id", "homepage-form")
         .append($("<input>").attr("value", "new-homepage").attr("type", "radio").attr("checked","checked")
-          .attr("name", "newTabCreation")).append("Specific page")
+          .attr("name", "newTabCreation")).append("Specific page ")
         .append($("<input>").attr("id", "new-homepage1").attr("type", "text").attr("value", currentUserHomepage)
           .attr("name", "newTabCreation")).append("<br>")
         .append($("<input>").attr("value", "new-homepage2").attr("type", "radio")
@@ -76,11 +32,6 @@ window.onload = () => {
     .append($("<button>")
     .attr("id", "submit-user-settings")
     .html("save"));
-/*
-  $("input").on("click" , function(){
-    $("input").not(this).attr('checked', false);
-  });
-  */
 
   $(document).ready(function () {
     $("#submit-user-settings").on("click", (): boolean => {
@@ -91,38 +42,27 @@ window.onload = () => {
               currentUserHomepage = $("#new-homepage1").val();
               console.log("#new-homepage1: " + currentUserHomepage);
               ipcRenderer.send("update-homepage", currentUserHomepage);
-              $("#homepage").empty()
-                .append($("<div>")
-                    .addClass("current-homepage")
-                    .html("New tabs open to " + currentUserHomepage));
+              updateHomePage(currentUserHomepage);
               return false;
             } else if (submitValue === "new-homepage2") {
               currentUserHomepage = "about:blank";
               ipcRenderer.send("update-homepage", currentUserHomepage);
-              $("#homepage").empty()
-                .append($("<div>")
-                    .addClass("current-homepage")
-                    .html("New tabs open to " + currentUserHomepage));
+              updateHomePage(currentUserHomepage);
               return false;
             } else {
               currentUserHomepage = "athenanet.athenahealth.com";
               ipcRenderer.send("update-homepage", currentUserHomepage);
-              $("#homepage").empty()
-                .append($("<div>")
-                    .addClass("current-homepage")
-                    .html("New tabs open to " + currentUserHomepage));
+              updateHomePage(currentUserHomepage);
               return false;
             }
-            /*      
-            console.log($("#new-homepage").val());
-            currentUserHomepage = $("#new-homepage").val();
-            ipcRenderer.send("update-homepage", currentUserHomepage);
-            $("#homepage").empty()
-                .append($("<div>")
-                    .addClass("current-homepage")
-                    .html("Homepage: " + currentUserHomepage));
-            return false;
-            */
     });
   });
 };
+
+function updateHomePage(newHomepage: string): void {
+  $("#homepage").empty()
+                .append($("<div>")
+                    .addClass("current-homepage")
+                    .html("New tabs open to " + currentUserHomepage));
+  $("#new-homepage1").removeAttr("value").attr("value", currentUserHomepage);
+}
