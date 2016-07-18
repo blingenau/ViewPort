@@ -216,4 +216,16 @@ describe("TabBarSet", function() {
         mock.verify();
     });
 
+    it("can add multiple users", function(){
+        let [mock, tabs] = setupMocks({});
+
+        tabs.addUser("test");
+        tabs.addUser("test2");
+        tabs.getUsers().length.should.equal(2);
+        tabs.getUsers()[0].should.equal("test");
+        tabs.size().should.equal(2);
+        mock.verify();
+
+    });
+
 });
