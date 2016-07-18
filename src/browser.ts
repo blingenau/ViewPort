@@ -498,7 +498,9 @@ window.onload = () => {
             url: "http://prodmirror.athenahealth.com"
         }), "test");
         tabs.activateUser("test");
-        browserDom.lockActiveUser();
+        if(!process.env.athenahealth_viewport_test) {
+            browserDom.lockActiveUser();
+        }
 
         browserDom.doLayout();
 
