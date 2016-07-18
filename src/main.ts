@@ -85,7 +85,7 @@ function createWindow(): void {
         mainWindow.on("close", (event: Electron.Event) => {
             // Stores the window size of this session
             let windowSize: number[] = mainWindow.getSize();
-            let windowSizeSettings = {"width" : windowSize[0], height : windowSize[1]};
+            let windowSizeSettings = {"width" : windowSize[0], "height" : windowSize[1]};
             preferenceFile.write(windowSizeSettings)
             .catch(err => {
                 createNewApplicationSettings(windowSize[0], windowSize[1]);
