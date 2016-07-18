@@ -3,6 +3,7 @@
     "assertion-error": "registry:dt/assertion-error#1.0.0+20160316155526",
     "chai": "registry:dt/chai#3.4.0+20160601211834",
     "chai-as-promised": "registry:dt/chai-as-promised#0.0.0+20160423070304",
+    "express": "registry:dt/express#4.0.0+20160708185218",
     "github-electron": "registry:dt/github-electron#1.2.5+20160624085047",
     "jquery": "registry:dt/jquery#1.10.0+20160704162008",
     "jqueryui": "registry:dt/jqueryui#1.9.0+20160627030821",
@@ -12,7 +13,8 @@
     "promises-a-plus": "registry:dt/promises-a-plus#0.0.0+20160317120654",
     "q": "registry:dt/q#0.0.0+20160613154756",
     "request-promise": "registry:dt/request-promise#3.0.0+20160628092802",
-    "webdriverio": "registry:dt/webdriverio#3.3.0+20160316155526"
+    "webdriverio": "registry:dt/webdriverio#3.3.0+20160316155526",
+    "ws": "registry:dt/ws#0.0.0+20160405094435"
   },
   "dependencies": {
     "es6-promise": "registry:npm/es6-promise#3.0.0+20160211003958",
