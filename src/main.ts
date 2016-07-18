@@ -8,7 +8,7 @@ const BrowserWindow: typeof Electron.BrowserWindow = electron.BrowserWindow;
 // Electron's dialog API
 const {dialog} = require("electron");
 
-import {PreferenceFileManager} from "./preference-file";
+import {PreferenceFileManager, PreferenceFile} from "./preference-file";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
@@ -24,85 +24,111 @@ let numTabs: number = 1;
 const preferenceFileManager = new PreferenceFileManager();
 preferenceFileManager.start();
 
+// The preference file that manages application level settings
+let preferenceFile: PreferenceFile = new PreferenceFile(".application");
+
 /**
  * Function to create a browser window
  */
 function createWindow(): void {
-    // Create the browser window.
-    mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
-        minHeight: 300,
-        minWidth: 400,
-        titleBarStyle: "hidden-inset"
-    });
+    let width: number;
+    let height: number;
+    // Read in the saved window size from the last session.
+    preferenceFile.readJson()
+    .then(settings => {
+        width = settings.width;
+        height = settings.height;
+    })
+    .catch(err => {
+        createNewApplicationSettings(800, 600);
+        width = 800;
+        height = 600;
+    })
+    .then(() => {
+        // Create the browser window.
+        mainWindow = new BrowserWindow({
+            width: width,
+            height: height,
+            minWidth: 800,
+            minHeight: 600,
+            titleBarStyle: "hidden-inset"
+        });
 
-    // Load the index.html of the app
-    let startPage = process.env.athenahealth_viewport_startpage || "index.html";
-    mainWindow.loadURL(`file://${__dirname}/${startPage}`);
+        // Load the index.html of the app
+        let startPage = process.env.athenahealth_viewport_startpage || "index.html";
+        mainWindow.loadURL(`file://${__dirname}/${startPage}`);
 
-    // Open the DevTOols.
-    // mainWindow.webContents.openDevTools();
+        // Open the DevTOols.
+        // mainWindow.webContents.openDevTools();
 
-    // Emitted when the window is closed
-    mainWindow.on("closed", () => {
-        // Dereference the window object. Usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
-        mainWindow = null;
-        BrowserWindow.getAllWindows().forEach((value: Electron.BrowserWindow): void => {
-            if (value.isClosable()) {
-                value.close();
+        // Emitted when the window is closed
+        mainWindow.on("closed", () => {
+            // Dereference the window object. Usually you would store windows
+            // in an array if your app supports multi windows, this is the time
+            // when you should delete the corresponding element.
+            mainWindow = null;
+            BrowserWindow.getAllWindows().forEach((value: Electron.BrowserWindow): void => {
+                if (value.isClosable()) {
+                    value.close();
+                }
+            });
+        });
+
+        mainWindow.on("enter-full-screen", function () {
+            mainWindow.webContents.send("enter-full-screen");
+        });
+
+        mainWindow.on("leave-full-screen", function () {
+            mainWindow.webContents.send("leave-full-screen");
+        });
+
+        mainWindow.on("close", (event: Electron.Event) => {
+            // Stores the window size of this session
+            let windowSize: number[] = mainWindow.getSize();
+            let windowSizeSettings = {"width" : windowSize[0], height : windowSize[1]};
+            preferenceFile.write(windowSizeSettings)
+            .catch(err => {
+                createNewApplicationSettings(windowSize[0], windowSize[1]);
+            });
+
+            if (process.env.athenahealth_viewport_test) {
+                // we don't want to present the close dialog during testing
+                return;
+            }
+            // potentially add some ipc here to request if it is OK to close without dialog (one tab, etc.)
+            if (numTabs > 1) {
+                const appName = app.getName();
+                const options: Object = {
+                    type: "question",
+                    title: `Close ${appName}`,
+                    message: `Closing ${appName} will also close all of your open tabs.`,
+                    detail: `If you choose Close ${appName}, ${appName} along with all of your tabs will be closed.`,
+                    buttons: [`Close ${appName}`, "Cancel"]
+                };
+                let response: Number = dialog.showMessageBox(mainWindow, options);
+
+                if (response === 1) {
+                    event.preventDefault();
+                }
             }
         });
-    });
 
-    mainWindow.on("enter-full-screen", function () {
-        mainWindow.webContents.send("enter-full-screen");
-    });
-
-    mainWindow.on("leave-full-screen", function () {
-        mainWindow.webContents.send("leave-full-screen");
-    });
-
-    mainWindow.on("close", (event: Electron.Event) => {
-        if (process.env.athenahealth_viewport_test) {
-            // we don't want to present the close dialog during testing
-            return;
-        }
-        // potentially add some ipc here to request if it is OK to close without dialog (one tab, etc.)
-        if (numTabs > 1) {
-            const appName = app.getName();
-            const options: Object = {
-                type: "question",
-                title: `Close ${appName}`,
-                message: `Closing ${appName} will also close all of your open tabs.`,
-                detail: `If you choose Close ${appName}, ${appName} along with all of your tabs will be closed.`,
-                buttons: [`Close ${appName}`, "Cancel"]
-            };
-            let response: Number = dialog.showMessageBox(mainWindow, options);
-
-            if (response === 1) {
+        mainWindow.webContents.session.on("will-download", function (event, item, webContents) {
+            let itemURL: string = item.getURL();
+            // clicking the download button in the viewer opens a blob url, 
+            // so we don't want to open those in the viewer (since that would make it impossible to download a PDF)
+            if (item.getMimeType() === "application/pdf" && itemURL.indexOf("blob:") !== 0) {
                 event.preventDefault();
+                mainWindow.webContents.send("openPDF", {
+                    url: itemURL,
+                    event: event,
+                    item: item, // as of electron 0.35.1, this is an empty object
+                    webContents: webContents
+                });
             }
-        }
+            return true;
+        });
     });
-
-    mainWindow.webContents.session.on("will-download", function (event, item, webContents) {
-        let itemURL: string = item.getURL();
-        // clicking the download button in the viewer opens a blob url, 
-        // so we don't want to open those in the viewer (since that would make it impossible to download a PDF)
-        if (item.getMimeType() === "application/pdf" && itemURL.indexOf("blob:") !== 0) {
-            event.preventDefault();
-            mainWindow.webContents.send("openPDF", {
-                url: itemURL,
-                event: event,
-                item: item, // as of electron 0.35.1, this is an empty object
-                webContents: webContents
-            });
-        }
-        return true;
-  });
 }
 // This method will be called when ELectron has finished
 // initialization and is ready to create browser windows.
@@ -114,7 +140,7 @@ app.on("ready", () => {
 // Quit when all windows are closed.
 app.on("windows-all-closed", () => {
     // On OS X it is commnon for applications and their menu bar
-    // to stay actuve until the user quits explicitly with Cmd + Q
+    // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== "darwin") {
         app.quit();
     }
@@ -122,7 +148,7 @@ app.on("windows-all-closed", () => {
 
 app.on("activate", () => {
     // On OS X it's common to re-create  a window in the app when the
-    // dock icon is clicked and there are on other windows open.
+    // dock icon is clicked and there are no other windows open.
     if (mainWindow === null) {
         createWindow();
     }
@@ -135,3 +161,12 @@ ipcMain.on("tabs-all-closed", (): void => {
 ipcMain.on("update-num-tabs", (event: Electron.IpcMainEvent, tabs: number): void => {
     numTabs = tabs;
 });
+
+/**
+ * Creates a file for the application if one does not exist already
+ * @param preferenceFile    file for the application settings.
+ */
+function createNewApplicationSettings(width: number, height: number): void {
+    let defaultSettings = {"width" : width, "height" : height};
+    preferenceFile.write(defaultSettings);
+}
