@@ -255,7 +255,7 @@ export class PreferenceFile {
     public write(content: string | Array<any> | Object): Promise<void> {
         let stringContent: string = (typeof content === "string" || content instanceof String)
             ? content
-            : JSON.stringify(content);
+            : JSON.stringify(content, null, 4);
         return preferenceFileStorage.write(this.filename, stringContent);
     }
 }
