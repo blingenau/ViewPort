@@ -305,7 +305,9 @@ class BrowserDOM implements IDOM {
         // dont allow navigation away from last athena tab
         // potentially add warning here describing this fact
         let athenaTabs: Tab[] = this.getAthenaTabs();
-        if (athenaTabs.length === 1 && tabs.getActiveTab() === athenaTabs[0]) {
+        if (athenaTabs.length === 1 &&
+            tabs.getActiveTab() === athenaTabs[0] &&
+            !this.isAthenaUrl(url)) {
             let options: any = {
                 type: "info",
                 message: "You must always have one tab with athenanet open.",
@@ -390,7 +392,7 @@ class BrowserDOM implements IDOM {
     public isAthenaUrl(url: string): boolean {
         // let re: RegExp = new RegExp("^https://(?:[\w-]+\.)+athenahealth\.com(?::\d+)?");
         // return re.test(url);
-        return url.match(/^https:\/\/(?:[\w-]+\.)+athenahealth\.com(?::\d+)?/) !== null;
+        return url.match(/^https?:\/\/(?:[\w-]+\.)+athenahealth\.com(?::\d+)?/) !== null;
     }
 
     private closeTabOnClick(tab: Tab): void {
@@ -442,8 +444,8 @@ window.onload = () => {
         browserDom.getWebview().goForward();
     });
 
-    $("#home").on("click", (): void => {
-        browserDom.navigateTo(browserDom.getWebview(), homepage);
+    $("#athena").on("click", (): void => {
+        browserDom.navigateTo(browserDom.getWebview(), "https://athenanet.athenahealth.com");
     });
 
     $("#add-tab").on("click", (): void => {
@@ -534,6 +536,7 @@ window.onload = () => {
                         name: "TIMEOUT_UNENCRYPTED"
                     }, (error: Error, cookies: Electron.Cookie[]): void => {
                         if (!cookies || cookies.length < 2) {
+                            console.log("No cookies");
                             stopwatch.stop();
                             return;
                         }
@@ -551,6 +554,7 @@ window.onload = () => {
                                 browserDom.unlockActiveUser();
                                 stopwatch.reset(currentTimeout*1000);
                                 stopwatch.start();
+                                almostDoneFired = false;
                                 return;
                             }
 

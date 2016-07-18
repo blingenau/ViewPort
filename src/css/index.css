@@ -53,7 +53,7 @@ input {
 
 #controls {
   padding: 0px;
-  padding-left: 75px;
+  padding-left: 90px;
   background-color: #e4e3e5;
   -webkit-app-region: drag;
   display: -webkit-flex;
@@ -63,7 +63,7 @@ input {
 }
 
 #controls.fullscreen {
-  padding-left: 15px;
+  padding-left: 20px;
 }
 
 #controls * {
@@ -100,26 +100,28 @@ input {
 #home:active {background-image: url("../svg/home_active.svg");}
 
 .reload {
-  width: 24px;
-  height: 23px;
+  width: 21px;
+  height: 22px;
   padding: 0px;
   position: absolute;
-  right: 5px;
-  top: 1px;
+  right: 9px;
+  top: 2px;
   background-image: url("../svg/reload_loading.svg");
   background-color: white;
-  border-radius: 10px;
 }
 #location.location-loaded + .reload {
   background-image: url("../svg/reload.svg");
 }
 
+#username{
+  margin-top: 17px;
+  margin-left: 15px;
+  font-size: 12px;
+}
+
 #athena {
-  position: absolute;
-  right: 65px;
-  width: 96px;
-  height: 20px;
-  top: 11px;
+  width: 16px;
+  height: 16px;
   background-color: transparent;
   background-image: url("../svg/athenanet_button.svg")
 }
@@ -207,7 +209,7 @@ compared to the back/forward buttons */
   padding-top: 7px;
   padding-bottom: 7px;
   width: 55%;
-  margin: 0 10px;
+  margin-left: 21px;
 }
 
 #controls #center-column {
