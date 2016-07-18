@@ -9,15 +9,15 @@ window.onload = () => {
   currentUser = userObject.username;
   currentUserHomepage = userObject.homepage;
   $("#user-settings")
-      .append($("<div>")
-          .html("Welcome " + currentUser))
-          .append("<br><br>");
+    .append($("<div>")
+        .html("Welcome " + currentUser))
+    .append("<br><br>");
   $("#user-settings")
-      .append($("<div>")
-          .attr("id", "homepage")
-          .append($("<div>")
-              .addClass("current-homepage")
-              .html("New tabs open to " + currentUserHomepage)));
+    .append($("<div>")
+        .attr("id", "homepage")
+        .append($("<div>")
+            .addClass("current-homepage")
+            .html("New tabs open to " + currentUserHomepage)));
   $("#user-settings")
       .append($("<form>")
           .attr("onsubmit", "event.preventDefault()")
@@ -41,10 +41,10 @@ window.onload = () => {
                   .append("Blank page")
                   .append("<br>")
                           .append($("<input>")
-                                          .attr("value", "new-homepage3")
-                                          .attr("type", "radio")
-                                          .attr("name", "newTabCreation"))
-                                          .append("athenaNet"));
+                                .attr("value", "new-homepage3")
+                                .attr("type", "radio")
+                                .attr("name", "newTabCreation"))
+                                .append("athenaNet"));
   $("#user-settings")
       .append($("<button>")
       .attr("id", "submit-user-settings")
