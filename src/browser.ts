@@ -224,6 +224,7 @@ class BrowserDOM implements IDOM {
         }
 
         $("#location").val(url);
+        $("#location").attr("value", url);
     }
 
     /**
@@ -453,6 +454,7 @@ window.onload = () => {
     });
 
     $("#settings").on("click", (): void => {
+        $("#location").removeClass("location-loaded");
         console.log(path);
         browserDom.addTab("file://" + __dirname + "/settings.html");
         remote.ipcMain.on("get-user", (event, arg) => {
@@ -499,7 +501,7 @@ window.onload = () => {
         }), "test");
         tabs.activateUser("test");
         if(!process.env.athenahealth_viewport_test) {
-            browserDom.lockActiveUser();
+            // browserDom.lockActiveUser();
         }
 
         browserDom.doLayout();
