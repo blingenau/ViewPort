@@ -226,6 +226,7 @@ class BrowserDOM implements IDOM {
         }
 
         $("#location").val(url);
+        $("#location").attr("value", url);
     }
 
     /**
@@ -455,6 +456,7 @@ window.onload = () => {
     });
 
     $("#settings").on("click", (): void => {
+        $("#location").removeClass("location-loaded");
         console.log(path);
         browserDom.addTab("file://" + __dirname + "/settings.html");
         remote.ipcMain.on("get-user", (event, arg) => {
@@ -467,15 +469,6 @@ window.onload = () => {
             homepage = new (<any>URL)(newHomepage).href;
             let newSettings = {"username" : user, "homepage" : newHomepage};
             preferenceFile.write(newSettings);
-            /*
-            try {
-               
-            } catch(err) {
-                homepage = "athenanet.athenahealth.com";
-                let newSettings = {"username" : user, "homepage" : newHomepage};
-                preferenceFile.write(newSettings);
-            }
-            */
         });
     });
     $("#reload").on("click", (): void => {
@@ -500,7 +493,8 @@ window.onload = () => {
             url: "http://prodmirror.athenahealth.com"
         }), "test");
         tabs.activateUser("test");
-        if(!process.env.athenahealth_viewport_test) {
+
+        if (!process.env.athenahealth_viewport_test) {
             browserDom.lockActiveUser();
         }
 

@@ -113,4 +113,10 @@ describe("application launch", function() {
         await app.client.waitForExist(".location-loaded");
         await app.client.getValue("#location").should.eventually.contain("example");
     });
+
+    it("can navigate to the settings", async function(){
+        await app.client.click("#settings");
+        await app.client.waitForExist(".location-loaded");
+        await app.client.getValue("#location").should.eventually.contain("settings");
+    });
 });

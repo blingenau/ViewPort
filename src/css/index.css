@@ -138,8 +138,8 @@ input {
 
 #dock .dock {
   position: absolute;
-  width: 16px;
-  height: 16px;
+  width: 30px;
+  height: 30px;
   background-color: transparent;
   border: 0;
 }
@@ -148,11 +148,13 @@ input {
   left: 10px;
   background-image: url("../svg/hamburger.svg");
 }
+/*
 #settings {
   top: 21px;
   left: 10px;
   background-image: url("../svg/gear.svg");
 }
+*/
 
 
 #controls button,
