@@ -419,7 +419,7 @@ class BrowserDOM implements IDOM {
 
 export const browserDom: BrowserDOM = new BrowserDOM();
 export const tabs: UserTabBar = new UserTabBar(browserDom);
-export const stopwatch: any = new Stopwatch(false, {refreshRateMS: 1, almostDoneMS: 1700000});
+export const stopwatch: any = new Stopwatch(false, {refreshRateMS: 1, almostDoneMS: 30000});
 let homepage = athenaNetHomepage;
 let backgroundWindow: Electron.BrowserWindow = null;
 
