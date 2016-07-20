@@ -148,14 +148,6 @@ input {
   left: 10px;
   background-image: url("../svg/hamburger.svg");
 }
-/*
-#settings {
-  top: 21px;
-  left: 10px;
-  background-image: url("../svg/gear.svg");
-}
-*/
-
 
 #controls button,
 input[type="submit"] {
