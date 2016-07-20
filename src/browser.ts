@@ -496,6 +496,7 @@ window.onload = () => {
 
         if (!process.env.athenahealth_viewport_test) {
             browserDom.lockActiveUser();
+            alert("Please login to continue using the Viewport");
         }
 
         browserDom.doLayout();

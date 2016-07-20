@@ -119,4 +119,9 @@ describe("application launch", function() {
         await app.client.waitForExist(".location-loaded");
         await app.client.getValue("#location").should.eventually.contain("settings");
     });
+    it("can change the homepage setting", async function(){
+        await app.client.click("#settings");
+        await app.client.waitForExist(".location-loaded");
+        // trying to figure out how to select within webview
+    });
 });
