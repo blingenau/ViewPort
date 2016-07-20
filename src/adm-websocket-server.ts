@@ -2,8 +2,9 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as http from "http";
 import * as https from "https";
-import * as url from "url";
 import * as ws from "ws";
+
+// import * as url from "url";
 
 const Subscribe = "0x12c";
 const Unsubscribe = "0x12d";
@@ -21,8 +22,8 @@ export class AdmWebsocketServer {
 
     constructor() {
         let handleRequest = (request: http.IncomingMessage, response: http.ServerResponse): void => {
-            console.log(`request: ${JSON.stringify(request, ["method", "url"], 4)}`);
             response.writeHead(200);
+            response.write(`ADM web server\n${request.method} ${request.url}`);
             response.end();
         };
 
@@ -159,8 +160,8 @@ export class AdmWebsocketServer {
         };
 
         let handleConnection = (client: ws): void => {
-            const location = url.parse(client.upgradeReq.url, true);
-            console.log(`connection: ${JSON.stringify(location, null, 4)}`);
+            // const location = url.parse(client.upgradeReq.url, true);
+            // console.log(`connection: ${JSON.stringify(location, null, 4)}`);
 
             client.on("message", handleMessage(client));
             client.on("open", () => console.log("open"));
@@ -168,7 +169,7 @@ export class AdmWebsocketServer {
                 console.log(`error: ${JSON.stringify(err, null, 4)}`);
             });
             client.on("close", (code, message) => {
-                console.log(`close: ${code} - ${message}`);
+                // console.log(`close: ${code} - ${message}`);
             });
 
             // send opening handshake
