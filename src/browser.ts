@@ -419,7 +419,7 @@ class BrowserDOM implements IDOM {
 
 export const browserDom: BrowserDOM = new BrowserDOM();
 export const tabs: UserTabBar = new UserTabBar(browserDom);
-export const stopwatch: any = new Stopwatch(false, {refreshRateMS: 1, almostDoneMS: 30000});
+export const stopwatch: any = new Stopwatch(false, {refreshRateMS: 1, almostDoneMS: 1700000});
 let homepage = athenaNetHomepage;
 let backgroundWindow: Electron.BrowserWindow = null;
 
@@ -534,41 +534,64 @@ window.onload = () => {
                         domain: athenaDomain,
                         name: "TIMEOUT_UNENCRYPTED"
                     }, (error: Error, cookies: Electron.Cookie[]): void => {
-                        if (!cookies || cookies.length < 2) {
+                        if (!cookies || cookies.length < 1) {
                             console.log("No cookies");
                             stopwatch.stop();
                             return;
-                        }
-
-                        let currentTimeout: number = parseInt(cookies[1].value, 10);
-                        let totalTimeout: number = parseInt(cookies[0].value, 10);
-                        // let isHidden: boolean = $(athenaWebview).css("display") === "none";
-                        console.log(`${currentTimeout} => ${stopwatch.ms}`);
-
-                        // Athenanet times out when the cookie's value is <= 0 so we lock the user.
-                        if (currentTimeout > 0) {
+                        } else if (cookies.length === 1) {
+                            let currentTimeout: number = parseInt(cookies[0].value, 10);
                             let userIsLocked: boolean = tabs.getActiveTabBar().getLockedStatus();
 
-                            if (userIsLocked) {
-                                browserDom.unlockActiveUser();
-                                stopwatch.reset(currentTimeout*1000);
-                                stopwatch.start();
-                                almostDoneFired = false;
-                                return;
-                            }
+                            console.log(`${currentTimeout} => ${stopwatch.ms}`);
 
-                            // Reset the timeout stopwatch to the current cookie time.
-                            if (previousTimeout === -1 || (previousTimeout !== currentTimeout && !userIsLocked)) {
-                                stopwatch.reset(currentTimeout*1000);
-                                stopwatch.start();
-                                if (totalTimeout === currentTimeout) {
+                            if (currentTimeout > 0) {
+                                if (userIsLocked) {
+                                    browserDom.unlockActiveUser();
+                                    stopwatch.reset(currentTimeout*1000);
+                                    stopwatch.start();
                                     almostDoneFired = false;
+                                    return;
+                                } else if (previousTimeout === -1 || previousTimeout !== currentTimeout) {
+                                    stopwatch.reset(currentTimeout*1000);
+                                    stopwatch.start();
+                                    previousTimeout = currentTimeout;
                                 }
-                                previousTimeout = currentTimeout;
+                            } else {
+                                if (!tabs.getActiveTabBar().getLockedStatus()) {
+                                    browserDom.lockActiveUser();
+                                }
                             }
                         } else {
-                            if (!tabs.getActiveTabBar().getLockedStatus()) {
-                                browserDom.lockActiveUser();
+                            let currentTimeout: number = parseInt(cookies[1].value, 10);
+                            let totalTimeout: number = parseInt(cookies[0].value, 10);
+                            // let isHidden: boolean = $(athenaWebview).css("display") === "none";
+                            console.log(`${currentTimeout} => ${stopwatch.ms}`);
+
+                            // Athenanet times out when the cookie's value is <= 0 so we lock the user.
+                            if (currentTimeout > 0) {
+                                let userIsLocked: boolean = tabs.getActiveTabBar().getLockedStatus();
+
+                                if (userIsLocked) {
+                                    browserDom.unlockActiveUser();
+                                    stopwatch.reset(currentTimeout*1000);
+                                    stopwatch.start();
+                                    almostDoneFired = false;
+                                    return;
+                                }
+
+                                // Reset the timeout stopwatch to the current cookie time.
+                                if (previousTimeout === -1 || (previousTimeout !== currentTimeout && !userIsLocked)) {
+                                    stopwatch.reset(currentTimeout*1000);
+                                    stopwatch.start();
+                                    if (totalTimeout === currentTimeout) {
+                                        almostDoneFired = false;
+                                    }
+                                    previousTimeout = currentTimeout;
+                                }
+                            } else {
+                                if (!tabs.getActiveTabBar().getLockedStatus()) {
+                                    browserDom.lockActiveUser();
+                                }
                             }
                         }
                     });
@@ -636,12 +659,19 @@ function handleLoadStart(event: Event): void {
  */
 function handleLoadStop(event: Event): void {
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
+    let url: string = webview.getAttribute("src");
     let tab: Tab = tabs.getTab(webview.getAttribute("tabID"));
-    tab.setUrl(webview.getAttribute("src"));
+    tab.setUrl(url);
     tab.setTitle(webview.getTitle());
     if (tabs.getActiveTab().getId() === tab.getId()) {
         browserDom.setAddress(tab.getUrl());
     }
+
+    if (browserDom.isAthenaUrl(url)) {
+        almostDoneFired = false;
+        previousTimeout = -1;
+    }
+
     browserDom.tabSwitch();
 }
 
