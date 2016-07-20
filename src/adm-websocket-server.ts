@@ -16,9 +16,9 @@ const config = {
     port: 46000
 };
 
-export class AdmWebsocketServer {
+export class AdmWebSocketServer {
     private httpsServer: https.Server;
-    private websocketServer: ws.Server;
+    private webSocketServer: ws.Server;
 
     constructor() {
         let handleRequest = (request: http.IncomingMessage, response: http.ServerResponse): void => {
@@ -188,11 +188,11 @@ export class AdmWebsocketServer {
             console.log(`HTTPS server error: ${JSON.stringify(err, null, 4)}`);
         });
         this.httpsServer.on("listening", () => {
-            this.websocketServer = new ws.Server({
+            this.webSocketServer = new ws.Server({
                 server: <any>(this.httpsServer)
             });
-            this.websocketServer.on("connection", handleConnection);
-            this.websocketServer.on("error", (err: any) => {
+            this.webSocketServer.on("connection", handleConnection);
+            this.webSocketServer.on("error", (err: any) => {
                 console.log(`WebSocket server error: ${JSON.stringify(err, null, 4)}`);
             });
         });
