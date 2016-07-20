@@ -43,6 +43,24 @@ export class AdmWebsocketServer {
             };
         };
 
+        let eventResponder = (client: ws) => {
+            return (module: string, event: string, data: any): void => {
+                let encodedData = JSON.stringify(data);
+
+                let hash = crypto.createHash("md5");
+                hash.update(encodedData);
+                let encodedDataChecksum = hash.digest("hex");
+
+                sender(client)(module, JSON.stringify({
+                    eventname: event,
+                    data: encodedData,
+                    checksum: encodedDataChecksum,
+                    chunknum: 0,
+                    totalchunks: 1
+                }));
+            };
+        };
+
         let isTrayAppRunning = (client: ws) => {
             responder(client)("istrayapprunning", true);
         };
@@ -58,15 +76,49 @@ export class AdmWebsocketServer {
                 Error: false,
                 Message: "Success",
                 Data: [
+                    {
+                        Name: "DYMOLabelPrinter",
+                        Version: {
+                            Name: "1.1.2.1",
+                            Persist: false,
+                            DeviceConnected: true,
+                            DeviceVisible: true
+                        }
+                    }
                 ]
             });
         };
 
         let getModuleInfo = (client: ws, data: any) => {
-            if (data.module === "") {
-                getInstalledModules(client);
-            } else {
-                // TODO
+            switch (data.module) {
+                case "":
+                    getInstalledModules(client);
+                    break;
+                case "AthenanetPerformanceMonitor":
+                    break;
+                default:
+                    console.log(`getModuleInfo: ${data.module}`);
+                    break;
+            }
+        };
+
+        let execDymoLabelPrinter = (client: ws, data: any) => {
+            if (data.Action === "IsSoftwareInstalled") {
+                eventResponder(client)("dymolabelprinter", data.Callback, {
+                    Error: false,
+                    Message: "Success",
+                    Data: true
+                });
+            }
+        };
+
+        let execModule = (client: ws, data: any) => {
+            switch (data.Module) {
+                case "DYMOLabelPrinter":
+                    execDymoLabelPrinter(client, data);
+                    break;
+                default:
+                    console.log(`execModule: ${data.Module}`);
             }
         };
 
@@ -95,6 +147,9 @@ export class AdmWebsocketServer {
                         break;
                     case "info":
                         getModuleInfo(client, requestData);
+                        break;
+                    case "exec":
+                        execModule(client, requestData);
                         break;
                     default:
                         console.log(`message: ${data}`);
