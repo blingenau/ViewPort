@@ -47,22 +47,34 @@ export class AdmWebsocketServer {
             responder(client)("istrayapprunning", true);
         };
 
+        let getApplicationInfo = (client: ws, data: any) => {
+            sender(client)("getapplicationinfo", {
+                Version: "1.5.1.0"
+            });
+        };
+
         let handleMessage = (client: ws) => {
             return (data: any, flags: {binary: boolean}): void => {
                 if (typeof data !== "string") {
                     console.log("invalid message received");
                 }
+
                 let request = JSON.parse(data);
                 if (!request.event) {
                     console.log("request is missing event field");
                     return;
                 }
+                let requestData = (request.data) ? JSON.parse(request.data) : null;
+
                 switch (request.event) {
                     case Subscribe:
                     case Unsubscribe:
                         break;
                     case "istrayapprunning":
                         isTrayAppRunning(client);
+                        break;
+                    case "getapplicationinfo":
+                        getApplicationInfo(client, requestData);
                         break;
                     default:
                         console.log(`message: ${data}`);
