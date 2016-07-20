@@ -11,7 +11,7 @@ const Unsubscribe = "0x12d";
 const Opened = "0xc8";
 
 const config = {
-    pfx: fs.readFileSync(`${__dirname}/ssl/ViewPort.pfx`),
+    pfx: fs.readFileSync(`${__dirname}/ssl/viewport.pfx`),
     passphrase: "today is xsockets day",
     port: 46000
 };
