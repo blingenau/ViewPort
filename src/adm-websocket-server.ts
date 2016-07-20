@@ -38,7 +38,7 @@ export class AdmWebsocketServer {
         let responder = (client: ws) => {
             return (event: string, response: any): void => {
                 sender(client)(event, JSON.stringify({
-                    response: response
+                    response: JSON.stringify(response)
                 }));
             };
         };
@@ -51,6 +51,23 @@ export class AdmWebsocketServer {
             sender(client)("getapplicationinfo", {
                 Version: "1.5.1.0"
             });
+        };
+
+        let getInstalledModules = (client: ws) => {
+            responder(client)("info", {
+                Error: false,
+                Message: "Success",
+                Data: [
+                ]
+            });
+        };
+
+        let getModuleInfo = (client: ws, data: any) => {
+            if (data.module === "") {
+                getInstalledModules(client);
+            } else {
+                // TODO
+            }
         };
 
         let handleMessage = (client: ws) => {
@@ -75,6 +92,9 @@ export class AdmWebsocketServer {
                         break;
                     case "getapplicationinfo":
                         getApplicationInfo(client, requestData);
+                        break;
+                    case "info":
+                        getModuleInfo(client, requestData);
                         break;
                     default:
                         console.log(`message: ${data}`);
