@@ -51,6 +51,8 @@ class BrowserDOM implements IDOM {
         });
         webview.src = url;
         webview.setAttribute("tabID", id);
+        webview.setAttribute("useragent", "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 " +
+            "(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
         document.getElementById("webviews").appendChild(webview);
 
         // If going to the settings page must use preload to set up IPC 

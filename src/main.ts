@@ -8,6 +8,7 @@ const BrowserWindow: typeof Electron.BrowserWindow = electron.BrowserWindow;
 // Electron's dialog API
 const {dialog} = require("electron");
 
+import {AdmWebsocketServer} from "./adm-websocket-server";
 import {PreferenceFileManager, PreferenceFile} from "./preference-file";
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -26,6 +27,10 @@ preferenceFileManager.start();
 
 // The preference file that manages application level settings
 let preferenceFile: PreferenceFile = new PreferenceFile(".application");
+
+// The ADM websocket server
+const admWebsocketServer = new AdmWebsocketServer();
+admWebsocketServer.start();
 
 /**
  * Function to create a browser window
