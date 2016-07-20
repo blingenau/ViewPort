@@ -184,10 +184,18 @@ export class AdmWebsocketServer {
                 pfx: config.pfx,
                 passphrase: config.passphrase
             }, handleRequest);
-        this.websocketServer = new ws.Server({
-            server: <any>(this.httpsServer)
+        this.httpsServer.on("error", (err: any) => {
+            console.log(`HTTPS server error: ${JSON.stringify(err, null, 4)}`);
         });
-        this.websocketServer.on("connection", handleConnection);
+        this.httpsServer.on("listening", () => {
+            this.websocketServer = new ws.Server({
+                server: <any>(this.httpsServer)
+            });
+            this.websocketServer.on("connection", handleConnection);
+            this.websocketServer.on("error", (err: any) => {
+                console.log(`WebSocket server error: ${JSON.stringify(err, null, 4)}`);
+            });
+        });
     }
 
     public start(): void {
