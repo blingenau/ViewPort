@@ -96,6 +96,7 @@ export class AdmWebSocketServer {
                     getInstalledModules(client);
                     break;
                 case "AthenanetPerformanceMonitor":
+                case "ConfigureMyComputer":
                     break;
                 default:
                     console.log(`getModuleInfo: ${data.module}`);
