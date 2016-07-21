@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Typescript implementation of an Electron-based browser",
   "main": "main.js",
-  "license": "athenahealth",
+  "license": "UNLICENSED",
   "scripts": {
     "start": "electron dist/main.js",
     "postinstall": "typings install"

@@ -11,7 +11,9 @@ module.exports = function() {
             let buffer = fs.readFileSync(`${packagePath}/package.json`);
             let nodePackage = JSON.parse(buffer.toString());
 
-            licenseCheck.check(nodePackage);
+            if (packagePath !== ".") {
+                licenseCheck.check(nodePackage);
+            }
 
             for (let key in nodePackage.dependencies) {
                 keys[key] = key;
