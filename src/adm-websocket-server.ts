@@ -75,7 +75,7 @@ export class AdmWebSocketServer {
 
         let getInstalledModules = (client: ws) => {
             let deviceConnectedBool: boolean = true;
-            let customData = {"action": "status"};
+            let customData = {"Action": "Status"};
             let customDataString = JSON.stringify(customData);
             // console.log(customDataString);
             this.child.stdout.once("data", function (databuffer: any) {
