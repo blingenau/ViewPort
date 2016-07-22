@@ -77,7 +77,7 @@ export class AdmWebSocketServer {
             let customData = {"action": "status"};
             let customDataString = JSON.stringify(customData);
             // this.child.stdin.setEncoding ='utf-8';
-            this.child.stdout.once('data', function (databuffter: any) {
+            this.child.stdout.once('data', function (databuffer: any) {
                 if(databuffer.toString() == "0"){
                     deviceConnectedBool = false;
                 }
