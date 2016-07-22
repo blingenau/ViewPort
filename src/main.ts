@@ -30,8 +30,9 @@ let preferenceFile: PreferenceFile = new PreferenceFile(".application");
 
 // The ADM websocket server
 const admWebSocketServer = new AdmWebSocketServer();
-admWebSocketServer.start();
-
+if (process.platform !== "darwin") {
+    admWebSocketServer.start();
+}
 /**
  * Function to create a browser window
  */

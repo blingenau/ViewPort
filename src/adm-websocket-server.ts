@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as http from "http";
 import * as https from "https";
 import * as ws from "ws";
-
+import * as proc from "child_process";
 // import * as url from "url";
 
 const Subscribe = "0x12c";
@@ -19,6 +19,7 @@ const config = {
 export class AdmWebSocketServer {
     private httpsServer: https.Server;
     private webSocketServer: ws.Server;
+    private child: proc.ChildProcess;
 
     constructor() {
         let handleRequest = (request: http.IncomingMessage, response: http.ServerResponse): void => {
@@ -105,11 +106,15 @@ export class AdmWebSocketServer {
 
         let execDymoLabelPrinter = (client: ws, data: any) => {
             if (data.Action === "IsSoftwareInstalled") {
-                eventResponder(client)("dymolabelprinter", data.Callback, {
-                    Error: false,
-                    Message: "Success",
-                    Data: true
+                // child returns "true" or "false" indicating if dymo is installed
+                this.child.stdout.once("data", function (output: any) {
+                    eventResponder(client)("dymolabelprinter", data.Callback, {
+                        Error: false,
+                        Message: "Success",
+                        Data: output.toString().replace(/^\s+|\s+$/g, "") === "true"
+                    });
                 });
+                this.child.stdin.write(JSON.stringify(data) + "\0");
             }
         };
 
@@ -199,6 +204,8 @@ export class AdmWebSocketServer {
     }
 
     public start(): void {
+        // this.child = proc.spawn("python",["./src/test.py"]);
+        this.child = proc.spawn("./src/bin/dymo/viewport-adm-executable.exe");
         this.httpsServer.listen(config.port, "127.0.0.1");
     }
 }
