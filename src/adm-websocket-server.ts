@@ -73,7 +73,15 @@ export class AdmWebSocketServer {
         };
 
         let getInstalledModules = (client: ws) => {
-            responder(client)("info", {
+            let deviceConnectedBool: boolean = true;
+            let customData = {"action": "status"};
+            let customDataString = JSON.stringify(customData);
+            // this.child.stdin.setEncoding ='utf-8';
+            this.child.stdout.once('data', function (databuffter: any) {
+                if(databuffer.toString() == "0"){
+                    deviceConnectedBool = false;
+                }
+                responder(client)("info", {
                 Error: false,
                 Message: "Success",
                 Data: [
@@ -82,12 +90,14 @@ export class AdmWebSocketServer {
                         Version: {
                             Name: "1.1.2.1",
                             Persist: false,
-                            DeviceConnected: true,
+                            DeviceConnected: deviceConnectedBool,
                             DeviceVisible: true
                         }
                     }
                 ]
             });
+            });
+            this.child.stdin.write(customDataString + "\0");
         };
 
         let getModuleInfo = (client: ws, data: any) => {
