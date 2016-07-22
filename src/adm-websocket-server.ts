@@ -77,11 +77,15 @@ export class AdmWebSocketServer {
             let deviceConnectedBool: boolean = true;
             let customData = {"action": "status"};
             let customDataString = JSON.stringify(customData);
-            // this.child.stdin.setEncoding ='utf-8';
+            // console.log(customDataString);
             this.child.stdout.once("data", function (databuffer: any) {
+            // data returns "0" device is not connected or "1" device is connected
                 if (databuffer.toString() === "0") {
                     deviceConnectedBool = false;
+                    console.log("Device isn't connected");
                 }
+                console.log("STD out: " + databuffer.toString());
+                console.log("SUCCESS");
                 responder(client)("info", {
                 Error: false,
                 Message: "Success",
@@ -98,11 +102,15 @@ export class AdmWebSocketServer {
                 ]
             });
             });
-            this.child.stdin.write(customDataString + "\0");
+            this.child.stdin.write(customDataString + "\n");
+            console.log("requesting");
         };
 
         let getModuleInfo = (client: ws, data: any) => {
             switch (data.module) {
+                case "DYMOLabelPrinter":
+                    getInstalledModules(client);
+                    break;
                 case "":
                     getInstalledModules(client);
                     break;
@@ -110,7 +118,7 @@ export class AdmWebSocketServer {
                 case "ConfigureMyComputer":
                     break;
                 default:
-                    console.log(`getModuleInfo: ${data.module}`);
+                    // console.log(`getModuleInfo: ${data.module}`);
                     break;
             }
         };
