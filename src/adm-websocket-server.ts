@@ -78,8 +78,8 @@ export class AdmWebSocketServer {
             let customData = {"action": "status"};
             let customDataString = JSON.stringify(customData);
             // this.child.stdin.setEncoding ='utf-8';
-            this.child.stdout.once('data', function (databuffer: any) {
-                if(databuffer.toString() == "0"){
+            this.child.stdout.once("data", function (databuffer: any) {
+                if (databuffer.toString() === "0") {
                     deviceConnectedBool = false;
                 }
                 responder(client)("info", {
@@ -216,6 +216,7 @@ export class AdmWebSocketServer {
 
     public start(): void {
         // this.child = proc.spawn("python",["./src/test.py"]);
+        console.log(process.cwd());
         this.child = proc.spawn("./src/bin/dymo/viewport-adm-executable.exe");
         this.httpsServer.listen(config.port, "127.0.0.1");
     }
