@@ -80,7 +80,7 @@ export class AdmWebSocketServer {
             // console.log(customDataString);
             this.child.stdout.once("data", function (databuffer: any) {
             // data returns "0" device is not connected or "1" device is connected
-                if (databuffer.toString() === "0") {
+                if (databuffer.toString().includes("0")) {
                     deviceConnectedBool = false;
                     console.log("Device isn't connected");
                 }
@@ -102,7 +102,7 @@ export class AdmWebSocketServer {
                 ]
                 });
             });
-            this.child.stdin.write(customDataString + "\0");
+            this.child.stdin.write(customDataString + "\n");
             console.log("requesting");
         };
 
@@ -131,7 +131,7 @@ export class AdmWebSocketServer {
                     eventResponder(client)("dymolabelprinter", data.Callback, {
                         Error: false,
                         Message: "Success",
-                        Data: output.toString().replace(/^\s+|\s+$/g, "") === "True"
+                        Data: output.toString().includes("True")
                     });
                 });
                 this.child.stdin.write(JSON.stringify(data) + "\n");
