@@ -1,6 +1,5 @@
 /// <reference path="../typings/index.d.ts" />
 import {ipcRenderer} from "electron";
-
 let currentUserHomepage: string = "";
 let currentUser: string = "";
 
@@ -8,17 +7,76 @@ window.onload = () => {
   let userObject = ipcRenderer.sendSync("get-user");
   currentUser = userObject.username;
   currentUserHomepage = userObject.homepage;
+  createUserSettings();
   $("#user-settings")
+      .append($("<button>")
+      .attr("id", "submit-user-settings")
+      .html("save"));
+
+  $(document).ready(function () {
+      $("#device").on("click", (): void => {
+          $("#user-settings").empty();
+          console.log("here");
+          $("#user-settings").append($("<div> Device Information </div>")
+            .attr("id", "deviceInformation"));
+      });
+
+      $("#user").on("click", (): void => {
+          $("#user-settings").empty();
+          createUserSettings();
+      });
+      $("#submit-user-settings").on("click", (): boolean => {
+          let submitValue: string = $("input[name=newTabCreation]:checked", "#homepage-form").val();
+          console.log("submitValue: " + submitValue);
+          if(submitValue === "new-homepage") {
+            console.log($("#new-homepage1").val());
+            currentUserHomepage = $("#new-homepage1").val();
+            console.log("#new-homepage1: " + currentUserHomepage);
+            ipcRenderer.send("update-homepage", currentUserHomepage);
+            updateHomePage(currentUserHomepage);
+            return false;
+          } else if (submitValue === "new-homepage2") {
+            currentUserHomepage = "about:blank";
+            ipcRenderer.send("update-homepage", currentUserHomepage);
+            updateHomePage(currentUserHomepage);
+            return false;
+          } else {
+            currentUserHomepage = "athenanet.athenahealth.com";
+            ipcRenderer.send("update-homepage", currentUserHomepage);
+            updateHomePage(currentUserHomepage);
+            return false;
+          }
+    });
+  });
+  $("#navbar")
+    .append($("<div> Welcome " + currentUser + "</div>"))
+    .append($("<div> User </div>")
+    .attr("id", "user"))
+    .append($("<div> Device </div>")
+    .attr("id", "device"));
+};
+
+function updateHomePage(newHomepage: string): void {
+  $("#homepage").empty()
+                .append($("<div>")
+                    .addClass("current-homepage")
+                    .html("New tabs open to " + newHomepage));
+  // $("#new-homepage1").trigger("reset");
+  // $("#new-homepage1").removeAttr("value");
+  // $("#new-homepage1").attr("value", newHomepage);
+}
+function createUserSettings(): void {
+    $("#user-settings")
     .append($("<div>")
         .html("Welcome " + currentUser))
     .append("<br><br>");
-  $("#user-settings")
+    $("#user-settings")
     .append($("<div>")
         .attr("id", "homepage")
         .append($("<div>")
             .addClass("current-homepage")
             .html("New tabs open to " + currentUserHomepage)));
-  $("#user-settings")
+    $("#user-settings")
       .append($("<form>")
           .attr("onsubmit", "event.preventDefault()")
           .attr("id", "homepage-form")
@@ -45,45 +103,4 @@ window.onload = () => {
                                 .attr("type", "radio")
                                 .attr("name", "newTabCreation"))
                                 .append("athenaNet"));
-  $("#user-settings")
-      .append($("<button>")
-      .attr("id", "submit-user-settings")
-      .html("save"));
-
-  $(document).ready(function () {
-      $("#submit-user-settings").on("click", (): boolean => {
-          let submitValue: string = $("input[name=newTabCreation]:checked", "#homepage-form").val();
-          console.log("submitValue: " + submitValue);
-          if(submitValue === "new-homepage") {
-            console.log($("#new-homepage1").val());
-            currentUserHomepage = $("#new-homepage1").val();
-            console.log("#new-homepage1: " + currentUserHomepage);
-            ipcRenderer.send("update-homepage", currentUserHomepage);
-            updateHomePage(currentUserHomepage);
-            return false;
-          } else if (submitValue === "new-homepage2") {
-            currentUserHomepage = "about:blank";
-            ipcRenderer.send("update-homepage", currentUserHomepage);
-            updateHomePage(currentUserHomepage);
-            return false;
-          } else {
-            currentUserHomepage = "athenanet.athenahealth.com";
-            ipcRenderer.send("update-homepage", currentUserHomepage);
-            updateHomePage(currentUserHomepage);
-            return false;
-          }
-    });
-  });
-  $("#navigation")
-    .append($("<div>"));
-};
-
-function updateHomePage(newHomepage: string): void {
-  $("#homepage").empty()
-                .append($("<div>")
-                    .addClass("current-homepage")
-                    .html("New tabs open to " + newHomepage));
-  // $("#new-homepage1").trigger("reset");
-  // $("#new-homepage1").removeAttr("value");
-  // $("#new-homepage1").attr("value", newHomepage);
 }
