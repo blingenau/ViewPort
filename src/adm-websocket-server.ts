@@ -77,15 +77,11 @@ export class AdmWebSocketServer {
             let deviceConnectedBool: boolean = true;
             let customData = {"Action": "Status"};
             let customDataString = JSON.stringify(customData);
-            // console.log(customDataString);
             this.child.stdout.once("data", function (databuffer: any) {
             // data returns "0" device is not connected or "1" device is connected
                 if (databuffer.toString().includes("0")) {
                     deviceConnectedBool = false;
-                    console.log("Device isn't connected");
                 }
-                console.log("STD out: " + databuffer.toString());
-                console.log("SUCCESS");
                 responder(client)("info", {
                 Error: false,
                 Message: "Success",
@@ -103,7 +99,6 @@ export class AdmWebSocketServer {
                 });
             });
             this.child.stdin.write(customDataString + "\n");
-            console.log("requesting");
         };
 
         let getModuleInfo = (client: ws, data: any) => {
@@ -118,7 +113,6 @@ export class AdmWebSocketServer {
                 case "ConfigureMyComputer":
                     break;
                 default:
-                    // console.log(`getModuleInfo: ${data.module}`);
                     break;
             }
         };
@@ -127,7 +121,6 @@ export class AdmWebSocketServer {
             if (data.Action === "IsSoftwareInstalled") {
                 // child returns "true" or "false" indicating if dymo is installed
                 this.child.stdout.once("data", function (output: any) {
-                    console.log("output: "+ output.toString());
                     eventResponder(client)("dymolabelprinter", data.Callback, {
                         Error: false,
                         Message: "Success",
@@ -135,7 +128,16 @@ export class AdmWebSocketServer {
                     });
                 });
                 this.child.stdin.write(JSON.stringify(data) + "\n");
-                console.log("issoftwareinstalled requested: " + JSON.stringify(data));
+            } else if (data.Action === "Print") {
+                this.child.stdout.once("data", function (output: any) {
+                    output = output.toString().includes("null") ? "" : output.toString();
+                    eventResponder(client)("dymolabelprinter", data.Callback, {
+                        Error: false,
+                        Message: "Success",
+                        Data: output
+                    });
+                });
+                this.child.stdin.write(JSON.stringify(data) + "\n");
             }
         };
 
@@ -227,9 +229,6 @@ export class AdmWebSocketServer {
     public start(): void {
         // this.child = proc.spawn("python",["./src/test.py"]);
         this.child = proc.spawn("./src/bin/dymo/viewport-adm-executable.exe");
-        this.child.stdout.on("data", (data: any) => {
-            console.log("STDOUT: " + data.toString());
-        });
         this.child.on("exit", () => {
             console.log("CHILD EXITED!");
         });
