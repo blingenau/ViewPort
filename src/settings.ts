@@ -28,7 +28,9 @@ window.onload = () => {
       .html("save"));
 
   $(document).ready(function () {
+      highlightSelection("#user");
       $("#device").on("click", (): void => {
+          highlightSelection("#device");
           $("#user-settings").empty();
           console.log("here");
           $("#user-settings")
@@ -38,8 +40,17 @@ window.onload = () => {
       });
 
       $("#user").on("click", (): void => {
+          highlightSelection("#user");
           $("#user-settings").empty();
           createUserSettings();
+      });
+      $("#administrator").on("click", (): void => {
+          highlightSelection("#administrator");
+          $("#user-settings").empty();
+          $("#user-settings")
+            .append($("<br><br><br>"))
+            .append($("<div> Administrator Settings </div>")
+                .attr("id", "administrator-settings"));
       });
       $("#submit-user-settings").on("click", (): boolean => {
           let submitValue: string = $("input[name=newTabCreation]:checked", "#homepage-form").val();
@@ -65,7 +76,8 @@ window.onload = () => {
     });
   });
   $("#navbar")
-    .append($("<div> User: " + currentUser + "</div>"))
+    .append($("<div> User: " + currentUser + "</div>")
+        .attr("id", "username"))
     .append($("<br><br>"))
     .append($("<div> User </div>")
         .attr("id", "user"))
@@ -91,7 +103,12 @@ window.onload = () => {
    }, 3000);
 };
 */
-
+function highlightSelection(selected: string): void {
+    $("#device").css("color", "#CCCCCC");
+    $("#user").css("color", "#CCCCCC");
+    $("#administrator").css("color", "#CCCCCC");
+    $(selected).css("color", "#6D56A4");
+}
 function updateHomePage(newHomepage: string): void {
   $("#homepage").empty()
                 .append($("<div>")
