@@ -13,8 +13,7 @@ body {
 #navbar {
   float: right;
   width: 20%;
-  border-style: solid;
-  border-right: thick double black;
+
 }
 #username {
   color: #8B8A91;
