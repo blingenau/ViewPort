@@ -17,8 +17,10 @@ window.onload = () => {
       $("#device").on("click", (): void => {
           $("#user-settings").empty();
           console.log("here");
-          $("#user-settings").append($("<div> Device Information </div>")
-            .attr("id", "deviceInformation"));
+          $("#user-settings")
+            .append($("<br><br><br>"))
+            .append($("<div> ADM Settings </div>")
+                .attr("id", "deviceInformation"));
       });
 
       $("#user").on("click", (): void => {
@@ -49,11 +51,16 @@ window.onload = () => {
     });
   });
   $("#navbar")
-    .append($("<div> Welcome " + currentUser + "</div>"))
+    .append($("<div> User: " + currentUser + "</div>"))
+    .append($("<br><br>"))
     .append($("<div> User </div>")
-    .attr("id", "user"))
+        .attr("id", "user"))
+    .append($("<br>"))
     .append($("<div> Device </div>")
-    .attr("id", "device"));
+        .attr("id", "device"))
+    .append($("<br>"))
+    .append($("<div> Administrator <div>")
+        .attr("id", "administrator"));
 };
 
 function updateHomePage(newHomepage: string): void {
@@ -67,10 +74,9 @@ function updateHomePage(newHomepage: string): void {
 }
 function createUserSettings(): void {
     $("#user-settings")
-    .append($("<div>")
-        .html("Welcome " + currentUser))
-    .append("<br><br>");
-    $("#user-settings")
+    .append($("<br><br><br>"))
+    .append($("<div> Personal Settings </div>"))
+    .append($("<br>"))
     .append($("<div>")
         .attr("id", "homepage")
         .append($("<div>")
