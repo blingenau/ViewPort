@@ -5,3 +5,5 @@ generated-files/
 node_modules/
 packages/
 typings/
+log.txt
+src/bin/dymo/viewport-adm-executable.vshost.exe.manifest

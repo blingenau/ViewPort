@@ -102,7 +102,7 @@ export class AdmWebSocketServer {
                 ]
                 });
             });
-            this.child.stdin.write(customDataString + "\n");
+            this.child.stdin.write(customDataString + "\0");
             console.log("requesting");
         };
 
