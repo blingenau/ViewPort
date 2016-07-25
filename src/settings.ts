@@ -74,6 +74,8 @@ window.onload = () => {
           }
     });
   });
+  $("#navigation")
+    .append($("<div>"));
 };
 
 function updateHomePage(newHomepage: string): void {
