@@ -1,0 +1,23 @@
+body {
+  margin: 0;
+  margin-left: 1cm;
+  margin-top: 1cm;
+  padding: 0;
+  font-family: Lucida Grande, Arial, sans-serif;
+}
+
+#user-settings {
+  float: right ;
+  width: 80% ;
+}
+#navbar {
+  float: right;
+  width: 20%;
+  border-style: solid;
+  border-right: thick double black;
+}
+#username {
+  color: #8B8A91;
+  font: facit bold;
+  font-size: 16;
+}
