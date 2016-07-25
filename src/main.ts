@@ -30,7 +30,39 @@ let preferenceFile: PreferenceFile = new PreferenceFile(".application");
 
 // The ADM websocket server
 const admWebSocketServer = new AdmWebSocketServer();
-admWebSocketServer.start();
+if (process.platform !== "darwin") {
+    admWebSocketServer.start();
+}
+
+class WorkQueue {
+    private queue: (() => void)[] = [];
+
+    public empty(): boolean {
+        return this.queue.length === 0;
+    }
+
+    public push(work: () => void): void {
+        this.queue.push(work);
+        if (this.queue.length === 1) {
+            process.nextTick(() => this.dispatchWork());
+        }
+    }
+
+    private dispatchWork(): void {
+        Promise.resolve(this.queue[0]())
+        .catch(err => {
+            console.log(`Work item failed: ${JSON.stringify(err, null, 4)}`);
+        })
+        .then(() => {
+            this.queue.shift();
+            if (!this.empty()) {
+                process.nextTick(() => this.dispatchWork());
+            }
+        });
+    }
+}
+
+const workQueue = new WorkQueue();
 
 /**
  * Function to create a browser window
@@ -91,10 +123,8 @@ function createWindow(): void {
             // Stores the window size of this session
             let windowSize: number[] = mainWindow.getSize();
             let windowSizeSettings = {"width" : windowSize[0], "height" : windowSize[1]};
-            preferenceFile.write(windowSizeSettings)
-            .catch(err => {
-                createNewApplicationSettings(windowSize[0], windowSize[1]);
-            });
+
+            workQueue.push(() => preferenceFile.write(windowSizeSettings));
 
             if (process.env.athenahealth_viewport_test) {
                 // we don't want to present the close dialog during testing
@@ -135,6 +165,17 @@ function createWindow(): void {
         });
     });
 }
+
+app.on("before-quit", event => {
+    if (workQueue.empty()) {
+        return;
+    }
+
+    // defer the quit until after the work queue is empty
+    event.preventDefault();
+    setTimeout(() => app.quit(), 100);
+});
+
 // This method will be called when ELectron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
