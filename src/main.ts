@@ -50,7 +50,8 @@ function createWindow(): void {
             height: height,
             minWidth: 800,
             minHeight: 600,
-            titleBarStyle: "hidden-inset"
+            titleBarStyle: "hidden-inset",
+            icon: `${__dirname}/athenaicon.ico`
         });
 
         // Load the index.html of the app

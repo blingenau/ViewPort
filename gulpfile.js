@@ -114,7 +114,8 @@ gulp.task("copy", ["clean-dist"], () => {
             "src/**/*.css",
             "src/**/*.svg",
             "src/**/*.pfx",
-            "src/pdfjs/**"
+            "src/pdfjs/**",
+            "src/**/*.ico"
         ], {
             base: "src"
         })
@@ -138,7 +139,8 @@ gulp.task("package", ["dist"], (done) => {
         version: process.versions.electron,
         out: "packages",
         "app-version": package.version,
-        overwrite: true
+        overwrite: true,
+        icon: `dist/athenaicon.ico`
     };
     packager(options, (err, appPath) => {
         if (err) {
