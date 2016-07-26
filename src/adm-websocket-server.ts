@@ -77,7 +77,7 @@ export class AdmWebSocketServer {
             let id: string = crypto.randomBytes(16).toString("hex");
             let customData = {
                 id: id,
-                message: {Action: "Status"}
+                message: JSON.stringify({Action: "Status"})
             };
             this.child.stdout.once(id, function (response: string) {
                // response is "0" device is not connected or "1" device is connected
@@ -120,7 +120,7 @@ export class AdmWebSocketServer {
             let id: string = crypto.randomBytes(16).toString("hex");
             let customData = {
                 id: id,
-                message: data
+                message: JSON.stringify(data)
             };
 
             if (data.Action === "IsSoftwareInstalled") {
