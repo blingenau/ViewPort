@@ -44,7 +44,7 @@ function createWindow(): void {
     // Read the global settings to get the window dimensions
     globalSettings.read().then(() => {
         // Create the browser window.
-        let {width, height} = globalSettings.mainWindow;
+        let {width, height} = globalSettings.mainWindow.size;
         mainWindow = new BrowserWindow({
             width: width,
             height: height,
@@ -85,7 +85,7 @@ function createWindow(): void {
         mainWindow.on("close", (event: Electron.Event) => {
             // Stores the window size of this session
             [width, height] = mainWindow.getSize();
-            globalSettings.mainWindow = {
+            globalSettings.mainWindow.size = {
                 width: width,
                 height: height
             };

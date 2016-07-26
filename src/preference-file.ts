@@ -51,6 +51,7 @@ class PreferenceFileLocalStorage implements IPreferenceFileStorage {
         return path.join(
             electron.app.getPath("appData"),
             electron.app.getName(),
+            "Settings",
             filename);
     }
 
