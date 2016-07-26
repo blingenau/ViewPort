@@ -4,7 +4,7 @@ import * as tv4 from "tv4";
 import {screen} from "electron";
 
 import {PreferenceFile} from "./preference-file";
-import {WorkQueue} from "./work-queue";
+import {IWorkQueue} from "./work-queue";
 
 // See https://spacetelescope.github.io/understanding-json-schema/index.html
 const settingsSchema = {
@@ -16,8 +16,8 @@ const settingsSchema = {
                 "size": {
                     type: "object",
                     properties: {
-                        width: {type: "integer"},
-                        height: {type: "integer"}
+                        "width": {type: "integer"},
+                        "height": {type: "integer"}
                     },
                     required: ["width", "height"],
                     additionalProperties: false
@@ -47,9 +47,9 @@ interface ISettings {
 export class GlobalSettings {
     private settingsFile: PreferenceFile = new PreferenceFile("global-settings.json");
     private settings: ISettings = null;
-    private workQueue: WorkQueue = null;
+    private workQueue: IWorkQueue = null;
 
-    constructor(workQueue: WorkQueue) {
+    constructor(workQueue: IWorkQueue) {
         this.workQueue = workQueue;
     }
 
