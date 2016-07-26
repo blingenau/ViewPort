@@ -25,8 +25,16 @@ let numTabs: number = 1;
 const preferenceFileManager = new PreferenceFileManager();
 preferenceFileManager.start();
 
-// The preference file that manages application level settings
-let preferenceFile: PreferenceFile = new PreferenceFile(".application");
+// Application global settings
+interface IGlobalSettings {
+    mainWindow?: {
+        width: number;
+        height: number;
+    };
+}
+
+let globalSettingsFile: PreferenceFile = new PreferenceFile("global-settings.json");
+let globalSettings: IGlobalSettings = {};
 
 // The ADM websocket server
 const admWebSocketServer = new AdmWebSocketServer();
@@ -68,21 +76,25 @@ const workQueue = new WorkQueue();
  * Function to create a browser window
  */
 function createWindow(): void {
-    let width: number;
-    let height: number;
-    // Read in the saved window size from the last session.
-    preferenceFile.readJson()
+    // Read the global settings to get the window dimensions
+    globalSettingsFile.readJson()
     .then(settings => {
-        width = settings.width;
-        height = settings.height;
+        globalSettings = settings;
     })
     .catch(err => {
-        createNewApplicationSettings(800, 600);
-        width = 800;
-        height = 600;
+        const {width, height} = electron.screen.getPrimaryDisplay().workAreaSize;
+        globalSettings.mainWindow = {
+            width: Math.min(960, width),
+            height: Math.min(720, height)
+        };
     })
     .then(() => {
         // Create the browser window.
+        let [width, height] = [800, 600];
+        if (globalSettings.mainWindow) {
+            width = globalSettings.mainWindow.width || width;
+            height = globalSettings.mainWindow.height || height;
+        }
         mainWindow = new BrowserWindow({
             width: width,
             height: height,
@@ -121,10 +133,13 @@ function createWindow(): void {
 
         mainWindow.on("close", (event: Electron.Event) => {
             // Stores the window size of this session
-            let windowSize: number[] = mainWindow.getSize();
-            let windowSizeSettings = {"width" : windowSize[0], "height" : windowSize[1]};
+            [width, height] = mainWindow.getSize();
+            globalSettings.mainWindow = {
+                width: width,
+                height: height
+            };
 
-            workQueue.push(() => preferenceFile.write(windowSizeSettings));
+            workQueue.push(() => globalSettingsFile.write(globalSettings));
 
             if (process.env.athenahealth_viewport_test) {
                 // we don't want to present the close dialog during testing
@@ -207,12 +222,3 @@ ipcMain.on("tabs-all-closed", (): void => {
 ipcMain.on("update-num-tabs", (event: Electron.IpcMainEvent, tabs: number): void => {
     numTabs = tabs;
 });
-
-/**
- * Creates a file for the application if one does not exist already
- * @param preferenceFile    file for the application settings.
- */
-function createNewApplicationSettings(width: number, height: number): void {
-    let defaultSettings = {"width" : width, "height" : height};
-    preferenceFile.write(defaultSettings);
-}

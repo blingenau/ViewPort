@@ -7,3 +7,5 @@ packages/
 typings/
 log.txt
 src/bin/dymo/viewport-adm-executable.vshost.exe.manifest
+src/adm_executable/bin
+src/adm_executable/obj
