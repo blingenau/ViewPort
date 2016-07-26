@@ -52,7 +52,7 @@ namespace ModuleLoader
 
         static void Main(string[] args)
         {
-            LoadModule(@"DYMOLabelPrinter.dll");
+            LoadModule(Directory.GetCurrentDirectory() + @"\src\bin\dymo\DYMOLabelPrinter.dll");
             
             string line = null;
             do
