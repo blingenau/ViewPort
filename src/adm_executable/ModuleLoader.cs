@@ -52,9 +52,9 @@ namespace ModuleLoader
 
         static void Main(string[] args)
         {
-            LoadModule(Directory.GetCurrentDirectory() + "\\src\\bin\\dymo\\DYMOLabelPrinter.dll");
+            LoadModule(@"DYMOLabelPrinter.dll");
             
-            string line = null; //= "{\"Module\":\"DYMOLabelPrinter\",\"Action\":\"Print\",\"Callback\":\"PrintResponse\",\"Data\":\"{\\\"labelURL\\\":\\\"https://prodmirror.athenahealth.com/static_20160719_1468991381/singlelabel.label\\\",\\\"JSONObjectText\\\":\\\"{\\\\\\\"PT_NAME\\\\\\\":\\\\\\\"TEST, AARON #13760\\\\\\\\n\\\\\\\",\\\\\\\"PT_INFO\\\\\\\":\\\\\\\"dob: 05/02/2015 CARDIOLOGY\\\\\\\\n311 ARSENAL ST\\\\\\\\nBOSTON, GA 02127\\\\\\\\nh: (678) 862-8902  w: 6788628902\\\\\\\"}\\\",\\\"useDefaultPrinter\\\":false}\",\"MessageIdentifier\":\"cebbb314-d191-9a9f-071c-7998ac07f180\",\"ChunkNumber\":1,\"TotalChunks\":1,\"Checksum\":\"fa702d3e7580cb077afef734573effa9\"}";
+            string line = null;
             do
             {
                 line = Console.ReadLine();
