@@ -10,7 +10,7 @@ import {WorkQueue} from "./work-queue";
 const settingsSchema = {
     type: "object",
     properties: {
-        mainWindow: {
+        "mainWindow": {
             type: "object",
             properties: {
                 "size": {
