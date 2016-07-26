@@ -1,23 +1,9 @@
 /// <reference path="../typings/index.d.ts" />
-// import * as proc from "child_process";
 import {ipcRenderer} from "electron";
 let currentUserHomepage: string = "";
 let currentUser: string = "";
 
 window.onload = () => {
-  /*
-  // Set up child process 
-
-  this.child = proc.spawn("./src/bin/dymo/viewport-adm-executable.exe");
-  this.child.on("exit", () => {
-    console.log("CHILD EXITED!");
-  });
-  this.child.stderr.on("data", (data: any) => {
-    console.log("ERROR: "+ data.toString());
-  });
-  // ///////////////////////////////////////////////
-  */
-
   let userObject = ipcRenderer.sendSync("get-user");
   currentUser = userObject.username;
   currentUserHomepage = userObject.homepage;
@@ -91,21 +77,7 @@ window.onload = () => {
     .append($("<div> Administrator <div>")
         .attr("id", "administrator"));
 };
-/*
-  setInterval(function(){ // executes every 3 seconds
-      let customDataString = JSON.stringify({"Action": "Status"});
-      this.child.stdout.once("data", function (databuffer: any) {
-            let deviceConnectedBool = true;
-            // data returns "0" device is not connected or "1" device is connected
-            if (databuffer.toString().includes("0")) {
-                deviceConnectedBool = false;
-                console.log("DEVICE IS NOT CONNECTED");
-            }
-      });
-      this.child.stdin.write(customDataString + "\n");
-   }, 3000);
-};
-*/
+
 function highlightSelection(selected: string): void {
     $("#device").css("color", "#CCCCCC");
     $("#user").css("color", "#CCCCCC");
@@ -117,9 +89,6 @@ function updateHomePage(newHomepage: string): void {
                 .append($("<div>")
                     .addClass("current-homepage")
                     .html("New tabs open to " + newHomepage));
-  // $("#new-homepage1").trigger("reset");
-  // $("#new-homepage1").removeAttr("value");
-  // $("#new-homepage1").attr("value", newHomepage);
 }
 function createUserSettings(): void {
     $("#user-settings")
