@@ -75,7 +75,7 @@ namespace ModuleLoader
                             {
                                 dllResponse = "null";
                             }
-                            response.Add("response", dllResponse);)
+                            response.Add("response", dllResponse);
                             Console.WriteLine(JsonConvert.SerializeObject(response));
                             Console.Out.Flush();
                             line = null;
