@@ -5,7 +5,7 @@ let currentUserHomepage: string = "";
 let currentUser: string = "";
 
 window.onload = () => {
-    /*
+  /*
   // Set up child process 
 
   this.child = proc.spawn("./src/bin/dymo/viewport-adm-executable.exe");
@@ -25,6 +25,7 @@ window.onload = () => {
   $("#user-settings")
       .append($("<button>")
       .attr("id", "submit-user-settings")
+      .css("font", "Helvetica Nueve")
       .html("save"));
 
   $(document).ready(function () {
@@ -36,7 +37,8 @@ window.onload = () => {
           $("#user-settings")
             .append($("<br><br><br>"))
             .append($("<div> ADM Settings </div>")
-                .attr("id", "deviceInformation"));
+                .attr("id", "deviceInformation")
+                .attr("class", "page-title"));
       });
 
       $("#user").on("click", (): void => {
@@ -50,7 +52,8 @@ window.onload = () => {
           $("#user-settings")
             .append($("<br><br><br>"))
             .append($("<div> Administrator Settings </div>")
-                .attr("id", "administrator-settings"));
+                .attr("id", "administrator-settings")
+                .attr("class", "page-title"));
       });
       $("#submit-user-settings").on("click", (): boolean => {
           let submitValue: string = $("input[name=newTabCreation]:checked", "#homepage-form").val();
@@ -121,7 +124,8 @@ function updateHomePage(newHomepage: string): void {
 function createUserSettings(): void {
     $("#user-settings")
     .append($("<br><br><br>"))
-    .append($("<div> Personal Settings </div>"))
+    .append($("<div> Personal Settings </div>")
+    .attr("class", "page-title"))
     .append($("<br>"))
     .append($("<div>")
         .attr("id", "homepage")
@@ -130,6 +134,7 @@ function createUserSettings(): void {
             .html("New tabs open to " + currentUserHomepage)));
     $("#user-settings")
       .append($("<form>")
+          .attr("class", "current-homepage")
           .attr("onsubmit", "event.preventDefault()")
           .attr("id", "homepage-form")
           .append($("<input>")
