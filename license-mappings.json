@@ -2,5 +2,6 @@
     "extsprintf": "MIT",
     "timer-stopwatch": "MIT",
     "options": "MIT",
+    "tv4": "Public domain",
     "verror": "MIT"
 }
