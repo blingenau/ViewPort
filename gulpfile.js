@@ -133,8 +133,8 @@ gulp.task("package", ["dist"], (done) => {
     var options = {
         dir: "dist",
         name: package.productName,
-        platform: "darwin",
-        arch: "x64",
+        platform: os.platform(),
+        arch: os.arch(),
         version: process.versions.electron,
         out: "packages",
         "app-version": package.version,
