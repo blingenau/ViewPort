@@ -18,11 +18,17 @@ const settingsSchema = {
                     properties: {
                         width: {type: "integer"},
                         height: {type: "integer"}
-                    }
+                    },
+                    required: ["width", "height"],
+                    additionalProperties: false
                 }
-            }
+            },
+            required: ["size"],
+            additionalProperties: false
         }
-    }
+    },
+    required: ["mainWindow"],
+    additionalProperties: false
 };
 
 interface ISize {
@@ -68,7 +74,7 @@ export class GlobalSettings {
     }
 
     private validOrDefault(settings: any): ISettings {
-        if (tv4.validate(settings, settingsSchema, false, true)) {
+        if (tv4.validate(settings, settingsSchema)) {
             return settings;
         }
 
