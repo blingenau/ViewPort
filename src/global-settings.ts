@@ -18,7 +18,6 @@ export class GlobalSettings {
     private settingsFile: PreferenceFile = new PreferenceFile("global-settings.json");
     private settings: ISettings = {};
     private workQueue: WorkQueue = null;
-    private writeQueued: boolean = false;
 
     constructor(workQueue: WorkQueue) {
         this.workQueue = workQueue;
@@ -49,14 +48,7 @@ export class GlobalSettings {
     }
 
     public write(): void {
-        // only queue up one write at a time
-        if (!this.writeQueued) {
-            this.writeQueued = true;
-            this.workQueue.push(() => {
-                this.writeQueued = false;
-                return this.settingsFile.write(this.settings);
-            });
-        }
+        this.workQueue.push(() => this.settingsFile.write(this.settings));
     }
 
     public get mainWindow(): ISize {
