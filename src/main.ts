@@ -9,7 +9,9 @@ const BrowserWindow: typeof Electron.BrowserWindow = electron.BrowserWindow;
 const {dialog} = require("electron");
 
 import {AdmWebSocketServer} from "./adm-websocket-server";
-import {PreferenceFileManager, PreferenceFile} from "./preference-file";
+import {GlobalSettings} from "./global-settings";
+import {PreferenceFileManager} from "./preference-file";
+import {WorkQueue} from "./work-queue";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
@@ -26,15 +28,8 @@ const preferenceFileManager = new PreferenceFileManager();
 preferenceFileManager.start();
 
 // Application global settings
-interface IGlobalSettings {
-    mainWindow?: {
-        width: number;
-        height: number;
-    };
-}
-
-let globalSettingsFile: PreferenceFile = new PreferenceFile("global-settings.json");
-let globalSettings: IGlobalSettings = {};
+const workQueue = new WorkQueue();
+const globalSettings = new GlobalSettings(workQueue);
 
 // The ADM websocket server
 const admWebSocketServer = new AdmWebSocketServer();
@@ -42,59 +37,14 @@ if (process.platform !== "darwin") {
     admWebSocketServer.start();
 }
 
-class WorkQueue {
-    private queue: (() => void)[] = [];
-
-    public empty(): boolean {
-        return this.queue.length === 0;
-    }
-
-    public push(work: () => void): void {
-        this.queue.push(work);
-        if (this.queue.length === 1) {
-            process.nextTick(() => this.dispatchWork());
-        }
-    }
-
-    private dispatchWork(): void {
-        Promise.resolve(this.queue[0]())
-        .catch(err => {
-            console.log(`Work item failed: ${JSON.stringify(err, null, 4)}`);
-        })
-        .then(() => {
-            this.queue.shift();
-            if (!this.empty()) {
-                process.nextTick(() => this.dispatchWork());
-            }
-        });
-    }
-}
-
-const workQueue = new WorkQueue();
-
 /**
  * Function to create a browser window
  */
 function createWindow(): void {
     // Read the global settings to get the window dimensions
-    globalSettingsFile.readJson()
-    .then(settings => {
-        globalSettings = settings;
-    })
-    .catch(err => {
-        const {width, height} = electron.screen.getPrimaryDisplay().workAreaSize;
-        globalSettings.mainWindow = {
-            width: Math.min(960, width),
-            height: Math.min(720, height)
-        };
-    })
-    .then(() => {
+    globalSettings.read().then(() => {
         // Create the browser window.
-        let [width, height] = [800, 600];
-        if (globalSettings.mainWindow) {
-            width = globalSettings.mainWindow.width || width;
-            height = globalSettings.mainWindow.height || height;
-        }
+        let {width, height} = globalSettings.mainWindow;
         mainWindow = new BrowserWindow({
             width: width,
             height: height,
@@ -138,8 +88,7 @@ function createWindow(): void {
                 width: width,
                 height: height
             };
-
-            workQueue.push(() => globalSettingsFile.write(globalSettings));
+            globalSettings.write();
 
             if (process.env.athenahealth_viewport_test) {
                 // we don't want to present the close dialog during testing
