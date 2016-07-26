@@ -74,14 +74,13 @@ export class AdmWebSocketServer {
         };
 
         let getInstalledModules = (client: ws) => {
-            let deviceConnectedBool: boolean = true;
-            let customData = {"Action": "Status"};
-            let customDataString = JSON.stringify(customData);
-            this.child.stdout.once("data", function (databuffer: any) {
-            // data returns "0" device is not connected or "1" device is connected
-                if (databuffer.toString().includes("0")) {
-                    deviceConnectedBool = false;
-                }
+            let id: string = crypto.randomBytes(16).toString("hex");
+            let customData = {
+                id: id,
+                message: {Action: "Status"}
+            };
+            this.child.stdout.once(id, function (response: string) {
+               // response is "0" device is not connected or "1" device is connected
                 responder(client)("info", {
                 Error: false,
                 Message: "Success",
@@ -91,14 +90,14 @@ export class AdmWebSocketServer {
                         Version: {
                             Name: "1.1.2.1",
                             Persist: false,
-                            DeviceConnected: deviceConnectedBool,
+                            DeviceConnected: response.includes("1"),
                             DeviceVisible: true
                         }
                     }
                 ]
                 });
             });
-            this.child.stdin.write(customDataString + "\n");
+            this.child.stdin.write(JSON.stringify(customData) + "\n");
         };
 
         let getModuleInfo = (client: ws, data: any) => {
@@ -118,27 +117,32 @@ export class AdmWebSocketServer {
         };
 
         let execDymoLabelPrinter = (client: ws, data: any) => {
+            let id: string = crypto.randomBytes(16).toString("hex");
+            let customData = {
+                id: id,
+                message: data
+            };
+
             if (data.Action === "IsSoftwareInstalled") {
                 // child returns "true" or "false" indicating if dymo is installed
-                this.child.stdout.once("data", function (output: any) {
+                this.child.stdout.once(id,  function (response: string) {
                     eventResponder(client)("dymolabelprinter", data.Callback, {
                         Error: false,
                         Message: "Success",
-                        Data: output.toString().includes("True")
+                        Data: response.includes("True")
                     });
                 });
-                this.child.stdin.write(JSON.stringify(data) + "\n");
             } else if (data.Action === "Print") {
-                this.child.stdout.once("data", function (output: any) {
-                    output = output.toString().includes("null") ? "" : output.toString();
+                this.child.stdout.once("data", function (response: string) {
+                    response = response.includes("null") ? "" : response;
                     eventResponder(client)("dymolabelprinter", data.Callback, {
                         Error: false,
                         Message: "Success",
-                        Data: output
+                        Data: response
                     });
                 });
-                this.child.stdin.write(JSON.stringify(data) + "\n");
             }
+            this.child.stdin.write(JSON.stringify(customData) + "\n");
         };
 
         let execModule = (client: ws, data: any) => {
@@ -229,6 +233,13 @@ export class AdmWebSocketServer {
     public start(): void {
         // this.child = proc.spawn("python",["./src/test.py"]);
         this.child = proc.spawn("./src/bin/dymo/viewport-adm-executable.exe");
+        let self = this;
+        this.child.stdout.on("data", function (output: any) {
+            output = JSON.parse(output);
+            if (!self.child.stdout.emit(output.id, output.response)) {
+                console.log("id not found");
+            }
+        });
         this.child.on("exit", () => {
             console.log("CHILD EXITED!");
         });
