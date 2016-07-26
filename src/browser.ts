@@ -493,7 +493,7 @@ window.onload = () => {
             url: "http://prodmirror.athenahealth.com"
         }), "test");
         tabs.activateUser("test");
-
+        // browserDom.clearCookies();
         if (!process.env.athenahealth_viewport_test) {
             browserDom.lockActiveUser();
             // alert("Please login to continue using the Viewport");
@@ -529,6 +529,19 @@ window.onload = () => {
                 return;
             }
             let athenaDomain: string = nodeUrl.parse(athenaWebview.getURL()).hostname;
+            if (!tabs.getActiveTabBar().getLockedStatus()) {
+                athenaWebview.getWebContents().session.cookies.get({
+                    domain: athenaDomain.replace(/prodmirror|athenanet/,""),
+                    name: "UNENCRYPTED_USERNAME"
+                }, (error: Error, cookies: Electron.Cookie[]) : void => {
+                    console.log(cookies);
+                    if (cookies && cookies.length > 0) {
+                        $("#username").text(cookies[0].value);
+                    } else {
+                        $("#username").text("");
+                    }
+                });
+            }
 
             athenaWebview.getWebContents().session.cookies.get({
                         domain: athenaDomain,
@@ -542,7 +555,7 @@ window.onload = () => {
                             let currentTimeout: number = parseInt(cookies[0].value, 10);
                             let userIsLocked: boolean = tabs.getActiveTabBar().getLockedStatus();
 
-                            console.log(`${currentTimeout} => ${stopwatch.ms}`);
+                            // console.log(`${currentTimeout} => ${stopwatch.ms}`);
 
                             if (currentTimeout > 0) {
                                 if (userIsLocked) {
@@ -565,7 +578,7 @@ window.onload = () => {
                             let currentTimeout: number = parseInt(cookies[1].value, 10);
                             let totalTimeout: number = parseInt(cookies[0].value, 10);
                             // let isHidden: boolean = $(athenaWebview).css("display") === "none";
-                            console.log(`${currentTimeout} => ${stopwatch.ms}`);
+                            // console.log(`${currentTimeout} => ${stopwatch.ms}`);
 
                             // Athenanet times out when the cookie's value is <= 0 so we lock the user.
                             if (currentTimeout > 0) {
