@@ -11,11 +11,6 @@ window.onload = () => {
     currentUser = userObject.username;
     currentUserHomepage = userObject.homepage;
     createUserSettings();
-    $("#user-settings")
-        .append($("<button>")
-            .attr("id", "submit-user-settings")
-            .css("font", "Helvetica Nueve")
-            .html("save"));
 
     $(document).ready(function () {
         highlightSelection("#user-nav");
@@ -146,6 +141,32 @@ function createUserSettings(): void {
                             .attr("type", "radio")
                             .attr("name", "newTabCreation"))
                             .append("athenaNet"));
+    $("#user-settings")
+    .append($("<button>")
+        .attr("id", "submit-user-settings")
+        .html("save"));
+    $("#submit-user-settings").on("click", (): boolean => {
+        let submitValue: string = $("input[name=newTabCreation]:checked", "#homepage-form").val();
+        console.log("submitValue: " + submitValue);
+        if(submitValue === "new-homepage") {
+            console.log($("#new-homepage1").val());
+            currentUserHomepage = $("#new-homepage1").val();
+            console.log("#new-homepage1: " + currentUserHomepage);
+            ipcRenderer.send("update-homepage", currentUserHomepage);
+            updateHomePage(currentUserHomepage);
+            return false;
+        } else if (submitValue === "new-homepage2") {
+            currentUserHomepage = "about:blank";
+            ipcRenderer.send("update-homepage", currentUserHomepage);
+            updateHomePage(currentUserHomepage);
+            return false;
+        } else {
+            currentUserHomepage = "athenanet.athenahealth.com";
+            ipcRenderer.send("update-homepage", currentUserHomepage);
+            updateHomePage(currentUserHomepage);
+            return false;
+        }
+    });
 }
 
 function getDeviceStatus(): void {

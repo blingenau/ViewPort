@@ -42,7 +42,7 @@ body {
   width: 16px;
   position: relative;
   right: -312px;
-  top: -18px;
+  top: -16px;
   border: 0;
 }
 
@@ -54,12 +54,12 @@ body {
 #status {
   position: relative;
   right: -300px;
-  top: -37px;
+  top: -49px;
 }
 
 #version {
   position: relative;
-  top: -55px;
+  top: -68px;
   right: -450px;
 }
 

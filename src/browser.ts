@@ -427,7 +427,7 @@ let backgroundWindow: Electron.BrowserWindow = null;
 
 window.onresize = () => browserDom.doLayout();
 window.onload = () => {
-    let user = "test";
+    let user = "";
     let preferenceFile = new PreferenceFile(user, "settings.json");
     let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
     // Event Handlers 
@@ -541,6 +541,7 @@ window.onload = () => {
                     // console.log(cookies);
                     if (cookies && cookies.length > 0) {
                         $("#username").text(cookies[0].value);
+                        user = cookies[0].value;
                     } else {
                         $("#username").text("");
                     }
