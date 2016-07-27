@@ -42,9 +42,9 @@ body {
   height: 16px;
   width: 16px;
   position: relative;
-  right: -312px;
-  top: -16px;
   border: 0;
+  right: -250px;
+  top: -16px;
 }
 
 #device {
@@ -54,13 +54,13 @@ body {
 
 #status {
   position: relative;
-  right: -300px;
-  top: -49px;
+  right: -250px;
+  top: -67px;
 }
 
 #version {
   position: relative;
-  top: -68px;
+  top: -85px;
   right: -450px;
 }
 
@@ -84,8 +84,12 @@ body {
 }
 #dymo-version {
   position: relative;
-  top: -32px;
-  right: -495px;
+  top: -47px;
+  right: -485px;
 }
 
-/* 12pt font, Helvetica Bold, #59575D */
+#status-words {
+  position: relative;
+  top: -32px;
+  right: -275px;
+}

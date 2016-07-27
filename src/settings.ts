@@ -42,6 +42,8 @@ window.onload = () => {
                     .attr("id", "Dymo")
                     .append($("<div> </div>")
                         .attr("id", "dymo-status"))
+                    .append($("<div> </div>")
+                        .attr("id", "status-words"))
                     .append($("<div> v1.1.2.1 </div> ")
                         .attr("id", "dymo-version")));
             getDeviceStatus();
@@ -183,8 +185,10 @@ function getDeviceStatus(): void {
     if(deviceStatus.device === true) {
         $("#dymo-status").css("background-image", `url("svg/huge-green-circle.svg")`);
         console.log("green circle");
+        $("#status-words").text("Connected");
     } else {
         $("#dymo-status").css("background-image", `url("svg/huge-yellow-circle.svg")`);
         console.log("yellow circle");
+        $("#status-words").text("Not connected");
     }
 }
