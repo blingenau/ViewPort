@@ -233,8 +233,7 @@ export class AdmWebSocketServer {
         return this.child;
     }
     public start(): void {
-        // this.child = proc.spawn("python",["./src/test.py"]);
-        this.child = proc.spawn("./src/bin/dymo/viewport-adm-executable.exe");
+        this.child = proc.spawn(`${__dirname}/bin/dymo/viewport-adm-executable.exe`);
         let self = this;
         this.child.stdout.on("data", function (output: any) {
             output = JSON.parse(output);
