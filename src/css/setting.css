@@ -3,16 +3,8 @@ body {
   margin-left: 1cm;
   margin-top: 1cm;
   padding: 0;
-  font-family: Lucida Grande, Arial, sans-serif;
+  font-family: Lucida Grande, Arial, sans-serif, Helvetica; 
 }
-/*
-#middle {
-  display: inline-block;
-  width: 4%;
-  border-left: thick solid black;
-}
-*/
-
 #user-settings {
   float: right;
   width: calc(100% - 250px);
@@ -27,17 +19,20 @@ body {
 }
 #username {
   color: #8B8A91;
-  font: facit bold;
+  font: facit;
+  font-weight: bold;
   font-size: 16;
 }
 .page-title {
-  font: Helvetica Bold;
+  font: Helvetica; 
+  font-weight: bold;
   color: #59575D;
   font-size: 12pt;
 }
 
 .current-homepage {
-  font: Helvetica Nueve Regular;
+  font: Helvetica;
+  font-variant: nueve;
   color: #59575D;
   font-size: 11pt; 
 }
@@ -70,4 +65,25 @@ body {
 #Dymo {
   position: relative;
   top: 20px;
+  font-weight: normal;
+  font-size: 11pt;
 }
+#user-nav {
+  position: relative;
+  top: 0px;
+}
+#device-nav {
+  position: relative;
+  top: 15px;
+}
+#administrator-nav {
+  position: relative;
+  top: 30px;
+}
+#dymo-version {
+  position: relative;
+  top: -32px;
+  right: -495px;
+}
+
+/* 12pt font, Helvetica Bold, #59575D */

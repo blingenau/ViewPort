@@ -38,7 +38,9 @@ window.onload = () => {
                     .append($("<div> DYMO Label Printer  </div>")
                     .attr("id", "Dymo")
                     .append($("<div> </div>")
-                        .attr("id", "dymo-status")));
+                        .attr("id", "dymo-status"))
+                    .append($("<div> 1.5.1.0 </div> ")
+                        .attr("id", "dymo-version")));
             getDeviceStatus();
             setInterval(function() {
                 getDeviceStatus();
@@ -94,9 +96,9 @@ window.onload = () => {
 };
 
 function highlightSelection(selected: string): void {
-    $("#device-nav").css("color", "#CCCCCC");
-    $("#user-nav").css("color", "#CCCCCC");
-    $("#administrator-nav").css("color", "#CCCCCC");
+    $("#device-nav").css("color", "#8B8A91");
+    $("#user-nav").css("color", "#8B8A91");
+    $("#administrator-nav").css("color", "#8B8A91");
     $(selected).css("color", "#6D56A4");
 }
 function updateHomePage(newHomepage: string): void {
