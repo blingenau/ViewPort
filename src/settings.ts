@@ -1,12 +1,20 @@
 /// <reference path="../typings/index.d.ts" />
 import {ipcRenderer} from "electron";
-// import {AdmWebSocketServer} from "./adm-websocket-server";
-// let remote = require('electron').remote;
 let currentUserHomepage: string = "";
 let currentUser: string = "";
 
 window.onload = () => {
-
+    /*
+    console.log(`${__dirname}/dymo/DYMOLabelPrinter.dll`);
+    let fs = require("fs");
+    fs.readFile(`${__dirname}/dymo/DYMOLabelPrinter.dll`, (err: any, data: any) => {
+        if (err) {
+            console.log("error");
+        } else {
+            console.log("found");
+        }
+});
+*/
     let userObject = ipcRenderer.sendSync("get-user");
     currentUser = userObject.username;
     currentUserHomepage = userObject.homepage;
@@ -27,14 +35,14 @@ window.onload = () => {
                         .attr("id", "device"))
                     .append($("<div> Status </div>")
                         .attr("id", "status"))
-                    .append($("<div> Software Version </div>")
+                    .append($("<div> Module Version </div>")
                         .attr("id", "version")));
             $("#device")
                     .append($("<div> DYMO Label Printer  </div>")
                     .attr("id", "Dymo")
                     .append($("<div> </div>")
                         .attr("id", "dymo-status"))
-                    .append($("<div> 1.5.1.0 </div> ")
+                    .append($("<div> v1.1.2.1 </div> ")
                         .attr("id", "dymo-version")));
             getDeviceStatus();
             setInterval(function() {
@@ -172,8 +180,6 @@ function createUserSettings(): void {
 function getDeviceStatus(): void {
     let deviceStatus = ipcRenderer.sendSync("get-device-status");
     console.log("DeviceStatus" + deviceStatus.device);
-    // $("#deviceInformation").empty();
-    // $("#Dymo").append($("<div>" + deviceStatus.device + "</div>"));
     if(deviceStatus.device === true) {
         $("#dymo-status").css("background-image", `url("svg/huge-green-circle.svg")`);
         console.log("green circle");

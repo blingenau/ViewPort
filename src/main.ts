@@ -180,12 +180,10 @@ ipcMain.on("get-device-status", (event, arg) => {
                 id: id,
                 message: JSON.stringify({Action: "Status"})
             };
-    // event.returnValue = {"device": true};
     let childProcess: proc.ChildProcess = admWebSocketServer.getChild();
     childProcess.stdout.once(id, function (response: string) {
         let connected: boolean = response.includes("1");
         event.returnValue = {"device": connected};
-        console.log("connected: " + connected);
     });
     childProcess.stdin.write(JSON.stringify(customData) + "\n");
 });
