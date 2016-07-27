@@ -56,7 +56,7 @@ window.onload = () => {
             $("#user-settings").empty();
             $("#user-settings")
                 .append($("<br><br><br>"))
-                .append($("<div> Administrator Settings </div>")
+                .append($("<div> Admin Settings </div>")
                     .attr("id", "administrator-settings")
                     .attr("class", "page-title"));
         });
@@ -91,7 +91,7 @@ window.onload = () => {
             .attr("id", "user-nav"))
         .append($("<div> Device </div>")
             .attr("id", "device-nav"))
-        .append($("<div> Administrator <div>")
+        .append($("<div> Admin <div>")
             .attr("id", "administrator-nav"));
 };
 
@@ -157,7 +157,7 @@ function getDeviceStatus(): void {
         $("#dymo-status").css("background-image", `url("svg/huge-green-circle.svg")`);
         console.log("green circle");
     } else {
-        $("#dymo-status").css("background-image", `url("svg/huge-red-circle.svg")`);
-        console.log("red circle");
+        $("#dymo-status").css("background-image", `url("svg/huge-yellow-circle.svg")`);
+        console.log("yellow circle");
     }
 }
