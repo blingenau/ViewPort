@@ -1,5 +1,6 @@
 /// <reference path="../typings/index.d.ts" />
-
+import * as proc from "child_process";
+import * as crypto from "crypto";
 const electron: Electron.ElectronMainAndRenderer = require("electron");
 // Module to control application life.
 const app: Electron.App = electron.app;
@@ -171,4 +172,20 @@ ipcMain.on("tabs-all-closed", (): void => {
 
 ipcMain.on("update-num-tabs", (event: Electron.IpcMainEvent, tabs: number): void => {
     numTabs = tabs;
+});
+
+ipcMain.on("get-device-status", (event, arg) => {
+    let id: string = crypto.randomBytes(16).toString("hex");
+    let customData = {
+                id: id,
+                message: JSON.stringify({Action: "Status"})
+            };
+    // event.returnValue = {"device": true};
+    let childProcess: proc.ChildProcess = admWebSocketServer.getChild();
+    childProcess.stdout.once(id, function (response: string) {
+        let connected: boolean = response.includes("1");
+        event.returnValue = {"device": connected};
+        console.log("connected: " + connected);
+    });
+    childProcess.stdin.write(JSON.stringify(customData) + "\n");
 });
