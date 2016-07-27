@@ -39,6 +39,7 @@ window.onload = () => {
                     .attr("id", "Dymo")
                     .append($("<div> </div>")
                         .attr("id", "dymo-status")));
+            getDeviceStatus();
             setInterval(function() {
                 let deviceStatus = ipcRenderer.sendSync("get-device-status");
                 console.log("DeviceStatus" + deviceStatus.device);
@@ -154,4 +155,18 @@ function createUserSettings(): void {
                             .attr("type", "radio")
                             .attr("name", "newTabCreation"))
                             .append("athenaNet"));
+}
+
+function getDeviceStatus(): void {
+    let deviceStatus = ipcRenderer.sendSync("get-device-status");
+    console.log("DeviceStatus" + deviceStatus.device);
+    // $("#deviceInformation").empty();
+    // $("#Dymo").append($("<div>" + deviceStatus.device + "</div>"));
+    if(deviceStatus.device === true) {
+        $("#dymo-status").css("background-image", `url("svg/huge-green-circle.svg")`);
+        console.log("green circle");
+    } else {
+        $("#dymo-status").css("background-image", `url("svg/huge-red-circle.svg")`);
+        console.log("red circle");
+    }
 }
