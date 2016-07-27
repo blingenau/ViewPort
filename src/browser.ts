@@ -489,6 +489,7 @@ window.onload = () => {
     })
     .then(() => {
         tabs.addUser("test");
+        // browserDom.addTab("http://prodmirror.athenahealth.com");
         tabs.addTab(new Tab(browserDom, {
             url: "http://prodmirror.athenahealth.com"
         }), "test");
@@ -504,9 +505,10 @@ window.onload = () => {
         ipcRenderer.on("openPDF", function (event, filedata) {
             let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
             let PDFurl: string = PDFViewerURL + filedata.url;
-            tabs.addTab(new Tab(browserDom, {
-                    url: PDFurl
-            }));
+            browserDom.addTab(PDFurl);
+            // tabs.addTab(new Tab(browserDom, {
+            //         url: PDFurl
+            // }));
         });
 
         ipcRenderer.on("enter-full-screen", function() {
@@ -534,7 +536,7 @@ window.onload = () => {
                     domain: athenaDomain.replace(/prodmirror|athenanet/,""),
                     name: "UNENCRYPTED_USERNAME"
                 }, (error: Error, cookies: Electron.Cookie[]) : void => {
-                    console.log(cookies);
+                    // console.log(cookies);
                     if (cookies && cookies.length > 0) {
                         $("#username").text(cookies[0].value);
                     } else {
