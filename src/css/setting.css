@@ -3,7 +3,8 @@ body {
   margin-left: 1cm;
   margin-top: 1cm;
   padding: 0;
-  font-family: Lucida Grande, Arial, sans-serif, Helvetica; 
+  font-family: Lucida Grande, Arial, sans-serif, Helvetica;
+  cursor: pointer; 
 }
 #user-settings {
   float: right;
