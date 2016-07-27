@@ -41,18 +41,7 @@ window.onload = () => {
                         .attr("id", "dymo-status")));
             getDeviceStatus();
             setInterval(function() {
-                let deviceStatus = ipcRenderer.sendSync("get-device-status");
-                console.log("DeviceStatus" + deviceStatus.device);
-                // $("#deviceInformation").empty();
-                // $("#Dymo").append($("<div>" + deviceStatus.device + "</div>"));
-                if(deviceStatus.device === true) {
-                    $("#dymo-status").css("background-image", `url("svg/huge-green-circle.svg")`);
-                    console.log("green circle");
-                } else {
-                    $("#dymo-status").css("background-image", `url("svg/huge-red-circle.svg")`);
-                    console.log("red circle");
-                }
-
+                getDeviceStatus();
             }, 3000);
         });
         $("#user-nav").on("click", (): void => {
