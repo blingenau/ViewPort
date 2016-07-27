@@ -14,13 +14,16 @@ body {
 */
 
 #user-settings {
-  float: right ;
-  width: 78% ;
+  float: right;
+  width: calc(100% - 250px);
+  height: 100%;
+  padding: 10px;
 }
 #navbar {
   float: left;
-  width: 18%;
-
+  width: 100px;
+  height: 100%;
+  padding: 10px;
 }
 #username {
   color: #8B8A91;
@@ -37,4 +40,34 @@ body {
   font: Helvetica Nueve Regular;
   color: #59575D;
   font-size: 11pt; 
+}
+#dymo-status {
+  height: 16px;
+  width: 16px;
+  position: relative;
+  right: -312px;
+  top: -18px;
+  border: 0;
+}
+
+#device {
+  position: relative;
+  top: 15px;
+}
+
+#status {
+  position: relative;
+  right: -300px;
+  top: -37px;
+}
+
+#version {
+  position: relative;
+  top: -55px;
+  right: -450px;
+}
+
+#Dymo {
+  position: relative;
+  top: 20px;
 }

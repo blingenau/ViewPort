@@ -1,9 +1,12 @@
 /// <reference path="../typings/index.d.ts" />
 import {ipcRenderer} from "electron";
+// import {AdmWebSocketServer} from "./adm-websocket-server";
+// let remote = require('electron').remote;
 let currentUserHomepage: string = "";
 let currentUser: string = "";
 
 window.onload = () => {
+
     let userObject = ipcRenderer.sendSync("get-user");
     currentUser = userObject.username;
     currentUserHomepage = userObject.homepage;
@@ -15,23 +18,39 @@ window.onload = () => {
             .html("save"));
 
     $(document).ready(function () {
-        highlightSelection("#user");
-        $("#device").on("click", (): void => {
-            highlightSelection("#device");
+        highlightSelection("#user-nav");
+        $("#device-nav").on("click", (): void => {
+            highlightSelection("#device-nav");
             $("#user-settings").empty();
             $("#user-settings")
                 .append($("<br><br><br>"))
                 .append($("<div> ADM Settings </div>")
+                    .append($("<br><br>"))
                     .attr("id", "deviceInformation")
-                    .attr("class", "page-title"));
+                    .attr("class", "page-title")
+                    .append($("<div> Device </div>")
+                        .attr("id", "device"))
+                    .append($("<div> Status </div>")
+                        .attr("id", "status"))
+                    .append($("<div> Software Version </div>")
+                        .attr("id", "version")));
+            $("#device")
+                    .append($("<div> DYMO Label Printer  </div>")
+                    .attr("id", "Dymo")
+                    .append($("<div> </div>")
+                        .attr("id", "dymo-status")));
+            getDeviceStatus();
+            setInterval(function() {
+                getDeviceStatus();
+            }, 3000);
         });
-        $("#user").on("click", (): void => {
-            highlightSelection("#user");
+        $("#user-nav").on("click", (): void => {
+            highlightSelection("#user-nav");
             $("#user-settings").empty();
             createUserSettings();
         });
-        $("#administrator").on("click", (): void => {
-            highlightSelection("#administrator");
+        $("#administrator-nav").on("click", (): void => {
+            highlightSelection("#administrator-nav");
             $("#user-settings").empty();
             $("#user-settings")
                 .append($("<br><br><br>"))
@@ -63,23 +82,21 @@ window.onload = () => {
         });
     });
     $("#navbar")
-        .append($("<div> User: " + currentUser + "</div>")
+        .append($("<div> " + currentUser + "</div>")
             .attr("id", "username"))
-        .append($("<br><br>"))
+        .append($("<br><br><br><br>"))
         .append($("<div> User </div>")
-            .attr("id", "user"))
-        .append($("<br>"))
+            .attr("id", "user-nav"))
         .append($("<div> Device </div>")
-            .attr("id", "device"))
-        .append($("<br>"))
+            .attr("id", "device-nav"))
         .append($("<div> Administrator <div>")
-            .attr("id", "administrator"));
+            .attr("id", "administrator-nav"));
 };
 
 function highlightSelection(selected: string): void {
-    $("#device").css("color", "#CCCCCC");
-    $("#user").css("color", "#CCCCCC");
-    $("#administrator").css("color", "#CCCCCC");
+    $("#device-nav").css("color", "#CCCCCC");
+    $("#user-nav").css("color", "#CCCCCC");
+    $("#administrator-nav").css("color", "#CCCCCC");
     $(selected).css("color", "#6D56A4");
 }
 function updateHomePage(newHomepage: string): void {
@@ -127,4 +144,18 @@ function createUserSettings(): void {
                             .attr("type", "radio")
                             .attr("name", "newTabCreation"))
                             .append("athenaNet"));
+}
+
+function getDeviceStatus(): void {
+    let deviceStatus = ipcRenderer.sendSync("get-device-status");
+    console.log("DeviceStatus" + deviceStatus.device);
+    // $("#deviceInformation").empty();
+    // $("#Dymo").append($("<div>" + deviceStatus.device + "</div>"));
+    if(deviceStatus.device === true) {
+        $("#dymo-status").css("background-image", `url("svg/huge-green-circle.svg")`);
+        console.log("green circle");
+    } else {
+        $("#dymo-status").css("background-image", `url("svg/huge-red-circle.svg")`);
+        console.log("red circle");
+    }
 }

@@ -383,6 +383,7 @@ class BrowserDOM implements IDOM {
         $("#add-tab").prop("disabled",true);
         $(".tab-close").hide();
         $("#location").prop("disabled",true);
+        $("#settings").prop("disabled", true);
     }
 
     public unlockActiveUser(): void {
@@ -390,6 +391,7 @@ class BrowserDOM implements IDOM {
         $("#add-tab").prop("disabled",false);
         $(".tab-close").show();
         $("#location").prop("disabled",false);
+        $("#settings").prop("disabled", false);
     }
 
     public isAthenaUrl(url: string): boolean {

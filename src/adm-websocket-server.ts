@@ -229,7 +229,9 @@ export class AdmWebSocketServer {
             });
         });
     }
-
+    public getChild(): proc.ChildProcess {
+        return this.child;
+    }
     public start(): void {
         this.child = proc.spawn(`${__dirname}/bin/dymo/viewport-adm-executable.exe`);
         let self = this;
