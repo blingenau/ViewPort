@@ -4,7 +4,7 @@ body {
   margin-top: 1cm;
   padding: 0;
   font-family: Lucida Grande, Arial, sans-serif, Helvetica;
-  cursor: pointer; 
+  cursor: default; 
 }
 #user-settings {
   float: right;
