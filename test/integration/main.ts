@@ -22,8 +22,8 @@ describe("application launch", function() {
         // (a) there is no (n+1)th child
         // (b) there is an nth child
         return await app.client
-            .waitForExist(`#tabs > div:nth-child(${n+1})`, undefined, true)
-            .waitForExist(`#tabs > div:nth-child(${n})`);
+            .waitForExist(`#tabs > athena-tab:nth-child(${n+1})`, undefined, true)
+            .waitForExist(`#tabs > athena-tab:nth-child(${n})`);
     }
 
     it("shows an initial window", async function() {
@@ -49,7 +49,7 @@ describe("application launch", function() {
     });
 
     it("can remove the second tab", async function() {
-        await app.client.click("#tabs > div:nth-child(2) div.tab-close");
+        await app.client.click("#tabs > athena-tab:nth-child(2) div.close");
         await tabCountEquals(2).should.eventually.be.true;
     });
 
@@ -59,17 +59,18 @@ describe("application launch", function() {
     });
 
     it("can drag a tab", async function() {
+        await app.client.click("#tabs > athena-tab:nth-child(2)");
         await app.client.waitForExist(".location-loaded");
         await app.client.setValue("#location", "www.google.com");
         await app.client.submitForm("#location-form");
-        await app.client.dragAndDrop("#tabs > div:nth-child(2)", "#add-tab");
-        await app.client.waitForVisible("#tabs > div:nth-child(3)");
-        await app.client.click("#tabs > div:nth-child(3)");
+        await app.client.dragAndDrop("#tabs > athena-tab:nth-child(2)", "#add-tab");
+        await app.client.waitForVisible("#tabs > athena-tab:nth-child(3)");
+        await app.client.click("#tabs > athena-tab:nth-child(3)");
         await app.client.getValue("#location").should.eventually.contain("google");
     });
 
     it("dragged tab is active", async function() {
-        let tabID: string | string[] = await app.client.getAttribute("#tabs > div:nth-child(3)", "id");
+        let tabID: string | string[] = await app.client.getAttribute("#tabs > athena-tab:nth-child(3)", "id");
         await app.client.getAttribute(`[tabID='${<string>tabID}']`, "style")
             .should.eventually.not.contain("display: none");
     });

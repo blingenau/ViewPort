@@ -3,13 +3,19 @@
     <head>
         <meta charset="UTF-8">
         <title>ViewPort</title>
-        <link rel="stylesheet" href="css/index.css">
-        <link rel="stylesheet" href="css/tabs.css">
-        <link rel="stylesheet" href="node_modules/jquery-ui/themes/base/base.css"> 
+
+        <script src="node_modules/webcomponents.js/webcomponents-lite.js"></script>
         <script>
             window.$ = window.jQuery = require("jquery");
             const browser = require("./browser.js");
         </script>
+
+        <link rel="import" href="node_modules/@polymer/polymer/polymer.html">
+        <link rel="import" href="webcomponents/athena-tab.html">
+        
+        <link rel="stylesheet" href="css/index.css">
+        <link rel="stylesheet" href="css/tabs.css">
+        <link rel="stylesheet" href="node_modules/jquery-ui/themes/base/base.css">
     </head>
     <body>
         <div id="controls">

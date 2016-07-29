@@ -1,0 +1,98 @@
+<dom-module id="athena-tab">
+
+<template>
+
+    <style>
+        :host {
+            float: left;
+            position: relative;
+            height: 100%;
+            border: 0px;
+            margin: 0px;
+            z-index: 1;
+            background : url("../svg/tab.svg");
+            border-style : Solid;
+            border-color : #7F7F7F;
+            border-color : rgba(127, 127, 127, 1);
+            border-width : 0px;
+        }
+        :host[current] {
+            z-index: 5;
+            background : url("../svg/tab_active.svg");
+        }
+        :host .favicon {
+            height: 16px;
+            width: 16px;
+            background-size: 16px;
+            position: absolute;
+            left: 9px;
+            top: 5px;
+            z-index: 3;
+        }
+        :host .title {
+            color: #222222;
+            padding: 5px 30px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        :host .close {
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            width: 14px;
+            height: 14px;
+            z-index: 999;
+            background-image: url("../svg/close.svg");
+        }
+        :host .close:enabled {
+            background-image: url("../svg/close.svg");
+        }
+        :host .close:hover {
+            background-image: url("../svg/close_hover.svg");
+        }
+        :host .close:active:hover {
+            background-image: url("../svg/close_active.svg");
+        }
+    </style>
+
+    <div class="title">
+        {{title}}
+    </div>
+    <div class="favicon">
+        <img src="{{favicon}}">
+    </div>
+    <div class="close" on-tap="onClose"/>
+
+</template>
+
+<script>
+    Polymer({
+        is: "athena-tab",
+
+        properties: {
+            title: String,
+            favicon: String,
+            current: Boolean
+        },
+
+        attached() {
+            this.listen(this, "tap", "onTap");
+        },
+
+        detached() {
+            this.unlisten(this, "tap", "onTap");
+        },
+
+        onTap(event) {
+            this.fire("tap");
+        },
+
+        onClose(event) {
+            event.stopPropagation();
+            this.fire("close");
+        }
+    });
+</script>
+
+</dom-module>

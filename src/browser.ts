@@ -82,31 +82,45 @@ class BrowserDOM implements IDOM {
      * @param tab   The Tab object associated with this new element.
      */
     public createTabElement(title: string, id: string, url: string, tab: Tab): void {
-        let self: BrowserDOM = this;
         $("#tabs")
-            .append($("<div>")
-                .addClass("ui-state-default tab")
+            .append($("<athena-tab>")
                 .attr("id", id)
-                .append($("<div>")
-                    .addClass("tab-title")
-                    .attr("title", title)
-                    .html(title))
-                .append($("<div>")
-                    .addClass("tab-favicon")
-                    .append($("<img>")
-                        .attr("src", blankFaviconUri)))
-                .append($("<div>")
-                    .addClass("tab-close")
-                    .click((event: JQueryMouseEventObject) => {
-                        event.stopPropagation();
-                        self.closeTabOnClick(tab);
-                        return false;
-                    }))
-                .click(() => {
-                    self.changeTabOnClick(tab);
-                    return false;
-                })
+                .attr("title", title)
+                .attr("favicon", blankFaviconUri)
+                .on("tap", () => this.changeTabOnClick(tab))
+                .on("close", () => this.closeTabOnClick(tab))
             );
+
+        // let self: BrowserDOM = this;
+        // $("#tabs")
+        //     .append($("<div>")
+        //         .addClass("ui-state-default tab")
+        //         .attr("id", id)
+        //         .append($("<div>")
+        //             .addClass("tab-title")
+        //             .attr("title", title)
+        //             .html(title))
+        //         .append($("<div>")
+        //             .addClass("tab-favicon")
+        //             .append($("<img>")
+        //                 .attr("src", blankFaviconUri)))
+        //         .append($("<div>")
+        //             .addClass("tab-close")
+        //             .click((event: JQueryMouseEventObject) => {
+        //                 event.stopPropagation();
+        //                 self.closeTabOnClick(tab);
+        //                 return false;
+        //             }))
+        //         .click(() => {
+        //             self.changeTabOnClick(tab);
+        //             return false;
+        //         })
+        //     );
+
+        (() => [
+            this.closeTabOnClick,
+            this.changeTabOnClick
+        ])();
     }
 
     /**
@@ -170,7 +184,7 @@ class BrowserDOM implements IDOM {
     public hideTab(id: string): void {
         id = id || tabs.getActiveTab().getId();
         $(`[tabID='${id}']`).hide();
-        $(`#${id}`).removeClass("tab-current");
+        $(`#${id}`).removeAttr("current");
     }
 
     /**
@@ -187,7 +201,7 @@ class BrowserDOM implements IDOM {
     public showTab(id: string): void {
         id = id || tabs.getActiveTab().getId();
         $(`[tabID='${id}']`).show();
-        $(`#${id}`).addClass("tab-current");
+        $(`#${id}`).attr("current", "");
     }
 
     /**
@@ -198,8 +212,8 @@ class BrowserDOM implements IDOM {
      */
     public getNextActiveTabId(id: string): string {
         let tab = $(`#${id}`);
-        let next: string = tab.next(".ui-state-default").attr("id")
-                         || tab.prev(".ui-state-default").attr("id");
+        let next: string = tab.next("athena-tab").attr("id")
+                         || tab.prev("athena-tab").attr("id");
         return next || "";
     }
 
@@ -210,9 +224,8 @@ class BrowserDOM implements IDOM {
      * @param title   The new title to be set. 
      */
     public setTitle(id: string, title: string): void {
-        $(`#${id}`).find(".tab-title")
-            .attr("title", title)
-            .html(title);
+        $(`#${id}`)
+            .attr("title", title);
     }
 
     /**
@@ -253,8 +266,7 @@ class BrowserDOM implements IDOM {
      */
     public setTabFavicon(id: string, url: string): void {
         getFaviconImage(url).then(favicon => {
-            $(`#${id}`).find(".tab-favicon").find("img")
-            .attr("src", favicon);
+            $(`#${id}`).attr("favicon", favicon);
         });
     }
 
@@ -262,9 +274,9 @@ class BrowserDOM implements IDOM {
      *  Resizes the elements in the window. 
      */
     public doLayout(): void {
-        let tabs: JQuery = $(".ui-state-default").not(".ui-sortable-placeholder");
-        let tabFav: JQuery = $(".tab-favicon");
-        let tabTitle: JQuery = $(".tab-title");
+        let tabs: JQuery = $("athena-tab").not(".ui-sortable-placeholder");
+        // let tabFav: JQuery = $(".tab-favicon");
+        // let tabTitle: JQuery = $(".tab-title");
         let controlsHeight: number = $("#controls").outerHeight();
         let tabBarHeight: number = $("#tabs").outerHeight();
         let windowWidth: number = document.documentElement.clientWidth;
@@ -280,13 +292,13 @@ class BrowserDOM implements IDOM {
         // Resize the tabs if there are many or the window is too small
         tabs.css("width", tabWidth);
 
-        if (tabs.get(0).clientWidth <= 60) {
-            tabFav.hide();
-            tabTitle.hide();
-        } else {
-            tabFav.show();
-            tabTitle.show();
-        }
+        // if (tabs.get(0).clientWidth <= 60) {
+        //     tabFav.hide();
+        //     tabTitle.hide();
+        // } else {
+        //     tabFav.show();
+        //     tabTitle.show();
+        // }
     }
     /**
      * Navigates a tab to a new URL.
@@ -644,7 +656,7 @@ window.onload = () => {
                 axis: "x",
                 scroll: false,
                 forcePlaceholderSize: true,
-                items: ".ui-state-default",
+                items: "athena-tab",
                 tolerance: "pointer",
                 containment: "parent"
             })
