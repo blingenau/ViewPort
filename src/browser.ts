@@ -153,7 +153,7 @@ class BrowserDOM implements IDOM {
     public hideTab(id: string): void {
         id = id || tabs.getActiveTab().getId();
         $(`[tabID='${id}']`).hide();
-        $(`#${id}`).removeAttr("current");
+        // $(`#${id}`).removeAttr("current");
     }
 
     /**
@@ -170,7 +170,7 @@ class BrowserDOM implements IDOM {
     public showTab(id: string): void {
         id = id || tabs.getActiveTab().getId();
         $(`[tabID='${id}']`).show();
-        $(`#${id}`).attr("current", "");
+        // $(`#${id}`).attr("current", "");
     }
 
     /**
@@ -478,10 +478,10 @@ window.onload = () => {
         }), "test");
         tabs.activateUser("test");
         // browserDom.clearCookies();
-        if (!process.env.athenahealth_viewport_test) {
-            browserDom.lockActiveUser();
-            // alert("Please login to continue using the Viewport");
-        }
+        // if (!process.env.athenahealth_viewport_test) {
+        //     browserDom.lockActiveUser();
+        //     // alert("Please login to continue using the Viewport");
+        // }
 
         browserDom.doLayout();
 

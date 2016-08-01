@@ -9,7 +9,6 @@ input {
   outline: none;
 }
 #tab-bar {
-  position: relative;
   height: 30px;
   width: 100%;
   background: #cccccc;

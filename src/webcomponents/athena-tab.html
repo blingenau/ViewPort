@@ -6,22 +6,22 @@
         :host .outer {
             float: left;
             position: relative;
+            display: none;
             width: 100%;
             height: 100%;
-            border: 0px;
-            margin: 0px;
+            border: 0;
+            margin: 0;
             z-index: 1;
             background : url("../svg/tab.svg");
-            border-style : Solid;
+            border-style : solid;
             border-color : #7F7F7F;
             border-color : rgba(127, 127, 127, 1);
-            border-width : 0px;
         }
-        :host[current] .outer {
+        :host([active]) .outer {
             z-index: 5;
             background : url("../svg/tab_active.svg");
         }
-        :host .favicon {
+        .favicon {
             height: 16px;
             width: 16px;
             background-size: 16px;
@@ -30,14 +30,14 @@
             top: 5px;
             z-index: 3;
         }
-        :host .title {
+        .title {
             color: #222222;
-            padding: 5px 30px;
+            margin: 5px 30px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        :host .close {
+        .close {
             position: absolute;
             top: 7px;
             right: 7px;
@@ -46,13 +46,13 @@
             z-index: 999;
             background-image: url("../svg/close.svg");
         }
-        :host .close:enabled {
+        .close:enabled {
             background-image: url("../svg/close.svg");
         }
-        :host .close:hover {
+        .close:hover {
             background-image: url("../svg/close_hover.svg");
         }
-        :host .close:active:hover {
+        .close:active:hover {
             background-image: url("../svg/close_active.svg");
         }
     </style>
@@ -76,7 +76,16 @@
         properties: {
             title: String,
             favicon: String,
-            current: Boolean
+            index: Number,
+            active: {
+                type: Boolean,
+                notify: true,
+                reflectToAttribute: true
+            },
+            width: {
+                type: String,
+                observer: "_widthChanged"
+            }
         },
 
         onTap(event) {
@@ -86,6 +95,15 @@
         onClose(event) {
             event.stopPropagation();
             this.fire("close");
+        },
+
+        _widthChanged(width) {
+            const outer = this.$$(".outer");
+            outer.style.width = width;
+            outer.style.display = "inline";
+
+            this.$$(".title").style.display = (outer.clientWidth < 80) ? "none" : "";
+            this.$$(".favicon").style.display = (outer.clientWidth < 50) ? "none" : "";
         }
     });
 </script>
