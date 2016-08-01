@@ -1,0 +1,59 @@
+<dom-module id="athena-tabbar">
+
+<link rel="import" href="athena-tab.html">
+
+<template>
+
+    <style>
+        :host .outer {
+            float: left;
+            position: relative;
+            *zoom: 1;
+            -webkit-user-select: none;
+            cursor: default;
+            font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            line-height: 13px;
+            transition : background 200ms;
+            margin: 0;
+            padding: 0 0 0 0;
+            width: 100%;
+            height: 100%;
+            background : #cccccc;
+            display: table-cell;
+        }
+    </style>
+
+    <div class="outer">
+        <content id="tabs" select="athena-tab"></content>
+    </div>
+
+</template>
+
+<script>
+    Polymer({
+        is: "athena-tabbar",
+
+        properties: {
+        },
+
+        attached() {
+            this._observer = Polymer.dom(this.$.tabs).observeNodes(info => this._layout());
+        },
+
+        detached() {
+            Polymer.dom(this.$.tabs).unobserveNodes(this._observer);
+            this._observer = null;
+        },
+
+        _layout() {
+            let children = this.getEffectiveChildren();
+            let width = `${100/children.length}%`;
+            for (let child of children) {
+                child.$$(".outer").style.width = width;
+            }
+        }
+    });
+</script>
+
+</dom-module>

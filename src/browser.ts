@@ -87,40 +87,9 @@ class BrowserDOM implements IDOM {
                 .attr("id", id)
                 .attr("title", title)
                 .attr("favicon", blankFaviconUri)
-                .on("tap", () => this.changeTabOnClick(tab))
+                .on("click", () => this.changeTabOnClick(tab))
                 .on("close", () => this.closeTabOnClick(tab))
             );
-
-        // let self: BrowserDOM = this;
-        // $("#tabs")
-        //     .append($("<div>")
-        //         .addClass("ui-state-default tab")
-        //         .attr("id", id)
-        //         .append($("<div>")
-        //             .addClass("tab-title")
-        //             .attr("title", title)
-        //             .html(title))
-        //         .append($("<div>")
-        //             .addClass("tab-favicon")
-        //             .append($("<img>")
-        //                 .attr("src", blankFaviconUri)))
-        //         .append($("<div>")
-        //             .addClass("tab-close")
-        //             .click((event: JQueryMouseEventObject) => {
-        //                 event.stopPropagation();
-        //                 self.closeTabOnClick(tab);
-        //                 return false;
-        //             }))
-        //         .click(() => {
-        //             self.changeTabOnClick(tab);
-        //             return false;
-        //         })
-        //     );
-
-        (() => [
-            this.closeTabOnClick,
-            this.changeTabOnClick
-        ])();
     }
 
     /**
@@ -274,7 +243,7 @@ class BrowserDOM implements IDOM {
      *  Resizes the elements in the window. 
      */
     public doLayout(): void {
-        let tabs: JQuery = $("athena-tab").not(".ui-sortable-placeholder");
+        // let tabs: JQuery = $("athena-tab").not(".ui-sortable-placeholder");
         // let tabFav: JQuery = $(".tab-favicon");
         // let tabTitle: JQuery = $(".tab-title");
         let controlsHeight: number = $("#controls").outerHeight();
@@ -283,14 +252,14 @@ class BrowserDOM implements IDOM {
         let windowHeight: number = document.documentElement.clientHeight;
         let webviewWidth: number = windowWidth;
         let webviewHeight: number = windowHeight - controlsHeight - tabBarHeight;
-        let tabWidth: string =  (100/tabs.length).toString() + "%";
+        // let tabWidth: string =  (100/tabs.length).toString() + "%";
         $("webview").css({
             width: webviewWidth + "px",
             height: webviewHeight + "px"
         });
 
         // Resize the tabs if there are many or the window is too small
-        tabs.css("width", tabWidth);
+        // tabs.css("width", tabWidth);
 
         // if (tabs.get(0).clientWidth <= 60) {
         //     tabFav.hide();

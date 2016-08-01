@@ -6,12 +6,15 @@
 
         <script src="node_modules/webcomponents.js/webcomponents-lite.js"></script>
         <script>
+            window.Polymer = {
+                dom: "shadow"
+            };
             window.$ = window.jQuery = require("jquery");
             const browser = require("./browser.js");
         </script>
 
         <link rel="import" href="node_modules/@polymer/polymer/polymer.html">
-        <link rel="import" href="webcomponents/athena-tab.html">
+        <link rel="import" href="webcomponents/athena-tabbar.html">
         
         <link rel="stylesheet" href="css/index.css">
         <link rel="stylesheet" href="css/tabs.css">
@@ -35,7 +38,7 @@
             <button id="settings" class="dock" title="View Settings"></button>
         </div>
         <div id="tab-bar">
-            <div id="tabs" class="tabs"></div>
+            <athena-tabbar id="tabs"></athena-tabbar>
             <button id="add-tab" title="New Tab"></button>
         </div>
         <div id="webviews">
