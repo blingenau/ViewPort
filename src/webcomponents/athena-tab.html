@@ -30,12 +30,21 @@
             top: 5px;
             z-index: 3;
         }
+        div.compact .favicon {
+            display: none;
+        }
         .title {
             color: #222222;
-            margin: 5px 30px;
+            margin: 5px 22px 5px 30px;
             overflow: hidden;
-            text-overflow: ellipsis;
+            text-overflow: clip;
             white-space: nowrap;
+            background: -webkit-linear-gradient(left, #222222, #222222 67%, #eeeeee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        div.compact .title {
+            margin: 5px 22px 5px 5px;
         }
         .close {
             position: absolute;
@@ -101,9 +110,7 @@
             const outer = this.$$(".outer");
             outer.style.width = width;
             outer.style.display = "inline";
-
-            this.$$(".title").style.display = (outer.clientWidth < 80) ? "none" : "";
-            this.$$(".favicon").style.display = (outer.clientWidth < 50) ? "none" : "";
+            this.toggleClass("compact", (outer.clientWidth < 80), outer);
         }
     });
 </script>
