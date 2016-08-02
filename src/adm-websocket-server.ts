@@ -63,16 +63,33 @@ export class AdmWebSocketServer {
             };
         };
 
+        /**
+         * Spoofs the message from the ADM tray app saying it's running.
+         * Athenanet requires this message in order to use any device functionality.
+         */
         let isTrayAppRunning = (client: ws) => {
             responder(client)("istrayapprunning", true);
         };
 
+        /**
+         * Spoofs the ADM version. Needs to be the latest version or Athenanet will
+         * require you to update ADM.
+         * 
+         * @todo Replace the hardcoded version with some function call that gets
+         *       the latest version of ADM.
+         */
         let getApplicationInfo = (client: ws, data: any) => {
             sender(client)("getapplicationinfo", {
                 Version: "1.5.1.0"
             });
         };
 
+        /**
+         * Responds with all installed modules. Currently hardcoded to return DYMOLabelPrinter.
+         * 
+         * @todo Actually search for all installed modules. Perhaps by checking the modules folder
+         *       for installed dll's with the names of devices.
+         */
         let getInstalledModules = (client: ws) => {
             let id: string = crypto.randomBytes(16).toString("hex");
             let customData = {
@@ -100,6 +117,14 @@ export class AdmWebSocketServer {
             this.child.stdin.write(JSON.stringify(customData) + "\n");
         };
 
+        /**
+         * Gets the installed status of a device or all devices. Empty string as the module
+         * signifies all devices. Currently Only handles DYMOLabelPrinter and all devices,
+         * but both cases call the same function.
+         * 
+         * @todo Write a getModuleInfo for DYMOLabelPrinter.
+         * @todo Once more devices are supported, write functions for them too.
+         */
         let getModuleInfo = (client: ws, data: any) => {
             switch (data.module) {
                 case "DYMOLabelPrinter":
@@ -116,6 +141,10 @@ export class AdmWebSocketServer {
             }
         };
 
+        /**
+         * Responsible for executing commands related to the DYMOLabelPrinter. Corresponds
+         * to actual method calls within the DYMO dll.
+         */
         let execDymoLabelPrinter = (client: ws, data: any) => {
             let id: string = crypto.randomBytes(16).toString("hex");
             let customData = {
@@ -145,6 +174,12 @@ export class AdmWebSocketServer {
             this.child.stdin.write(JSON.stringify(customData) + "\n");
         };
 
+        /**
+         * Switch case for execution commands of the various modules.
+         * 
+         * @todo Once other devices are supported add them and write their
+         *       respective functions.
+         */
         let execModule = (client: ws, data: any) => {
             switch (data.Module) {
                 case "DYMOLabelPrinter":
