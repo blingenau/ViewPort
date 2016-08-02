@@ -19,7 +19,7 @@
         }
     </style>
 
-    <div class="outer">
+    <div class="outer" on-mouseleave="_resizeTabs">
         <content id="tabs" select="athena-tab"></content>
     </div>
 
@@ -43,7 +43,24 @@
             this._observer = Polymer.dom(this.$.tabs).observeNodes(info => {
                 this._updateTabListeners(info.addedNodes, this.listen.bind(this));
                 this._updateTabListeners(info.removedNodes, this.unlisten.bind(this));
-                this._layout();
+
+                const tabs = this.getEffectiveChildren();
+                const oldLastIndex = tabs.length - info.addedNodes.length + info.removedNodes.length - 1;
+                const resizeImmediately = info.addedNodes.length > 0 ||
+                    info.removedNodes.some(tab => tab.index === oldLastIndex);
+
+                this._renumberTabs();
+                if (resizeImmediately) {
+                    this._resizeTabs();
+                }
+
+                if (info.addedNodes.length > 0) {
+                    this.selectedIndex = info.addedNodes[info.addedNodes.length - 1].index;
+                } else if (this.selectedIndex >= tabs.length) {
+                    this.selectedIndex = tabs.length - 1;
+                } else {
+                    this._selectedIndexChanged(this.selectedIndex);
+                }
             });
         },
 
@@ -61,8 +78,8 @@
         },
 
         _selectedIndexChanged(selectedIndex) {
-            let index = Number(selectedIndex);
-            let tabs = this.getEffectiveChildren();
+            const index = Number(selectedIndex);
+            const tabs = this.getEffectiveChildren();
             for (let i = 0; i < tabs.length; ++i) {
                 tabs[i].active = (i === index);
             }
@@ -72,15 +89,23 @@
             this.selectedIndex = event.currentTarget.index;
         },
 
-        _closeTab() {
+        _closeTab(event) {
+            this.removeChild(event.currentTarget);
+            this.fire("close-tab", {tab: event.currentTarget});
         },
 
-        _layout() {
-            let tabs = this.getEffectiveChildren();
-            this.selectedIndex = tabs.length - 1;
-            let width = `${100/tabs.length}%`;
+        _renumberTabs() {
+            const tabs = this.getEffectiveChildren();
             for (let i = 0; i < tabs.length; ++i) {
                 tabs[i].index = i;
+            }
+        },
+
+        _resizeTabs() {
+            console.log("_resizeTabs()");
+            const tabs = this.getEffectiveChildren();
+            const width = `${100/tabs.length}%`;
+            for (let i = 0; i < tabs.length; ++i) {
                 tabs[i].width = width;
             }
         }

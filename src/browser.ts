@@ -22,6 +22,9 @@ const athenaNetHomepage: string = "https://athenanet.athenahealth.com";
 let almostDoneFired: boolean = false;
 let previousTimeout: number = -1;
 
+// each tab registers events against ipcRenderer; increase the maximum listeners from the default of 10
+ipcRenderer.setMaxListeners(Infinity);
+
 /**
  * class DOM 
  * 
@@ -87,8 +90,6 @@ class BrowserDOM implements IDOM {
                 .attr("id", id)
                 .attr("title", title)
                 .attr("favicon", blankFaviconUri)
-                .on("click", () => this.changeTabOnClick(tab))
-                .on("close", () => this.closeTabOnClick(tab))
             );
     }
 
@@ -136,7 +137,7 @@ class BrowserDOM implements IDOM {
      * @param id   ID of the tab element to be removed.
      */
     public removeTabElement(id: string): void {
-        $(`#${id}`).remove();
+        // empty
     }
 
     /**
@@ -381,23 +382,21 @@ class BrowserDOM implements IDOM {
         return url.match(/^https?:\/\/(?:[\w-]+\.)+athenahealth\.com(?::\d+)?/) !== null;
     }
 
-    private closeTabOnClick(tab: Tab): void {
+    public closeTabOnClick(tab: Tab): void {
         if (!this.handleUserLock()) {
             tabs.removeTab(tab.getId());
-            this.tabSwitch();
-            this.doLayout();
             ipcRenderer.send("update-num-tabs", tabs.getActiveTabBar().size());
         }
     }
 
-    private changeTabOnClick(tab: Tab): void {
-        if (!tab.getActiveStatus() && !this.handleUserLock()) {
-            tabs.getActiveTabBar().hideTabs();
-            tabs.getUserTabBar().activateTab(tab);
-            this.tabSwitch();
-            this.doLayout();
-        }
-    }
+    // private changeTabOnClick(tab: Tab): void {
+    //     if (!tab.getActiveStatus() && !this.handleUserLock()) {
+    //         tabs.getActiveTabBar().hideTabs();
+    //         tabs.getUserTabBar().activateTab(tab);
+    //         this.tabSwitch();
+    //         this.doLayout();
+    //     }
+    // }
 }
 
 export const browserDom: BrowserDOM = new BrowserDOM();
@@ -461,6 +460,10 @@ window.onload = () => {
                 browserDom.getWebview().reload();
             }
     });
+    $("#tabs").on("close-tab", event => {
+        browserDom.closeTabOnClick(tabs.getTab((<any>event).detail.tab.id));
+    });
+
     // Read user preference file or create a new file then create first tab
     preferenceFile.readJson()
     .then(settings => {
@@ -619,20 +622,20 @@ window.onload = () => {
             almostDoneFired = true;
         });
 
-        $(function() {
-            $("#tabs").sortable({
-                revert: true,
-                axis: "x",
-                scroll: false,
-                forcePlaceholderSize: true,
-                items: "athena-tab",
-                tolerance: "pointer",
-                containment: "parent"
-            })
-            .on("sortactivate", function(event: Event, ui: any) {
-                ui.placeholder.css("width", ui.item.css("width"));
-            });
-        });
+        // $(function() {
+        //     $("#tabs").sortable({
+        //         revert: true,
+        //         axis: "x",
+        //         scroll: false,
+        //         forcePlaceholderSize: true,
+        //         items: "athena-tab",
+        //         tolerance: "pointer",
+        //         containment: "parent"
+        //     })
+        //     .on("sortactivate", function(event: Event, ui: any) {
+        //         ui.placeholder.css("width", ui.item.css("width"));
+        //     });
+        // });
 
         createBackgroundWindow();
     });
