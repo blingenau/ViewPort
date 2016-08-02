@@ -555,7 +555,7 @@ window.onload = () => {
                         name: "TIMEOUT_UNENCRYPTED"
                     }, (error: Error, cookies: Electron.Cookie[]): void => {
                         if (!cookies || cookies.length < 1) {
-                            console.log("No cookies");
+                            // console.log("No cookies");
                             stopwatch.stop();
                             return;
                         } else if (cookies.length === 1) {
