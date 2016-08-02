@@ -296,22 +296,8 @@ class BrowserDOM implements IDOM {
      * @param isLocalContent   Whether the URL is local isLocalContent to load.
      */
     public navigateTo(webview: Electron.WebViewElement, url: string, isLocalContent?: boolean): void {
-        isLocalContent = isLocalContent ? isLocalContent : url.includes("file://");
-        if (!url) {
-            url = homepage;
-        }
-        url = url.trim();
-        // parse url to determine if it is a google search or actual url
-        // todo move all parsing into single function
-        if (url.indexOf("http") === -1 && !isLocalContent) {
-            if(url.indexOf(" ") !== -1 || url.indexOf(".") === -1) {
-                url = "https://google.com/search?q="+encodeURIComponent(url);
-            } else {
-                url = `http://${url}`;
-            }
-        }
         $("#location").blur();
-
+        url = this.parseUrl(url);
         // dont allow navigation away from last athena tab
         // potentially add warning here describing this fact
         let athenaTabs: Tab[] = this.getAthenaTabs();
@@ -401,6 +387,24 @@ class BrowserDOM implements IDOM {
         $("#location").prop("disabled",false);
         $("#settings").prop("disabled", false);
         $("#dock").show();
+    }
+
+    public parseUrl(url: string, isLocalContent?: boolean): string {
+        isLocalContent = isLocalContent ? isLocalContent : url.includes("file://");
+        if (!url) {
+            url = homepage;
+        }
+        url = url.trim();
+        // parse url to determine if it is a google search or actual url
+        // todo move all parsing into single function
+        if (url.indexOf("http") === -1 && !isLocalContent) {
+            if(url.indexOf(" ") !== -1 || url.indexOf(".") === -1) {
+                url = "https://google.com/search?q="+encodeURIComponent(url);
+            } else {
+                url = `http://${url}`;
+            }
+        }
+        return url;
     }
 
     public isAthenaUrl(url: string): boolean {
@@ -562,7 +566,7 @@ window.onload = () => {
                         name: "TIMEOUT_UNENCRYPTED"
                     }, (error: Error, cookies: Electron.Cookie[]): void => {
                         if (!cookies || cookies.length < 1) {
-                            // console.log("No cookies");
+                            console.log("No cookies");
                             stopwatch.stop();
                             return;
                         } else if (cookies.length === 1) {
@@ -686,7 +690,7 @@ function handleLoadStart(event: Event): void {
  */
 function handleLoadStop(event: Event): void {
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
-    let url: string = webview.getAttribute("src");
+    let url: string = browserDom.parseUrl(webview.getAttribute("src"));
     let tab: Tab = tabs.getTab(webview.getAttribute("tabID"));
     tab.setUrl(url);
     tab.setTitle(webview.getTitle());
