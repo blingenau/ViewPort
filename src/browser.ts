@@ -300,8 +300,15 @@ class BrowserDOM implements IDOM {
         if (!url) {
             url = homepage;
         }
+        url = url.trim();
+        // parse url to determine if it is a google search or actual url
+        // todo move all parsing into single function
         if (url.indexOf("http") === -1 && !isLocalContent) {
-            url = `http://${url}`;
+            if(url.indexOf(" ") !== -1 || url.indexOf(".") === -1) {
+                url = "https://google.com/search?q="+encodeURIComponent(url);
+            } else {
+                url = `http://${url}`;
+            }
         }
         $("#location").blur();
 
