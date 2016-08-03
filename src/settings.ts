@@ -4,17 +4,6 @@ let currentUserHomepage: string = "";
 let currentUser: string = "";
 
 window.onload = () => {
-    /*
-    console.log(`${__dirname}/dymo/DYMOLabelPrinter.dll`);
-    let fs = require("fs");
-    fs.readFile(`${__dirname}/dymo/DYMOLabelPrinter.dll`, (err: any, data: any) => {
-        if (err) {
-            console.log("error");
-        } else {
-            console.log("found");
-        }
-});
-*/
     let userObject = ipcRenderer.sendSync("get-user");
     currentUser = userObject.username;
     currentUserHomepage = userObject.homepage;
@@ -125,15 +114,16 @@ function createUserSettings(): void {
             .html("New tabs open to " + currentUserHomepage)));
     $("#user-settings")
       .append($("<form>")
-          .attr("class", "current-homepage")
+          .addClass("current-homepage")
           .attr("onsubmit", "event.preventDefault()")
           .attr("id", "homepage-form")
           .append($("<input>")
+              .attr("id", "one")
               .attr("value", "new-homepage")
               .attr("type", "radio")
               .attr("checked","checked")
               .attr("name", "newTabCreation"))
-          .append("Specific page ")
+              .append($("<label for=`one` > Specific page </label>"))
               .append($("<input>")
                   .attr("id", "new-homepage1")
                   .attr("type", "text")
@@ -141,16 +131,18 @@ function createUserSettings(): void {
                   .attr("name", "newTabCreation"))
               .append("<br>")
                   .append($("<input>")
+                      .attr("id", "two")
                       .attr("value", "new-homepage2")
                       .attr("type", "radio")
                       .attr("name", "newTabCreation"))
-                  .append("Blank page")
+                  .append($("<label for=`two` > Blank page </label>"))
                   .append("<br>")
                         .append($("<input>")
+                            .attr("id", "three")
                             .attr("value", "new-homepage3")
                             .attr("type", "radio")
                             .attr("name", "newTabCreation"))
-                            .append("athenaNet"));
+                            .append($("<label for=`three` > athenaNet </label>")));
     $("#user-settings")
     .append($("<button>")
         .attr("id", "submit-user-settings")
