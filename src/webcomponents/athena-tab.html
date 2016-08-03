@@ -67,14 +67,14 @@
         }
     </style>
 
-    <div class="outer" on-tap="onTap">
+    <div class="outer" on-tap="_onTap">
         <div class="title">
             {{title}}
         </div>
         <div class="favicon">
             <img src="{{favicon}}">
         </div>
-        <div class="close" on-tap="onClose"/>
+        <div class="close" on-tap="_onClose"/>
     </div>
 
 </template>
@@ -86,7 +86,6 @@
         properties: {
             title: String,
             favicon: String,
-            index: Number,
             active: {
                 type: Boolean,
                 notify: true,
@@ -98,11 +97,11 @@
             }
         },
 
-        onTap(event) {
+        _onTap(event) {
             this.fire("click-tab");
         },
 
-        onClose(event) {
+        _onClose(event) {
             event.stopPropagation();
             this.fire("close-tab");
         },

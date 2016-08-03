@@ -40,19 +40,12 @@
         },
 
         attached() {
+            this._delayResizeTabs = false;
             this._observer = Polymer.dom(this.$.tabs).observeNodes(info => {
                 this._updateTabListeners(info.addedNodes, this.listen.bind(this));
                 this._updateTabListeners(info.removedNodes, this.unlisten.bind(this));
 
                 const tabs = this.getEffectiveChildren();
-                const oldLastIndex = tabs.length - info.addedNodes.length + info.removedNodes.length - 1;
-                const resizeImmediately = info.addedNodes.length > 0 ||
-                    info.removedNodes.some(tab => tab.index === oldLastIndex);
-
-                this._renumberTabs();
-                if (resizeImmediately) {
-                    this._resizeTabs();
-                }
 
                 if (info.addedNodes.length > 0) {
                     this._activateTab(info.addedNodes[info.addedNodes.length - 1]);
@@ -61,6 +54,11 @@
                 } else if (this.selectedIndex !== -1) {
                     this._activateTab(tabs[this.selectedIndex]);
                 }
+
+                if (info.addedNodes.length > 0 || !this._delayResizeTabs) {
+                    this._resizeTabs();
+                }
+                this._delayResizeTabs = false;
             });
         },
 
@@ -87,7 +85,8 @@
 
         _activateTab(tab) {
             if (this._fireTabEvent("activate-tab", tab)) {
-                this.selectedIndex = tab.index;
+                const tabs = this.getEffectiveChildren();
+                this.selectedIndex = tabs.findIndex(t => t === tab);
                 this._selectedIndexChanged(this.selectedIndex);
             }
         },
@@ -101,6 +100,7 @@
             event.stopPropagation();
             const tab = event.currentTarget;
             if (this._fireTabEvent("close-tab", tab)) {
+                this._delayResizeTabs = (tab.nextSibling !== null);
                 this.removeChild(tab);
             }
         },
@@ -108,13 +108,6 @@
         _fireTabEvent(eventName, tab) {
             let event = this.fire(eventName, {tab: tab}, {cancelable: true});
             return !event.defaultPrevented;
-        },
-
-        _renumberTabs() {
-            const tabs = this.getEffectiveChildren();
-            for (let i = 0; i < tabs.length; ++i) {
-                tabs[i].index = i;
-            }
         },
 
         _resizeTabs() {
