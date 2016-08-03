@@ -382,21 +382,29 @@ class BrowserDOM implements IDOM {
         return url.match(/^https?:\/\/(?:[\w-]+\.)+athenahealth\.com(?::\d+)?/) !== null;
     }
 
-    public closeTabOnClick(tab: Tab): void {
-        if (!this.handleUserLock()) {
-            tabs.removeTab(tab.getId());
-            ipcRenderer.send("update-num-tabs", tabs.getActiveTabBar().size());
+    public closeTabOnClick(tab: Tab): boolean {
+        if (this.handleUserLock()) {
+            return false;
         }
+
+        tabs.removeTab(tab.getId());
+        ipcRenderer.send("update-num-tabs", tabs.getActiveTabBar().size());
+        return true;
     }
 
-    // private changeTabOnClick(tab: Tab): void {
-    //     if (!tab.getActiveStatus() && !this.handleUserLock()) {
-    //         tabs.getActiveTabBar().hideTabs();
-    //         tabs.getUserTabBar().activateTab(tab);
-    //         this.tabSwitch();
-    //         this.doLayout();
-    //     }
-    // }
+    public changeTabOnClick(tab: Tab): boolean {
+        if (this.handleUserLock()) {
+            return false;
+        }
+
+        if (!tab.getActiveStatus()) {
+            tabs.getActiveTabBar().hideTabs();
+            tabs.getUserTabBar().activateTab(tab);
+            this.tabSwitch();
+            this.doLayout();
+        }
+        return true;
+    }
 }
 
 export const browserDom: BrowserDOM = new BrowserDOM();
@@ -460,8 +468,16 @@ window.onload = () => {
                 browserDom.getWebview().reload();
             }
     });
+    $("#tabs").on("activate-tab", event => {
+        if (!browserDom.changeTabOnClick(tabs.getTab((<any>event).detail.tab.id))) {
+            event.preventDefault();
+        }
+    });
     $("#tabs").on("close-tab", event => {
-        browserDom.closeTabOnClick(tabs.getTab((<any>event).detail.tab.id));
+        console.log(`close-tab`);
+        if (!browserDom.closeTabOnClick(tabs.getTab((<any>event).detail.tab.id))) {
+            event.preventDefault();
+        }
     });
 
     // Read user preference file or create a new file then create first tab

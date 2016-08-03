@@ -55,11 +55,11 @@
                 }
 
                 if (info.addedNodes.length > 0) {
-                    this.selectedIndex = info.addedNodes[info.addedNodes.length - 1].index;
+                    this._activateTab(info.addedNodes[info.addedNodes.length - 1]);
                 } else if (this.selectedIndex >= tabs.length) {
-                    this.selectedIndex = tabs.length - 1;
-                } else {
-                    this._selectedIndexChanged(this.selectedIndex);
+                    this._activateTab(tabs[tabs.length - 1]);
+                } else if (this.selectedIndex !== -1) {
+                    this._activateTab(tabs[this.selectedIndex]);
                 }
             });
         },
@@ -72,8 +72,8 @@
 
         _updateTabListeners(tabs, listenFn) {
             for (let tab of tabs) {
-                listenFn(tab, "click", "_clickTab");
-                listenFn(tab, "close", "_closeTab");
+                listenFn(tab, "click-tab", "_clickTab");
+                listenFn(tab, "close-tab", "_closeTab");
             }
         },
 
@@ -85,13 +85,29 @@
             }
         },
 
+        _activateTab(tab) {
+            console.log(`activate-tab ${tab.id}`);
+            if (this._fireTabEvent("activate-tab", tab)) {
+                this.selectedIndex = tab.index;
+            }
+        },
+
         _clickTab(event) {
-            this.selectedIndex = event.currentTarget.index;
+            event.stopPropagation();
+            this._activateTab(event.currentTarget);
         },
 
         _closeTab(event) {
-            this.removeChild(event.currentTarget);
-            this.fire("close-tab", {tab: event.currentTarget});
+            event.stopPropagation();
+            const tab = event.currentTarget;
+            if (this._fireTabEvent("close-tab", tab)) {
+                this.removeChild(tab);
+            }
+        },
+
+        _fireTabEvent(eventName, tab) {
+            let event = this.fire(eventName, {tab: tab}, {cancelable: true});
+            return !event.defaultPrevented;
         },
 
         _renumberTabs() {

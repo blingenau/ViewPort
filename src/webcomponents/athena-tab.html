@@ -99,12 +99,12 @@
         },
 
         onTap(event) {
-            this.fire("click");
+            this.fire("click-tab");
         },
 
         onClose(event) {
             event.stopPropagation();
-            this.fire("close");
+            this.fire("close-tab");
         },
 
         _widthChanged(width) {
