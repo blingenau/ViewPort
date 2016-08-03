@@ -101,7 +101,12 @@
             event.stopPropagation();
             const tab = event.currentTarget;
             if (this._fireTabEvent("close-tab", tab)) {
-                tab.width = "0";
+                this._delayResizeTabs = (tab.nextSibling !== null);
+                if (this._delayResizeTabs) {
+                    tab.width = "0";
+                } else {
+                    this.removeChild(tab);
+                }
             }
         },
 
@@ -122,8 +127,9 @@
             if (event.propertyName === "width") {
                 const tab = event.target;
                 if (tab.width === "0") {
-                    this._delayResizeTabs = (tab.nextSibling !== null);
-                    this.removeChild(tab);
+                    if (this._delayResizeTabs) {
+                        this.removeChild(tab);
+                    }
                 }
             }
         },
