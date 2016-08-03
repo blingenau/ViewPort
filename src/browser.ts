@@ -443,6 +443,7 @@ window.onload = () => {
     let user = "";
     let preferenceFile = new PreferenceFile(user, "settings.json");
     let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
+    let findMatchCase: boolean = false;
     // Event Handlers 
     $("#location-form").on("submit", (): boolean => {
             let address: string = $("#location").val();
@@ -487,12 +488,63 @@ window.onload = () => {
         });
     });
     $("#reload").on("click", (): void => {
-            if (browserDom.getWebview().isLoading()) {
-                browserDom.getWebview().stop();
-            } else {
-                browserDom.getWebview().reload();
-            }
+        if (browserDom.getWebview().isLoading()) {
+            browserDom.getWebview().stop();
+        } else {
+            browserDom.getWebview().reload();
+        }
     });
+
+    // Find-in-page controls
+    $("#find-form").on("submit", (event: JQueryEventObject): void => {
+        event.preventDefault();
+        browserDom.getWebview().findInPage($("#find-text").val(),
+            {matchCase: findMatchCase});
+    });
+
+    $("#find-text").keydown(function (event: JQueryKeyEventObject) {
+        if (event.which === 27) {
+            event.preventDefault();
+            $("#find-close").click();
+        }
+    });
+
+    $("#find-forward").on("click", (event: JQueryEventObject): void => {
+        event.preventDefault();
+        browserDom.getWebview().findInPage($("#find-text").val(),
+            {matchCase: findMatchCase});
+    });
+
+    $("#find-backward").on("click", (event: JQueryEventObject): void => {
+        event.preventDefault();
+        browserDom.getWebview().findInPage($("#find-text").val(),
+            {matchCase: findMatchCase, forward: false});
+    });
+
+    $("#match-case").on("click", function (event: JQueryEventObject) {
+        event.preventDefault();
+        if (!findMatchCase) {
+            findMatchCase = true;
+            $(this).addClass("on");
+        } else {
+            findMatchCase = false;
+            $(this).removeClass("on");
+        }
+        browserDom.getWebview().findInPage($("#find-text").val(),
+            {matchCase: findMatchCase});
+    });
+
+    $("#find-close").on("click", function (event: JQueryEventObject) {
+        event.preventDefault();
+        browserDom.getWebview().stopFindInPage("clearSelection");
+        $("#find-box").slideUp("fast");
+    });
+
+    remote.globalShortcut.register("CommandOrControl+F", (): void => {
+        $("#find-box").slideDown("fast");
+        $("#find-text").select();
+    });
+
     // Read user preference file or create a new file then create first tab
     preferenceFile.readJson()
     .then(settings => {
