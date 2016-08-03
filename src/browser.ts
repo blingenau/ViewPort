@@ -397,12 +397,10 @@ class BrowserDOM implements IDOM {
             return false;
         }
 
-        if (!tab.getActiveStatus()) {
-            tabs.getActiveTabBar().hideTabs();
-            tabs.getUserTabBar().activateTab(tab);
-            this.tabSwitch();
-            this.doLayout();
-        }
+        tabs.getActiveTabBar().hideTabs();
+        tabs.getUserTabBar().activateTab(tab);
+        this.tabSwitch();
+        this.doLayout();
         return true;
     }
 }

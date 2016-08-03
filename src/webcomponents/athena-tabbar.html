@@ -86,9 +86,9 @@
         },
 
         _activateTab(tab) {
-            console.log(`activate-tab ${tab.id}`);
             if (this._fireTabEvent("activate-tab", tab)) {
                 this.selectedIndex = tab.index;
+                this._selectedIndexChanged(this.selectedIndex);
             }
         },
 
