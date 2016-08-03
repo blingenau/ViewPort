@@ -19,7 +19,7 @@
         }
     </style>
 
-    <div class="outer" on-mouseleave="_resizeTabs">
+    <div class="outer" on-mouseleave="_resizeTabs" on-track="_dragTab">
         <content id="tabs" select="athena-tab"></content>
     </div>
 
@@ -72,6 +72,7 @@
             for (let tab of tabs) {
                 listenFn(tab, "click-tab", "_clickTab");
                 listenFn(tab, "close-tab", "_closeTab");
+                listenFn(tab, "transitionend", "_transitionEnd");
             }
         },
 
@@ -100,8 +101,7 @@
             event.stopPropagation();
             const tab = event.currentTarget;
             if (this._fireTabEvent("close-tab", tab)) {
-                this._delayResizeTabs = (tab.nextSibling !== null);
-                this.removeChild(tab);
+                tab.width = "0";
             }
         },
 
@@ -115,6 +115,28 @@
             const width = `${100/tabs.length}%`;
             for (let i = 0; i < tabs.length; ++i) {
                 tabs[i].width = width;
+            }
+        },
+
+        _transitionEnd(event) {
+            if (event.propertyName === "width") {
+                const tab = event.target;
+                if (tab.width === "0") {
+                    this._delayResizeTabs = (tab.nextSibling !== null);
+                    this.removeChild(tab);
+                }
+            }
+        },
+
+        _dragTab(event) {
+            console.log(`_dragTab: ${JSON.stringify(event.detail)}`);
+            switch (event.detail.state) {
+                case "start":
+                    break;
+                case "track":
+                    break;
+                case "end":
+                    break;
             }
         }
     });

@@ -6,8 +6,7 @@
         :host .outer {
             float: left;
             position: relative;
-            display: none;
-            width: 100%;
+            width: 0px;
             height: 100%;
             border: 0;
             margin: 0;
@@ -17,6 +16,7 @@
             border-color : #7F7F7F;
             border-color : rgba(127, 127, 127, 1);
             -webkit-user-select: none;
+            transition: width 200ms;
         }
         :host([active]) .outer {
             z-index: 5;
@@ -31,9 +31,6 @@
             top: 5px;
             z-index: 3;
         }
-        div.compact .favicon {
-            display: none;
-        }
         .title {
             color: #222222;
             margin: 5px 22px 5px 30px;
@@ -43,9 +40,6 @@
             background: -webkit-linear-gradient(left, #222222, #222222 67%, #eeeeee);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-        }
-        div.compact .title {
-            margin: 5px 22px 5px 5px;
         }
         .close {
             position: absolute;
@@ -108,9 +102,10 @@
 
         _widthChanged(width) {
             const outer = this.$$(".outer");
+            if (width === "0") {
+                outer.style.visibility = "hidden";
+            }
             outer.style.width = width;
-            outer.style.display = "inline";
-            this.toggleClass("compact", (outer.clientWidth < 80), outer);
         }
     });
 </script>
