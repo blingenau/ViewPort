@@ -160,7 +160,9 @@
         _dragTabStart(tabs, tab) {
             this._draggedTabIndex = tabs.findIndex(t => t === tab);
             if (this._draggedTabIndex !== -1) {
-                if (!this._activateTab(tab)) {
+                if (this._activateTab(tab)) {
+                    tab.noAnimation = true;
+                } else {
                     this._draggedTabIndex = -1;
                 }
             }
@@ -206,6 +208,8 @@
 
                 Polymer.dom(this).insertBefore(dragTab, dropTab);
             }
+
+            tabs[this._draggedTabIndex].noAnimation = false;
             
             this.selectedIndex = this._droppedTabIndex;
             this._draggedTabIndex = -1;

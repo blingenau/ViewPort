@@ -16,7 +16,10 @@
             border-color : #7F7F7F;
             border-color : rgba(127, 127, 127, 1);
             -webkit-user-select: none;
-            transition: width 200ms;
+            transition: width 200ms, transform 200ms;
+        }
+        .no-animation {
+            transition: unset;
         }
         :host([active]) .outer {
             z-index: 5;
@@ -93,6 +96,10 @@
             hOffset: {
                 type: Number,
                 observer: "_hOffsetChanged"
+            },
+            noAnimation: {
+                type: Boolean,
+                observer: "_noAnimationChanged"
             }
         },
 
@@ -113,8 +120,11 @@
         },
 
         _hOffsetChanged(hOffset) {
-            const left = (hOffset === 0) ? "" : `${hOffset}px`;
-            this.$.outer.style.left = left;
+            this.$.outer.style.transform = `translateX(${hOffset}px)`;
+        },
+
+        _noAnimationChanged(noAnimation) {
+            this.toggleClass("no-animation", noAnimation, this.$.outer);
         }
     });
 </script>
