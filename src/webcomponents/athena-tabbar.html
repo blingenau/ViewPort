@@ -43,10 +43,9 @@
         attached() {
             this._delayResizeTabs = false;
             this._observer = Polymer.dom(this.$.tabs).observeNodes(info => {
-                if (info.addedNodes.length === 1 &&
-                    info.removedNodes.length === 1 &&
-                    info.addedNodes[0] === info.removedNodes[0]) {
-                        // a tab was moved
+                if (info.addedNodes.length === info.removedNodes.length &&
+                    info.addedNodes.every(tab => info.removedNodes.includes(tab))) {
+                    // tabs were moved (Polymer may move a different set than you expect, too)
                     return;
                 }
 
@@ -206,10 +205,9 @@
                 }
 
                 Polymer.dom(this).insertBefore(dragTab, dropTab);
-
-                this.selectedIndex = this._droppedTabIndex;
             }
-
+            
+            this.selectedIndex = this._droppedTabIndex;
             this._draggedTabIndex = -1;
             this._droppedTabIndex = -1;
         }
