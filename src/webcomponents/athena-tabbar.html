@@ -16,10 +16,11 @@
             width: 100%;
             height: 100%;
             background : #cccccc;
+            overflow: hidden;
         }
     </style>
 
-    <div class="outer" on-mouseleave="_resizeTabs" on-track="_dragTab">
+    <div class="outer" on-mouseleave="_resizeTabs">
         <content id="tabs" select="athena-tab"></content>
     </div>
 
@@ -73,6 +74,7 @@
                 listenFn(tab, "click-tab", "_clickTab");
                 listenFn(tab, "close-tab", "_closeTab");
                 listenFn(tab, "transitionend", "_transitionEnd");
+                listenFn(tab, "track", "_dragTab");
             }
         },
 
@@ -135,13 +137,44 @@
         },
 
         _dragTab(event) {
-            console.log(`_dragTab: ${JSON.stringify(event.detail)}`);
+            const tab = event.target;
+            const tabs = this.getEffectiveChildren();
             switch (event.detail.state) {
                 case "start":
+                    this._draggedTab = tab;
+                    this._draggedTabIndex = tabs.findIndex(t => t === tab);
+                    this._dragStart = {
+                        x: event.detail.x,
+                        y: event.detail.y
+                    };
                     break;
                 case "track":
+                    const bounds = this.$$(".outer").getBoundingClientRect();
+                    const tabWidth = bounds.width / tabs.length;
+                    let targetTabIndex;
+                    if (event.detail.x < bounds.left) {
+                        targetTabIndex = 0;
+                    } else if (bounds.right <= event.detail.x) {
+                        targetTabIndex = tabs.length - 1;
+                    } else {
+                        targetTabIndex = Math.floor((event.detail.x - bounds.left) / tabWidth);
+                    }
+                    for (let i = 0; i < tabs.length; ++i) {
+                        let width;
+                        if (i < this._draggedTabIndex) {
+                            width = (i < targetTabIndex) ? 0 : tabWidth;
+                        } else if (i > this._draggedTabIndex) {
+                            width = (i > targetTabIndex) ? 0 : -tabWidth;
+                        } else {
+                            width = event.detail.dx;
+                        }
+                        tabs[i].$$(".outer").style.left = `${width}px`;
+                    }
                     break;
                 case "end":
+                    for (let i = 0; i < tabs.length; ++i) {
+                        tabs[i].$$(".outer").style.left = "0px";
+                    }
                     break;
             }
         }
