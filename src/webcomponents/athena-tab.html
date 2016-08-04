@@ -61,7 +61,7 @@
         }
     </style>
 
-    <div class="outer" on-tap="_onTap">
+    <div id="outer" class="outer" on-tap="_onTap">
         <div class="title">
             {{title}}
         </div>
@@ -88,6 +88,10 @@
             width: {
                 type: String,
                 observer: "_widthChanged"
+            },
+            hOffset: {
+                type: Number,
+                observer: "_hOffsetChanged"
             }
         },
 
@@ -101,11 +105,15 @@
         },
 
         _widthChanged(width) {
-            const outer = this.$$(".outer");
             if (width === "0") {
-                outer.style.visibility = "hidden";
+                this.$.outer.style.visibility = "hidden";
             }
-            outer.style.width = width;
+            this.$.outer.style.width = width;
+        },
+
+        _hOffsetChanged(hOffset) {
+            const left = (hOffset === 0) ? "" : `${hOffset}px`;
+            this.$.outer.style.left = left;
         }
     });
 </script>

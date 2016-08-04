@@ -43,8 +43,15 @@
         attached() {
             this._delayResizeTabs = false;
             this._observer = Polymer.dom(this.$.tabs).observeNodes(info => {
-                this._updateTabListeners(info.addedNodes, this.listen.bind(this));
+                if (info.addedNodes.length === 1 &&
+                    info.removedNodes.length === 1 &&
+                    info.addedNodes[0] === info.removedNodes[0]) {
+                        // a tab was moved
+                    return;
+                }
+
                 this._updateTabListeners(info.removedNodes, this.unlisten.bind(this));
+                this._updateTabListeners(info.addedNodes, this.listen.bind(this));
 
                 const tabs = this.getEffectiveChildren();
 
@@ -91,7 +98,9 @@
                 const tabs = this.getEffectiveChildren();
                 this.selectedIndex = tabs.findIndex(t => t === tab);
                 this._selectedIndexChanged(this.selectedIndex);
+                return true;
             }
+            return false;
         },
 
         _clickTab(event) {
@@ -107,7 +116,7 @@
                 if (this._delayResizeTabs) {
                     tab.width = "0";
                 } else {
-                    this.removeChild(tab);
+                    Polymer.dom(this).removeChild(tab);
                 }
             }
         },
@@ -137,46 +146,72 @@
         },
 
         _dragTab(event) {
-            const tab = event.target;
             const tabs = this.getEffectiveChildren();
-            switch (event.detail.state) {
-                case "start":
-                    this._draggedTab = tab;
-                    this._draggedTabIndex = tabs.findIndex(t => t === tab);
-                    this._dragStart = {
-                        x: event.detail.x,
-                        y: event.detail.y
-                    };
-                    break;
-                case "track":
-                    const bounds = this.$$(".outer").getBoundingClientRect();
-                    const tabWidth = bounds.width / tabs.length;
-                    let targetTabIndex;
-                    if (event.detail.x < bounds.left) {
-                        targetTabIndex = 0;
-                    } else if (bounds.right <= event.detail.x) {
-                        targetTabIndex = tabs.length - 1;
-                    } else {
-                        targetTabIndex = Math.floor((event.detail.x - bounds.left) / tabWidth);
-                    }
-                    for (let i = 0; i < tabs.length; ++i) {
-                        let width;
-                        if (i < this._draggedTabIndex) {
-                            width = (i < targetTabIndex) ? 0 : tabWidth;
-                        } else if (i > this._draggedTabIndex) {
-                            width = (i > targetTabIndex) ? 0 : -tabWidth;
-                        } else {
-                            width = event.detail.dx;
-                        }
-                        tabs[i].$$(".outer").style.left = `${width}px`;
-                    }
-                    break;
-                case "end":
-                    for (let i = 0; i < tabs.length; ++i) {
-                        tabs[i].$$(".outer").style.left = "0px";
-                    }
-                    break;
+            if (event.detail.state === "start") {
+                this._dragTabStart(tabs, event.target);
+            } else if (this._draggedTabIndex !== -1) {
+                if (event.detail.state === "track") {
+                    this._dragTabTrack(tabs, event.detail);
+                } else if (event.detail.state === "end") {
+                    this._dragTabEnd(tabs);
+                }
             }
+        },
+
+        _dragTabStart(tabs, tab) {
+            this._draggedTabIndex = tabs.findIndex(t => t === tab);
+            if (this._draggedTabIndex !== -1) {
+                if (!this._activateTab(tab)) {
+                    this._draggedTabIndex = -1;
+                }
+            }
+        },
+
+        _dragTabTrack(tabs, track) {
+            const bounds = this.$$(".outer").getBoundingClientRect();
+            const tabWidth = bounds.width / tabs.length;
+
+            if (event.detail.x < bounds.left) {
+                this._droppedTabIndex = 0;
+            } else if (bounds.right <= track.x) {
+                this._droppedTabIndex = tabs.length - 1;
+            } else {
+                this._droppedTabIndex = Math.floor((track.x - bounds.left) / tabWidth);
+            }
+
+            for (let i = 0; i < tabs.length; ++i) {
+                let width;
+                if (i < this._draggedTabIndex) {
+                    width = (i < this._droppedTabIndex) ? 0 : tabWidth;
+                } else if (i > this._draggedTabIndex) {
+                    width = (i > this._droppedTabIndex) ? 0 : -tabWidth;
+                } else {
+                    width = track.dx;
+                }
+                tabs[i].hOffset = width;
+            }
+        },
+
+        _dragTabEnd(tabs) {
+            for (let i = 0; i < tabs.length; ++i) {
+                tabs[i].hOffset = 0;
+            }
+
+            if (this._draggedTabIndex !== this._droppedTabIndex) {
+                let dragTab = tabs[this._draggedTabIndex];
+                let dropTab = tabs[this._droppedTabIndex];
+
+                if (this._draggedTabIndex < this._droppedTabIndex) {
+                    dropTab = Polymer.dom(dropTab).nextSibling;
+                }
+
+                Polymer.dom(this).insertBefore(dragTab, dropTab);
+
+                this.selectedIndex = this._droppedTabIndex;
+            }
+
+            this._draggedTabIndex = -1;
+            this._droppedTabIndex = -1;
         }
     });
 </script>
