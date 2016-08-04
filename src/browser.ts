@@ -45,7 +45,8 @@ class BrowserDOM implements IDOM {
         webview.addEventListener("did-stop-loading", handleLoadStop);
         webview.addEventListener("did-fail-load", handleLoadFail);
         webview.addEventListener("load-commit", handleLoadCommit);
-        webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
+        // webview.addEventListener("will-navigate", handleWillNavigate);
+        // webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
         webview.addEventListener("new-window", (event) => {
             browserDom.addTab(event.url);
         });
@@ -540,10 +541,7 @@ window.onload = () => {
         $("#find-box").slideUp("fast");
     });
 
-    remote.globalShortcut.register("CommandOrControl+F", (): void => {
-        $("#find-box").slideDown("fast");
-        $("#find-text").select();
-    });
+    window.addEventListener("keydown", handleKeyDown);
 
     // Read user preference file or create a new file then create first tab
     preferenceFile.readJson()
@@ -742,7 +740,7 @@ function handleLoadStart(event: Event): void {
  */
 function handleLoadStop(event: Event): void {
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
-    let url: string = browserDom.parseUrl(webview.getAttribute("src"));
+    let url: string = browserDom.parseUrl(webview.getURL());
     let tab: Tab = tabs.getTab(webview.getAttribute("tabID"));
     tab.setUrl(url);
     tab.setTitle(webview.getTitle());
@@ -768,17 +766,7 @@ function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void 
     if (tabs.getTab(webview.getAttribute("tabID")).getActiveStatus()) {
         (<HTMLButtonElement>$("#back").get(0)).disabled = !webview.canGoBack();
         (<HTMLButtonElement>$("#forward").get(0)).disabled = !webview.canGoForward();
-    }
-}
-
-/**
- * Function to be called when a webview redirects.
- *
- * @param event   The event triggered.
- */
-function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequestEvent): void {
-    if (tabs.getActiveTab().getId() === (<Electron.WebViewElement>event.target).getAttribute("tabID")) {
-        browserDom.setAddress(event.newURL);
+        browserDom.setAddress(webview.getWebContents().getURL());
     }
 }
 
@@ -790,6 +778,28 @@ function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequest
 function handleLoadFail(event: Electron.WebViewElement.DidFailLoadEvent): void {
     if (event.errorCode !== -3 && event.errorCode !== -300) {
         browserDom.navigateTo(<Electron.WebViewElement>event.target, "file://" + __dirname + "/error.html", true);
+    }
+}
+
+/**
+ * Function to handle local keyboard shortcuts. Not using Electron's globalShortcut
+ * because it still listens for them when the app isn't focused.
+ * 
+ * @param event   The keyboard event triggered.
+ * @todo Currently has a switch case for more Ctrl+... events, add more.
+ */
+function handleKeyDown(event: KeyboardEvent): void {
+    if (event.metaKey) {
+        switch (event.keyCode) {
+            // Ctrl+F.
+            case 70:
+                event.preventDefault();
+                $("#find-box").slideDown("fast");
+                $("#find-text").select();
+                return;
+            default:
+                return;
+        }
     }
 }
 
