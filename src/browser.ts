@@ -493,9 +493,10 @@ window.onload = () => {
                 $("#back-history").append($("<li>" + tabs.getActiveTab().back[i] + "</li>")
                 .attr("id", i)
                 .attr("class", tabs.getActiveTab().back[i]));
+                // there is an off by 1 error
                 $("#" + i).click(function(){
                     browserDom.navigateTo(browserDom.getWebview(), $("#" + i).attr("class"));
-                    $("#back-history").off();
+                    $("#back-history").contents().off();
                     $("#back").empty();
                     tabs.getActiveTab().back = [];
                 });
