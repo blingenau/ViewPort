@@ -46,10 +46,7 @@ class BrowserDOM implements IDOM {
         webview.addEventListener("did-stop-loading", handleLoadStop);
         webview.addEventListener("did-fail-load", handleLoadFail);
         webview.addEventListener("load-commit", handleLoadCommit);
-<<<<<<< HEAD
-=======
         // webview.addEventListener("will-navigate", handleWillNavigate);
->>>>>>> 667e02bc8ba770e2fb1f3733cea8bfdc4f234938
         // webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
         webview.addEventListener("new-window", (event) => {
             browserDom.addTab(event.url);
@@ -843,7 +840,6 @@ function handleLoadFail(event: Electron.WebViewElement.DidFailLoadEvent): void {
         browserDom.navigateTo(<Electron.WebViewElement>event.target, "file://" + __dirname + "/error.html", true);
     }
 }
-
 
 /**
  * Function to handle local keyboard shortcuts. Not using Electron's globalShortcut
