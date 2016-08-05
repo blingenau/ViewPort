@@ -75,6 +75,7 @@ input {
   padding: 0px;
   transform: translateY(7px);
   background-color: transparent;
+  z-index: 2;
 }
 
 #controls input {
@@ -293,6 +294,15 @@ compared to the back/forward buttons */
   margin: 2px 0px;
   padding: 3px 4px 2px 0;
   text-align: center;
+}
+
+#back-history {
+    background-color: white;
+    right: 80px;
+    width: 300px;
+    top: 34px;
+    z-index: 4;
+    position: relative;
 }
 
 #find-box #match-case {

@@ -21,6 +21,7 @@ const blankFaviconUri: string =
 const athenaNetHomepage: string = "https://athenanet.athenahealth.com";
 let almostDoneFired: boolean = false;
 let previousTimeout: number = -1;
+let clickIsValid = true;
 
 /**
  * class DOM 
@@ -297,6 +298,10 @@ class BrowserDOM implements IDOM {
      * @param isLocalContent   Whether the URL is local isLocalContent to load.
      */
     public navigateTo(webview: Electron.WebViewElement, url: string, isLocalContent?: boolean): void {
+        // tabs.getActiveTab().back.push(webview.getAttribute("src"));
+        // console.log(webview.getWebContents().getURL());
+        tabs.getActiveTab().forward = [];
+        // console.log(webview.getAttribute("src"));
         $("#location").blur();
         url = this.parseUrl(url);
         // dont allow navigation away from last athena tab
@@ -455,22 +460,68 @@ window.onload = () => {
         });
 
     // Navigation button controls
+    /*
     $("#back").on("click", (): void => {
+        let popped = tabs.getActiveTab().back.pop();
+        tabs.getActiveTab().forward.push(popped);
         browserDom.getWebview().goBack();
     });
-
+    */
     $("#forward").on("click", (): void => {
+        let popped = tabs.getActiveTab().forward.pop();
+        tabs.getActiveTab().back.push(popped);
         browserDom.getWebview().goForward();
     });
+    let cancelClick: any;
+    // mousedown, a global variable is set to the timeout function
+    $("#back").mousedown( function() {
+        cancelClick = setTimeout( displayBack, 500 );
+    });
+    // mouseup, the timeout for dontClick is cancelled
+    $("#back").mouseup( function() {
+        clearTimeout(cancelClick);
+        // if the time limit wasn't passed, this will be true
+        if(clickIsValid) {
+            // this is where you call the function you want to happen on  a quick click
+            let popped = tabs.getActiveTab().back.pop();
+            tabs.getActiveTab().forward.push(popped);
+            browserDom.getWebview().goBack();
+        } else {
+            $("#back").append($("<div></div>")
+                        .attr("id", "back-history"));
+            for(let i = tabs.getActiveTab().back.length - 1; i > 0 && i > tabs.getActiveTab().back.length - 6; i--) {
+                $("#back-history").append($("<li>" + tabs.getActiveTab().back[i] + "</li>")
+                .attr("id", i)
+                .attr("class", tabs.getActiveTab().back[i]));
+                $("#" + i).click(function(){
+                    browserDom.navigateTo($("#" + i).attr("class"));
+                    $("#back-history").off();
+                    $("#back").empty();
+                    tabs.getActiveTab().back = [];
+                });
+            }
+            $("#back").mouseleave( function() {
+                $("#back").empty();
+            });
+        }
+        // reset the values to their defaults
+        clickIsValid = true;
+    });
+    /* let timeoutId = 0;
+
+    $("#back").mousedown(function() {
+        timeoutId = setTimeout(displayBack, 1000);
+    }).bind("mouseup mouseleave", function() {
+        clearTimeout(timeoutId);
+    });
+    */
 
     $("#athena").on("click", (): void => {
         browserDom.navigateTo(browserDom.getWebview(), "https://athenanet.athenahealth.com");
     });
-
     $("#add-tab").on("click", (): void => {
         browserDom.addTab(homepage);
     });
-
     $("#settings").on("click", (): void => {
         $("#location").removeClass("location-loaded");
         browserDom.addTab("file://" + __dirname + "/settings.html");
@@ -790,6 +841,9 @@ function handleLoadStop(event: Event): void {
  */
 function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void {
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
+    tabs.getActiveTab().back.push(webview.getWebContents().getURL());
+    console.log(webview.getAttribute("src"));
+    // console.log(webview.getWebContents().getURL());
     if (tabs.getTab(webview.getAttribute("tabID")).getActiveStatus()) {
         (<HTMLButtonElement>$("#back").get(0)).disabled = !webview.canGoBack();
         (<HTMLButtonElement>$("#forward").get(0)).disabled = !webview.canGoForward();
@@ -802,6 +856,12 @@ function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void 
  *
  * @param event   The event triggered.
  */
+
+/*
+function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequestEvent): void {
+    if (tabs.getActiveTab().getId() === (<Electron.WebViewElement>event.target).getAttribute("tabID")) {
+        browserDom.setAddress(event.newURL);
+*/
 function handleLoadFail(event: Electron.WebViewElement.DidFailLoadEvent): void {
     if (event.errorCode !== -3 && event.errorCode !== -300) {
         browserDom.navigateTo(<Electron.WebViewElement>event.target, "file://" + __dirname + "/error.html", true);
@@ -892,4 +952,9 @@ function getFaviconImage(domain: string): Promise<string> {
 function createNewUserSettings(preferenceFile: PreferenceFile, user: string): void {
     let defaultSettings = {"username" : user, "homepage" : athenaNetHomepage};
     preferenceFile.write(defaultSettings);
+}
+
+function displayBack(): void {
+    clickIsValid = false;
+    console.log(tabs.getActiveTab().back);
 }
