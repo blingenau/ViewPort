@@ -27,6 +27,8 @@ export interface IDOM {
  *      webview: Electron.WebViewElement - webview element of tab
  */
 export class Tab {
+    public back: string[];
+    public forward: string[];
     private url: string;
     private id: string;
     private title: string;
@@ -49,6 +51,8 @@ export class Tab {
         this.active = tab.active || true;
         this.dom.createWebview(this.url, this.id);
         this.dom.createTabElement(this.title, this.id, this.url, this);
+        this.back = [];
+        this.forward = [];
     }
 
     /**
