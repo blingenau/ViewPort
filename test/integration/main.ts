@@ -49,7 +49,9 @@ describe("application launch", function() {
     });
 
     it("can remove the second tab", async function() {
-        await app.client.click("#tabs > athena-tab:nth-child(2) div.close");
+        await app.client.selectorExecute("#tabs", function(elements: [any]) {
+            elements.forEach(e => e.closeTab(2));
+        });
         await tabCountEquals(2).should.eventually.be.true;
     });
 
@@ -58,21 +60,17 @@ describe("application launch", function() {
         await tabCountEquals(3).should.eventually.be.true;
     });
 
-    it("can drag a tab", async function() {
-        await app.client.click("#tabs > athena-tab:nth-child(2)");
+    it("can move a tab", async function() {
+        await app.client.selectorExecute("#tabs", function(elements: [any]) {
+            return elements.every(e => e.activateTab(1));
+        }).should.eventually.be.true;
         await app.client.waitForExist(".location-loaded");
         await app.client.setValue("#location", "www.google.com");
         await app.client.submitForm("#location-form");
-        await app.client.dragAndDrop("#tabs > athena-tab:nth-child(2)", "#add-tab");
-        await app.client.waitForVisible("#tabs > athena-tab:nth-child(3)");
-        await app.client.click("#tabs > athena-tab:nth-child(3)");
+        await app.client.selectorExecute("#tabs", function(elements: [any]) {
+            return elements.every(e => e.moveTab(1, 2));
+        }).should.eventually.be.true;
         await app.client.getValue("#location").should.eventually.contain("google");
-    });
-
-    it("dragged tab is active", async function() {
-        let tabID: string | string[] = await app.client.getAttribute("#tabs > athena-tab:nth-child(3)", "id");
-        await app.client.getAttribute(`[tabID='${<string>tabID}']`, "style")
-            .should.eventually.not.contain("display: none");
     });
 
     let originalLocation: string | string[] = null;

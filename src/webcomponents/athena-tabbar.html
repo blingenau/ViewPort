@@ -37,7 +37,62 @@
                 notify: true,
                 reflectToAttribute: true,
                 observer: "_selectedIndexChanged"
+            },
+            count: {
+                type: Number,
+                value: 0,
+                notify: true,
+                readOnly: true
             }
+        },
+
+        activateTab(index) {
+            const tabs = this.getEffectiveChildren();
+            if (index < 0 || index >= tabs.length) {
+                return false;
+            }
+            const tab = tabs[index];
+
+            if (this._fireTabEvent("activate-tab", tab)) {
+                this.selectedIndex = index;
+                this._selectedIndexChanged(index);
+                return true;
+            }
+            return false;
+        },
+
+        closeTab(index) {
+            const tabs = this.getEffectiveChildren();
+            if (index < 0 || index >= tabs.length) {
+                return false;
+            }
+            const tab = tabs[index];
+
+            if (this._fireTabEvent("close-tab", tab)) {
+                this._delayResizeTabs = false;
+                Polymer.dom(this).removeChild(tab);
+                return true;
+            }
+            return false;
+        },
+
+        moveTab(fromIndex, toIndex) {
+            const tabs = this.getEffectiveChildren();
+            if (fromIndex === toIndex ||
+                fromIndex < 0 || fromIndex >= tabs.length ||
+                toIndex < 0 || toIndex >= tabs.length) {
+                return false;
+            }
+
+            let fromTab = tabs[fromIndex];
+            let toTab = tabs[toIndex];
+
+            if (fromIndex < toIndex) {
+                toTab = Polymer.dom(toTab).nextSibling;
+            }
+
+            Polymer.dom(this).insertBefore(fromTab, toTab);
+            return true;
         },
 
         attached() {
@@ -53,13 +108,15 @@
                 this._updateTabListeners(info.addedNodes, this.listen.bind(this));
 
                 const tabs = this.getEffectiveChildren();
+                this._setCount(tabs.length);
 
                 if (info.addedNodes.length > 0) {
-                    this._activateTab(info.addedNodes[info.addedNodes.length - 1]);
+                    const lastAddedTab = info.addedNodes[info.addedNodes.length - 1];
+                    this.activateTab(tabs.findIndex(t => t === lastAddedTab));
                 } else if (this.selectedIndex >= tabs.length) {
-                    this._activateTab(tabs[tabs.length - 1]);
+                    this.activateTab(tabs.length - 1);
                 } else if (this.selectedIndex !== -1) {
-                    this._activateTab(tabs[this.selectedIndex]);
+                    this.activateTab(this.selectedIndex);
                 }
 
                 if (info.addedNodes.length > 0 || !this._delayResizeTabs) {
@@ -92,19 +149,10 @@
             }
         },
 
-        _activateTab(tab) {
-            if (this._fireTabEvent("activate-tab", tab)) {
-                const tabs = this.getEffectiveChildren();
-                this.selectedIndex = tabs.findIndex(t => t === tab);
-                this._selectedIndexChanged(this.selectedIndex);
-                return true;
-            }
-            return false;
-        },
-
         _clickTab(event) {
             event.stopPropagation();
-            this._activateTab(event.currentTarget);
+            const tabs = this.getEffectiveChildren();
+            this.activateTab(tabs.findIndex(t => t === event.currentTarget));
         },
 
         _closeTab(event) {
@@ -159,12 +207,10 @@
 
         _dragTabStart(tabs, tab) {
             this._draggedTabIndex = tabs.findIndex(t => t === tab);
-            if (this._draggedTabIndex !== -1) {
-                if (this._activateTab(tab)) {
-                    tab.noAnimation = true;
-                } else {
-                    this._draggedTabIndex = -1;
-                }
+            if (this.activateTab(this._draggedTabIndex)) {
+                tab.noAnimation = true;
+            } else {
+                this._draggedTabIndex = -1;
             }
         },
 
@@ -198,17 +244,7 @@
                 tabs[i].hOffset = 0;
             }
 
-            if (this._draggedTabIndex !== this._droppedTabIndex) {
-                let dragTab = tabs[this._draggedTabIndex];
-                let dropTab = tabs[this._droppedTabIndex];
-
-                if (this._draggedTabIndex < this._droppedTabIndex) {
-                    dropTab = Polymer.dom(dropTab).nextSibling;
-                }
-
-                Polymer.dom(this).insertBefore(dragTab, dropTab);
-            }
-
+            this.moveTab(this._draggedTabIndex, this._droppedTabIndex);
             tabs[this._draggedTabIndex].noAnimation = false;
             
             this.selectedIndex = this._droppedTabIndex;
