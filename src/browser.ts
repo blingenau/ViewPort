@@ -45,7 +45,8 @@ class BrowserDOM implements IDOM {
         webview.addEventListener("did-stop-loading", handleLoadStop);
         webview.addEventListener("did-fail-load", handleLoadFail);
         webview.addEventListener("load-commit", handleLoadCommit);
-        webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
+        // webview.addEventListener("will-navigate", handleWillNavigate);
+        // webview.addEventListener("did-get-redirect-request", handleLoadRedirect);
         webview.addEventListener("new-window", (event) => {
             browserDom.addTab(event.url);
         });
@@ -442,6 +443,7 @@ window.onresize = () => browserDom.doLayout();
 window.onload = () => {
     let user = "testUser";
     let preferenceFile = new PreferenceFile(user, "settings.json");
+    let findMatchCase: boolean = false;
     // Event Handlers 
     $("#location-form").on("submit", (): boolean => {
             let address: string = $("#location").val();
@@ -485,13 +487,59 @@ window.onload = () => {
         });
     });
     $("#reload").on("click", (): void => {
-            if (browserDom.getWebview().isLoading()) {
-                browserDom.getWebview().stop();
-            } else {
-                browserDom.getWebview().reload();
-            }
+        if (browserDom.getWebview().isLoading()) {
+            browserDom.getWebview().stop();
+        } else {
+            browserDom.getWebview().reload();
+        }
     });
-    console.log(preferenceFile);
+
+    // Find-in-page controls
+    $("#find-form").on("submit", (event: JQueryEventObject): void => {
+        event.preventDefault();
+        browserDom.getWebview().findInPage($("#find-text").val(),
+            {matchCase: findMatchCase});
+    });
+
+    $("#find-text").keydown(function (event: JQueryKeyEventObject) {
+        if (event.which === 27) {
+            event.preventDefault();
+            $("#find-close").click();
+        }
+    });
+
+    $("#find-forward").on("click", (event: JQueryEventObject): void => {
+        event.preventDefault();
+        browserDom.getWebview().findInPage($("#find-text").val(),
+            {matchCase: findMatchCase});
+    });
+
+    $("#find-backward").on("click", (event: JQueryEventObject): void => {
+        event.preventDefault();
+        browserDom.getWebview().findInPage($("#find-text").val(),
+            {matchCase: findMatchCase, forward: false});
+    });
+
+    $("#match-case").on("click", function (event: JQueryEventObject) {
+        event.preventDefault();
+        if (!findMatchCase) {
+            findMatchCase = true;
+            $(this).addClass("on");
+        } else {
+            findMatchCase = false;
+            $(this).removeClass("on");
+        }
+        browserDom.getWebview().findInPage($("#find-text").val(),
+            {matchCase: findMatchCase});
+    });
+
+    $("#find-close").on("click", function (event: JQueryEventObject) {
+        event.preventDefault();
+        browserDom.getWebview().stopFindInPage("clearSelection");
+        $("#find-box").slideUp("fast");
+    });
+
+    window.addEventListener("keydown", handleKeyDown);
     // Read user preference file or create a new file then create first tab
     let tabsToAdd: string[] = [];
     preferenceFile.readJson()
@@ -554,9 +602,8 @@ window.onload = () => {
         ipcRenderer.on("leave-full-screen", function() {
             $("#controls").removeClass("fullscreen");
         });
-        console.log(preferenceFile);
+
         ipcRenderer.on("fetch-preferences", function () {
-            console.log(preferenceFile);
             preferenceFile.readJson().then(settings => {
                 settings.tabs = tabs.getActiveTabBar().getAllTabs().map((t: Tab) => t.getUrl());
                 preferenceFile.write(settings);
@@ -720,7 +767,7 @@ function handleLoadStart(event: Event): void {
  */
 function handleLoadStop(event: Event): void {
     let webview: Electron.WebViewElement = <Electron.WebViewElement>event.target;
-    let url: string = browserDom.parseUrl(webview.getAttribute("src"));
+    let url: string = browserDom.parseUrl(webview.getURL());
     let tab: Tab = tabs.getTab(webview.getAttribute("tabID"));
     tab.setUrl(url);
     tab.setTitle(webview.getTitle());
@@ -746,17 +793,7 @@ function handleLoadCommit(event: Electron.WebViewElement.LoadCommitEvent): void 
     if (tabs.getTab(webview.getAttribute("tabID")).getActiveStatus()) {
         (<HTMLButtonElement>$("#back").get(0)).disabled = !webview.canGoBack();
         (<HTMLButtonElement>$("#forward").get(0)).disabled = !webview.canGoForward();
-    }
-}
-
-/**
- * Function to be called when a webview redirects.
- *
- * @param event   The event triggered.
- */
-function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequestEvent): void {
-    if (tabs.getActiveTab().getId() === (<Electron.WebViewElement>event.target).getAttribute("tabID")) {
-        browserDom.setAddress(event.newURL);
+        browserDom.setAddress(webview.getWebContents().getURL());
     }
 }
 
@@ -768,6 +805,48 @@ function handleLoadRedirect(event: Electron.WebViewElement.DidGetRedirectRequest
 function handleLoadFail(event: Electron.WebViewElement.DidFailLoadEvent): void {
     if (event.errorCode !== -3 && event.errorCode !== -300) {
         browserDom.navigateTo(<Electron.WebViewElement>event.target, "file://" + __dirname + "/error.html", true);
+    }
+}
+
+/**
+ * Function to handle local keyboard shortcuts. Not using Electron's globalShortcut
+ * because it still listens for them when the app isn't focused.
+ * 
+ * @param event   The keyboard event triggered.
+ * @todo Currently has a switch case for more Ctrl+... events, add more.
+ */
+function handleKeyDown(event: KeyboardEvent): void {
+    if (event.metaKey) {
+        switch (event.keyCode) {
+            // Ctrl/Cmd+F - find in page.
+            case 70:
+                event.preventDefault();
+                $("#find-box").slideDown("fast");
+                $("#find-text").select();
+                return;
+            // Ctrl/Cmd+R - reload page.
+            case 82:
+                event.preventDefault();
+                if ($("#location").hasClass("location-loaded")) {
+                    $("#reload").click();
+                }
+                return;
+            // Ctrl/Cmd+T - new tab.
+            case 84:
+                event.preventDefault();
+                $("#add-tab").click();
+                return;
+            // Ctrl/Cmd+W - close current tab.
+            case 87:
+                event.preventDefault();
+                let tabClose: JQuery = $(browserDom.getTabElement()).find(".tab-close");
+                if (tabClose.is(":visible")) {
+                    tabClose.click();
+                }
+                return;
+            default:
+                return;
+        }
     }
 }
 

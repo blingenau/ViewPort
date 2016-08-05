@@ -223,7 +223,7 @@ compared to the back/forward buttons */
   padding: 2px;
 
   position: fixed;
-  top: 36px;
+  top: 70px;
   height: 25px;
 
   display: none;
@@ -272,7 +272,7 @@ compared to the back/forward buttons */
 }
 
 #find-box {
-  right: 5px;
+  right: 1px;
   width: 280px;
   z-index: 2;
 }
@@ -299,6 +299,11 @@ compared to the back/forward buttons */
   margin: 2px 0px;
   font-size: 10px;
   width: 28px;
+}
+
+#match-case.on {
+  color: blue;
+  font-weight: bold;
 }
 
 #find-box #find-backward,
