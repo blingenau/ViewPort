@@ -797,6 +797,13 @@ function handleKeyDown(event: KeyboardEvent): void {
                 $("#find-box").slideDown("fast");
                 $("#find-text").select();
                 return;
+            // Ctrl/Cmd+R - reload page.
+            case 82:
+                event.preventDefault();
+                if ($("#location").hasClass("location-loaded")) {
+                    $("#reload").click();
+                }
+                return;
             // Ctrl/Cmd+T - new tab.
             case 84:
                 event.preventDefault();
