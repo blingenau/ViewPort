@@ -399,7 +399,7 @@ class BrowserDOM implements IDOM {
         // todo move all parsing into single function
         if (url.indexOf("http") === -1 && !isLocalContent) {
             if(url.indexOf(" ") !== -1 || url.indexOf(".") === -1) {
-                url = "https://google.com/search?q="+encodeURIComponent(url);
+                url = "https://google.com/#q="+encodeURIComponent(url);
             } else {
                 url = `http://${url}`;
             }
@@ -440,9 +440,8 @@ let backgroundWindow: Electron.BrowserWindow = null;
 
 window.onresize = () => browserDom.doLayout();
 window.onload = () => {
-    let user = "";
+    let user = "testUser";
     let preferenceFile = new PreferenceFile(user, "settings.json");
-    let path = ([remote.app.getPath("appData"), remote.app.getName(), "users", user]).join("/");
     // Event Handlers 
     $("#location-form").on("submit", (): boolean => {
             let address: string = $("#location").val();
@@ -472,7 +471,6 @@ window.onload = () => {
 
     $("#settings").on("click", (): void => {
         $("#location").removeClass("location-loaded");
-        console.log(path);
         browserDom.addTab("file://" + __dirname + "/settings.html");
         remote.ipcMain.on("get-user", (event, arg) => {
                     event.returnValue = {"username": user, "homepage": homepage};
@@ -493,29 +491,52 @@ window.onload = () => {
                 browserDom.getWebview().reload();
             }
     });
+    console.log(preferenceFile);
     // Read user preference file or create a new file then create first tab
+    let tabsToAdd: string[] = [];
     preferenceFile.readJson()
     .then(settings => {
         homepage = new (<any>URL)(settings.homepage).href;
+        if (settings.tabs && settings.tabs.length > 1) {
+            tabsToAdd = settings.tabs;
+        }
     })
     .catch(err => {
         // any errors in the file will result in the default settings being applied to the user
         createNewUserSettings(preferenceFile, user);
     })
     .then(() => {
-        tabs.addUser("test");
+        tabs.addUser(user);
         // browserDom.addTab("http://prodmirror.athenahealth.com");
         tabs.addTab(new Tab(browserDom, {
             url: "http://prodmirror.athenahealth.com"
-        }), "test");
-        tabs.activateUser("test");
-        // browserDom.clearCookies();
+        }), user);
+        tabs.activateUser(user);
+
+        browserDom.doLayout();
+        if (tabsToAdd.length) {
+            let response = remote.dialog.showMessageBox({
+                type: "question",
+                title: "Restore Tabs",
+                message: "Your last session ended with multiple tabs open. Would you like to restore those tabs?",
+                detail: "Pressing restore will re-open the tabs open when your last session ended.",
+                buttons: ["Restore", "Cancel"]
+            });
+
+            if (response === 0) {
+                tabs.getActiveTabBar().clearAllTabs();
+                tabsToAdd.forEach(browserDom.addTab);
+                let athenaTabs: Tab[] = browserDom.getAthenaTabs();
+                if (athenaTabs.length) {
+                    tabs.getActiveTabBar().hideTabs();
+                    tabs.getActiveTabBar().activateTab(athenaTabs[0]);
+                }
+            }
+        }
         if (!process.env.athenahealth_viewport_test) {
             browserDom.lockActiveUser();
             // alert("Please login to continue using the Viewport");
         }
-
-        browserDom.doLayout();
 
         ipcRenderer.on("openPDF", function (event, filedata) {
             let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
@@ -532,6 +553,15 @@ window.onload = () => {
 
         ipcRenderer.on("leave-full-screen", function() {
             $("#controls").removeClass("fullscreen");
+        });
+        console.log(preferenceFile);
+        ipcRenderer.on("fetch-preferences", function () {
+            console.log(preferenceFile);
+            preferenceFile.readJson().then(settings => {
+                settings.tabs = tabs.getActiveTabBar().getAllTabs().map((t: Tab) => t.getUrl());
+                preferenceFile.write(settings);
+                ipcRenderer.send("preferences-written");
+            });
         });
 
         // use getAthenaTabs

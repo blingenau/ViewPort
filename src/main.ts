@@ -32,6 +32,8 @@ preferenceFileManager.start();
 const workQueue = new WorkQueue();
 const globalSettings = new GlobalSettings(workQueue);
 
+let readyToQuit = false;
+let closeCalled = false;
 // The ADM websocket server
 const admWebSocketServer = new AdmWebSocketServer();
 if (process.platform !== "darwin") {
@@ -85,6 +87,9 @@ function createWindow(): void {
 
         mainWindow.on("close", (event: Electron.Event) => {
             // Stores the window size of this session
+            if (readyToQuit) {
+                return;
+            }
             [width, height] = mainWindow.getSize();
             globalSettings.mainWindow.size = {
                 width: width,
@@ -96,6 +101,10 @@ function createWindow(): void {
                 // we don't want to present the close dialog during testing
                 return;
             }
+            ipcMain.once("preferences-written", (e) => {
+                readyToQuit = true;
+                mainWindow.close();
+            });
             // potentially add some ipc here to request if it is OK to close without dialog (one tab, etc.)
             if (numTabs > 1) {
                 const appName = app.getName();
@@ -110,8 +119,12 @@ function createWindow(): void {
 
                 if (response === 1) {
                     event.preventDefault();
+                    return;
                 }
             }
+            event.preventDefault();
+            mainWindow.webContents.send("fetch-preferences");
+            closeCalled = true;
         });
 
         mainWindow.webContents.session.on("will-download", function (event, item, webContents) {
@@ -133,11 +146,10 @@ function createWindow(): void {
 }
 
 app.on("before-quit", event => {
-    if (workQueue.empty()) {
+    // defer the quit until after the work queue is empty
+    if ((!closeCalled || readyToQuit) && workQueue.empty()) {
         return;
     }
-
-    // defer the quit until after the work queue is empty
     event.preventDefault();
     setTimeout(() => app.quit(), 100);
 });
