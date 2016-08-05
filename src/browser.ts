@@ -791,11 +791,24 @@ function handleLoadFail(event: Electron.WebViewElement.DidFailLoadEvent): void {
 function handleKeyDown(event: KeyboardEvent): void {
     if (event.metaKey) {
         switch (event.keyCode) {
-            // Ctrl+F.
+            // Ctrl/Cmd+F - find in page.
             case 70:
                 event.preventDefault();
                 $("#find-box").slideDown("fast");
                 $("#find-text").select();
+                return;
+            // Ctrl/Cmd+T - new tab.
+            case 84:
+                event.preventDefault();
+                $("#add-tab").click();
+                return;
+            // Ctrl/Cmd+W - close current tab.
+            case 87:
+                event.preventDefault();
+                let tabClose: JQuery = $(browserDom.getTabElement()).find(".tab-close");
+                if (tabClose.is(":visible")) {
+                    tabClose.click();
+                }
                 return;
             default:
                 return;
