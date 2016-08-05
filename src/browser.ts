@@ -494,7 +494,7 @@ window.onload = () => {
                 .attr("id", i)
                 .attr("class", tabs.getActiveTab().back[i]));
                 $("#" + i).click(function(){
-                    browserDom.navigateTo($("#" + i).attr("class"));
+                    browserDom.navigateTo(browserDom.getWebview(), $("#" + i).attr("class"));
                     $("#back-history").off();
                     $("#back").empty();
                     tabs.getActiveTab().back = [];
@@ -615,7 +615,7 @@ window.onload = () => {
         browserDom.doLayout();
         if (tabsToAdd.length) {
             let response = remote.dialog.showMessageBox({
-                type: "question",
+                type: "info",
                 title: "Restore Tabs",
                 message: "Your last session ended with multiple tabs open. Would you like to restore those tabs?",
                 detail: "Pressing restore will re-open the tabs open when your last session ended.",
@@ -625,6 +625,7 @@ window.onload = () => {
             if (response === 0) {
                 tabs.getActiveTabBar().clearAllTabs();
                 tabsToAdd.forEach(browserDom.addTab);
+                console.log("here");
                 let athenaTabs: Tab[] = browserDom.getAthenaTabs();
                 if (athenaTabs.length) {
                     tabs.getActiveTabBar().hideTabs();
@@ -632,11 +633,12 @@ window.onload = () => {
                 }
             }
         }
+
         if (!process.env.athenahealth_viewport_test) {
             browserDom.lockActiveUser();
             // alert("Please login to continue using the Viewport");
         }
-
+        console.log("done locking");
         ipcRenderer.on("openPDF", function (event, filedata) {
             let PDFViewerURL: string = "file://" + __dirname + "/pdfjs/web/viewer.html?url=";
             let PDFurl: string = PDFViewerURL + filedata.url;

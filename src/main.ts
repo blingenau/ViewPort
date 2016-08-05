@@ -103,7 +103,8 @@ function createWindow(): void {
             }
             ipcMain.once("preferences-written", (e) => {
                 readyToQuit = true;
-                mainWindow.close();
+                console.log("here in main");
+                // mainWindow.close();
             });
             // potentially add some ipc here to request if it is OK to close without dialog (one tab, etc.)
             if (numTabs > 1) {
@@ -122,9 +123,9 @@ function createWindow(): void {
                     return;
                 }
             }
+            closeCalled = true;
             event.preventDefault();
             mainWindow.webContents.send("fetch-preferences");
-            closeCalled = true;
         });
 
         mainWindow.webContents.session.on("will-download", function (event, item, webContents) {
